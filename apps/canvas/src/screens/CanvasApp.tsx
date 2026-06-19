@@ -2,38 +2,45 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   ChevronDown,
+  File as FileIcon,
+  Film,
   House,
+  ImageIcon,
   LogOut,
   MoreHorizontal,
+  Music,
+  Palette,
+  PanelLeft,
+  PanelLeftClose,
   PenLine,
   Plus,
   Save,
   StickyNote,
   Trash2,
+  Type as TypeIcon,
   UserRound,
 } from 'lucide-react'
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-  useNavigate,
-  useParams,
-} from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom'
 import {
   Background,
   Controls,
+  Handle,
   MiniMap,
+  Position,
   ReactFlow,
+  ReactFlowProvider,
   useEdgesState,
   useNodesState,
+  useReactFlow,
   type Connection,
   type Edge,
   type Node,
+  type NodeProps,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
-import { canvasApi } from '@super-app/api-client'
+import type { AssetDto, AssetKind } from '@super-app/contracts/assets'
+import { assetsApi, canvasApi } from '@super-app/api-client'
 import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
 import { clientEnv } from '@super-app/env/client'
@@ -91,7 +98,11 @@ export function CanvasApp() {
 /*  ListView                                                                    */
 /* -------------------------------------------------------------------------- */
 
-function ListView({ user }: { user: { id: string; name?: string; email: string; avatarUrl?: string } }) {
+function ListView({
+  user,
+}: {
+  user: { id: string; name?: string; email: string; avatarUrl?: string }
+}) {
   const navigate = useNavigate()
   const [projects, setProjects] = useState<ProjectSummary[]>([])
   const [loading, setLoading] = useState(true)
@@ -226,9 +237,7 @@ function ListView({ user }: { user: { id: string; name?: string; email: string; 
             <h1 className="m-0 text-[clamp(26px,4vw,40px)] font-bold leading-none tracking-[-0.02em]">
               我的画布
             </h1>
-            <p className="m-0 mt-2 text-sm text-[#999999]">
-              {projects.length} 个项目
-            </p>
+            <p className="m-0 mt-2 text-sm text-[#999999]">{projects.length} 个项目</p>
           </div>
           <button
             type="button"
@@ -248,12 +257,8 @@ function ListView({ user }: { user: { id: string; name?: string; email: string; 
         ) : projects.length === 0 ? (
           <div className="grid place-items-center py-20">
             <div className="max-w-[420px] text-center">
-              <h3 className="mb-2.5 text-[22px] font-bold tracking-[-0.02em]">
-                还没有画布项目
-              </h3>
-              <p className="m-0 mb-6 text-[#999999]">
-                创建第一个画布，开始组织你的资产和想法。
-              </p>
+              <h3 className="mb-2.5 text-[22px] font-bold tracking-[-0.02em]">还没有画布项目</h3>
+              <p className="m-0 mb-6 text-[#999999]">创建第一个画布，开始组织你的资产和想法。</p>
               <button
                 type="button"
                 className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-[10px] border-0 bg-[#e5e5e5] px-5 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
@@ -448,7 +453,11 @@ function ListView({ user }: { user: { id: string; name?: string; email: string; 
 /*  EditorRoute  — loads project by URL :id                                    */
 /* -------------------------------------------------------------------------- */
 
-function EditorRoute({ user }: { user: { id: string; name?: string; email: string; avatarUrl?: string } }) {
+function EditorRoute({
+  user,
+}: {
+  user: { id: string; name?: string; email: string; avatarUrl?: string }
+}) {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [project, setProject] = useState<ProjectDetail | null>(null)
@@ -486,12 +495,7 @@ function EditorRoute({ user }: { user: { id: string; name?: string; email: strin
   }
 
   if (error || !project) {
-    return (
-      <ScreenState
-        title="项目未找到"
-        description="该画布项目不存在或已被删除。"
-      />
-    )
+    return <ScreenState title="项目未找到" description="该画布项目不存在或已被删除。" />
   }
 
   return (
@@ -511,7 +515,21 @@ function EditorRoute({ user }: { user: { id: string; name?: string; email: strin
 /*  EditorView  — powered by @xyflow/react                                     */
 /* -------------------------------------------------------------------------- */
 
-function EditorView({
+function EditorView(props: {
+  user: { id: string; name?: string; email: string; avatarUrl?: string }
+  project: ProjectDetail
+  onBack: () => void
+  onLogout: () => void
+}) {
+  // ReactFlowProvider is required so useReactFlow() works inside EditorViewInner.
+  return (
+    <ReactFlowProvider>
+      <EditorViewInner {...props} />
+    </ReactFlowProvider>
+  )
+}
+
+function EditorViewInner({
   user,
   project,
   onBack,
@@ -524,6 +542,8 @@ function EditorView({
 }) {
   const [saving, setSaving] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const { screenToFlowPosition } = useReactFlow()
 
   // Load existing canvas data or start fresh
   const initialData = useMemo<CanvasData>(() => {
@@ -580,6 +600,38 @@ function EditorView({
       },
     }
     setNodes((nds) => [...nds, newNode])
+  }
+
+  /* ---- Asset drop handling --------------------------------------------- */
+
+  function handleDrop(event: React.DragEvent) {
+    event.preventDefault()
+    const raw = event.dataTransfer.getData('application/super-asset')
+    if (!raw) return
+
+    let asset: AssetDto
+    try {
+      asset = JSON.parse(raw) as AssetDto
+    } catch {
+      return
+    }
+
+    const position = screenToFlowPosition({ x: event.clientX, y: event.clientY })
+    setNodes((nds) => [
+      ...nds,
+      {
+        id: `asset-${Date.now()}`,
+        type: 'asset',
+        position,
+        data: {
+          assetId: asset.id,
+          kind: asset.kind,
+          title: asset.title,
+          thumbnailUrl: asset.thumbnailUrl,
+          fileUrl: asset.files?.[0]?.url,
+        },
+      },
+    ])
   }
 
   /* ---- Connection handling --------------------------------------------- */
@@ -666,38 +718,309 @@ function EditorView({
             <House size={16} aria-hidden="true" />
           </a>
 
-          <UserMenu
-            user={user}
-            open={userMenuOpen}
-            setOpen={setUserMenuOpen}
-            onLogout={onLogout}
-          />
+          <UserMenu user={user} open={userMenuOpen} setOpen={setUserMenuOpen} onLogout={onLogout} />
         </div>
       </header>
 
-      {/* React Flow Canvas */}
-      <div className="flex-1">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          fitView
-          proOptions={{ hideAttribution: true }}
-          style={{ background: '#1a1a1a' }}
-        >
-          <Background color="#2a2a2a" gap={24} size={1} />
-          <Controls className="[&>button]:!bg-[#1c1c1c] [&>button]:!border-[#2a2a2a] [&>button]:!text-[#e5e5e5] [&>button]:!fill-[#e5e5e5]" />
-          <MiniMap
-            style={{ background: '#1c1c1c', border: '1px solid #2a2a2a' }}
-            maskColor="rgba(0,0,0,0.6)"
-            nodeColor="#3a3a3a"
-          />
-        </ReactFlow>
+      {/* Asset sidebar + React Flow canvas */}
+      <div className="flex flex-1">
+        <AssetSidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((c) => !c)}
+        />
+
+        {/* React Flow Canvas */}
+        <div className="flex-1">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
+            fitView
+            proOptions={{ hideAttribution: true }}
+            style={{ background: '#1a1a1a' }}
+          >
+            <Background color="#2a2a2a" gap={24} size={1} />
+            <Controls className="[&>button]:!bg-[#1c1c1c] [&>button]:!border-[#2a2a2a] [&>button]:!text-[#e5e5e5] [&>button]:!fill-[#e5e5e5]" />
+            <MiniMap
+              style={{ background: '#1c1c1c', border: '1px solid #2a2a2a' }}
+              maskColor="rgba(0,0,0,0.6)"
+              nodeColor="#3a3a3a"
+            />
+          </ReactFlow>
+        </div>
       </div>
     </main>
   )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Asset node + sidebar (Phase 4a: drag-to-canvas)                            */
+/* -------------------------------------------------------------------------- */
+
+interface AssetNodeData {
+  assetId: string
+  kind: AssetKind
+  title: string
+  thumbnailUrl?: string
+  fileUrl?: string
+}
+
+// Stable nodeTypes identity (module scope) to avoid React Flow re-create warnings.
+const nodeTypes = { asset: AssetNode }
+
+function AssetNode({ data }: NodeProps) {
+  const d = data as unknown as AssetNodeData
+  const cardStyle: React.CSSProperties = {
+    background: '#1c1c1c',
+    color: '#e5e5e5',
+    border: '1px solid #3a3a3a',
+    borderRadius: '12px',
+    padding: '10px',
+    minWidth: 180,
+    maxWidth: 220,
+    fontSize: '13px',
+  }
+
+  let media: React.ReactNode = null
+  if (d.kind === 'image' && (d.thumbnailUrl || d.fileUrl)) {
+    media = (
+      <img
+        src={d.thumbnailUrl ?? d.fileUrl}
+        alt={d.title}
+        style={{
+          width: '100%',
+          height: 120,
+          objectFit: 'cover',
+          borderRadius: 8,
+          display: 'block',
+        }}
+      />
+    )
+  } else {
+    const Icon =
+      d.kind === 'video'
+        ? Film
+        : d.kind === 'audio'
+          ? Music
+          : d.kind === 'file'
+            ? FileIcon
+            : d.kind === 'text'
+              ? TypeIcon
+              : d.kind === 'subject'
+                ? UserRound
+                : d.kind === 'style'
+                  ? Palette
+                  : ImageIcon
+    media = (
+      <div
+        style={{
+          height: 64,
+          display: 'grid',
+          placeItems: 'center',
+          color: '#999999',
+          background: '#242424',
+          borderRadius: 8,
+        }}
+      >
+        <Icon size={26} aria-hidden="true" />
+      </div>
+    )
+  }
+
+  return (
+    <div style={cardStyle}>
+      <Handle type="target" position={Position.Top} style={{ background: '#666' }} />
+      {media}
+      <div
+        style={{
+          marginTop: 8,
+          fontWeight: 600,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {d.title}
+      </div>
+      <div style={{ marginTop: 2, fontSize: 11, color: '#888888' }}>{assetKindLabel(d.kind)}</div>
+      <Handle type="source" position={Position.Bottom} style={{ background: '#666' }} />
+    </div>
+  )
+}
+
+function assetKindLabel(kind: AssetKind): string {
+  const map: Record<AssetKind, string> = {
+    image: '图片',
+    video: '视频',
+    audio: '音频',
+    file: '文件',
+    text: '文本',
+    subject: '主体',
+    style: '风格',
+    template: '模板',
+  }
+  return map[kind]
+}
+
+const SIDEBAR_FILTERS: { value: 'all' | AssetKind; label: string }[] = [
+  { value: 'all', label: '全部' },
+  { value: 'image', label: '图片' },
+  { value: 'video', label: '视频' },
+  { value: 'audio', label: '音频' },
+  { value: 'file', label: '文件' },
+  { value: 'text', label: '文本' },
+  { value: 'subject', label: '主体' },
+  { value: 'style', label: '风格' },
+]
+
+function AssetSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  const [filter, setFilter] = useState<'all' | AssetKind>('all')
+  const [items, setItems] = useState<AssetDto[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const kind = filter === 'all' ? undefined : filter
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    assetsApi
+      .list({ kind, limit: 50 })
+      .then((res) => {
+        if (!cancelled) setItems(res.items)
+      })
+      .catch(() => {
+        if (!cancelled) setItems([])
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [kind])
+
+  if (collapsed) {
+    return (
+      <aside
+        style={{ width: 52, borderRight: '1px solid #2a2a2a', background: '#161616' }}
+        className="flex shrink-0 flex-col items-center gap-3 py-3"
+      >
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label="展开资产面板"
+          title="展开资产面板"
+          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[#999999] transition-colors hover:bg-[#242424] hover:text-[#e5e5e5]"
+        >
+          <PanelLeft size={18} aria-hidden="true" />
+        </button>
+      </aside>
+    )
+  }
+
+  return (
+    <aside
+      style={{ width: 280, borderRight: '1px solid #2a2a2a', background: '#161616' }}
+      className="flex shrink-0 flex-col"
+    >
+      <div className="flex items-center justify-between px-4 py-3">
+        <strong className="text-[13px] font-semibold text-[#e5e5e5]">资产</strong>
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label="收起资产面板"
+          title="收起资产面板"
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[#999999] transition-colors hover:bg-[#242424] hover:text-[#e5e5e5]"
+        >
+          <PanelLeftClose size={16} aria-hidden="true" />
+        </button>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5 px-3 pb-2">
+        {SIDEBAR_FILTERS.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => setFilter(opt.value)}
+            className={`cursor-pointer rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+              filter === opt.value
+                ? 'border-[#666] bg-[#3a3a3a] text-[#e5e5e5]'
+                : 'border-[#2a2a2a] bg-transparent text-[#999999] hover:border-[#3a3a3a] hover:text-[#e5e5e5]'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-3 pb-4">
+        {loading ? (
+          <p className="px-1 py-6 text-center text-[12px] text-[#666666]">加载中…</p>
+        ) : items.length === 0 ? (
+          <p className="px-1 py-6 text-center text-[12px] text-[#666666]">
+            还没有资产，去资产库上传一些吧。
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {items.map((asset) => (
+              <SidebarAssetCard key={asset.id} asset={asset} />
+            ))}
+          </div>
+        )}
+      </div>
+    </aside>
+  )
+}
+
+function SidebarAssetCard({ asset }: { asset: AssetDto }) {
+  return (
+    <div
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('application/super-asset', JSON.stringify(asset))
+        e.dataTransfer.effectAllowed = 'move'
+      }}
+      title={`拖到画布以添加：${asset.title}`}
+      className="group flex cursor-grab flex-col gap-1.5 rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] p-2 transition-colors hover:border-[#3a3a3a] hover:bg-[#202020] active:cursor-grabbing"
+    >
+      <div className="grid aspect-video place-items-center overflow-hidden rounded bg-[#242424]">
+        {asset.kind === 'image' && (asset.thumbnailUrl || asset.files[0]?.url) ? (
+          <img
+            src={asset.thumbnailUrl ?? asset.files[0]?.url}
+            alt={asset.title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <SidebarKindIcon kind={asset.kind} />
+        )}
+      </div>
+      <span className="truncate text-[11px] font-medium text-[#e5e5e5]">{asset.title}</span>
+      <span className="text-[10px] text-[#666666]">{assetKindLabel(asset.kind)}</span>
+    </div>
+  )
+}
+
+function SidebarKindIcon({ kind }: { kind: AssetKind }) {
+  const Icon =
+    kind === 'video'
+      ? Film
+      : kind === 'audio'
+        ? Music
+        : kind === 'file'
+          ? FileIcon
+          : kind === 'text'
+            ? TypeIcon
+            : kind === 'subject'
+              ? UserRound
+              : kind === 'style'
+                ? Palette
+                : ImageIcon
+  return <Icon size={20} aria-hidden="true" className="text-[#666666]" />
 }
 
 /* -------------------------------------------------------------------------- */
@@ -764,13 +1087,7 @@ function UserMenu({
   )
 }
 
-function DialogOverlay({
-  children,
-  onClose,
-}: {
-  children: React.ReactNode
-  onClose: () => void
-}) {
+function DialogOverlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   useEffect(() => {
     function onEscape(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()

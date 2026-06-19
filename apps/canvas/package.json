@@ -14,6 +14,7 @@
   "dependencies": {
     "@super-app/api-client": "workspace:*",
     "@super-app/auth-client": "workspace:*",
+    "@super-app/contracts": "workspace:*",
     "@super-app/design-tokens": "workspace:*",
     "@super-app/env": "workspace:*",
     "@super-app/ui-react": "workspace:*",
