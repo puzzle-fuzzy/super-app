@@ -50,6 +50,13 @@
       "when": 1781891244679,
       "tag": "0008_normal_manta",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781895159644,
+      "tag": "0007_minor_wildside",
+      "breakpoints": true
     }
   ]
 }
