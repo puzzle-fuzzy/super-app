@@ -80,10 +80,7 @@ export async function listCanvasProjects({
 }: ListCanvasProjectsInput): Promise<CanvasProjectListResponse> {
   const effectiveLimit = Math.min(Math.max(limit, 1), 100)
 
-  const conditions = [
-    eq(canvasProjects.ownerId, owner.id),
-    eq(canvasProjects.status, 'active'),
-  ]
+  const conditions = [eq(canvasProjects.ownerId, owner.id), eq(canvasProjects.status, 'active')]
 
   if (cursor) {
     const decoded = decodeCursor(cursor)
@@ -270,7 +267,11 @@ export async function getRecentCanvasProjects(
     .select()
     .from(canvasProjects)
     .where(
-      and(eq(canvasProjects.ownerId, ownerId), eq(canvasProjects.status, 'active'), isNull(canvasProjects.deletedAt))
+      and(
+        eq(canvasProjects.ownerId, ownerId),
+        eq(canvasProjects.status, 'active'),
+        isNull(canvasProjects.deletedAt)
+      )
     )
     .orderBy(desc(canvasProjects.updatedAt))
     .limit(limit)
@@ -323,9 +324,7 @@ async function loadCanvasProject(
 /*  DTO mappers                                                               */
 /* -------------------------------------------------------------------------- */
 
-function toCanvasProjectSummaryDto(
-  project: typeof canvasProjects.$inferSelect
-): CanvasProjectDto {
+function toCanvasProjectSummaryDto(project: typeof canvasProjects.$inferSelect): CanvasProjectDto {
   return {
     id: project.id,
     title: project.title,

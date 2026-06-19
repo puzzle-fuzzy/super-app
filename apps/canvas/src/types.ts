@@ -58,12 +58,7 @@ export interface GroupNodeData {
 export type GroupNodeType = Node<GroupNodeData, 'groupNode'>
 
 // ========== 联合类型 ==========
-export type AppNode =
-  | ImageNodeType
-  | VideoNodeType
-  | DocNodeType
-  | TextNodeType
-  | GroupNodeType
+export type AppNode = ImageNodeType | VideoNodeType | DocNodeType | TextNodeType | GroupNodeType
 
 // ========== API 响应 ==========
 export interface UploadResponse {

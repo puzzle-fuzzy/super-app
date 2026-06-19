@@ -22,7 +22,10 @@ describe('styles module', () => {
 
   afterAll(async () => {
     for (const user of testUsers) {
-      const owned = await db.select({ id: assets.id }).from(assets).where(eq(assets.ownerId, user.id))
+      const owned = await db
+        .select({ id: assets.id })
+        .from(assets)
+        .where(eq(assets.ownerId, user.id))
       for (const asset of owned) {
         await db.delete(styleAssets).where(eq(styleAssets.assetId, asset.id))
       }

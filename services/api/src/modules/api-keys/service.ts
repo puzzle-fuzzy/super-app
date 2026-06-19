@@ -1,5 +1,9 @@
 import type { CurrentUser } from '@super-app/contracts/auth'
-import type { ApiKeyDto, CreateApiKeyRequest, CreateApiKeyResponse } from '@super-app/contracts/api-keys'
+import type {
+  ApiKeyDto,
+  CreateApiKeyRequest,
+  CreateApiKeyResponse,
+} from '@super-app/contracts/api-keys'
 import type { Db } from '@super-app/db'
 import { apiKeys } from '@super-app/db/schema'
 import { and, desc, eq } from 'drizzle-orm'
@@ -107,10 +111,7 @@ export async function revokeApiKey({ db, owner, id }: RevokeApiKeyInput): Promis
     throw new AppError(409, 'CONFLICT', 'API key is already revoked')
   }
 
-  await db
-    .update(apiKeys)
-    .set({ isRevoked: true, updatedAt: new Date() })
-    .where(eq(apiKeys.id, id))
+  await db.update(apiKeys).set({ isRevoked: true, updatedAt: new Date() }).where(eq(apiKeys.id, id))
 }
 
 /* -------------------------------------------------------------------------- */

@@ -20,15 +20,15 @@ Structurally identical to Phase 1 (text) and Phase 2 (subject): a new `style_ass
 
 ## Decisions (locked)
 
-| # | Decision |
-|---|----------|
-| 1 | 7 fields: `style_type`, `positive_prompt`, `negative_prompt`, `color_palette`, `recommended_model`, `recommended_params`, `metadata`. Dropped the 4 fine-grained rule fields (premature) — `positive_prompt` covers them. |
-| 2 | `style_type` enum: all 6 values up front (`visual, video, writing, audio, ui, mixed`). |
-| 3 | `color_palette` and `recommended_params` are JSONB columns (`z.record(z.unknown())` in contracts). Flexible, no sub-schema churn. |
-| 4 | Full CRUD (POST/GET/PATCH/DELETE), same shape as text/subject. PATCH is partial. |
-| 5 | All style fields optional at create EXCEPT `style_type` (required). Allows progressive fill. |
-| 6 | Extension data is a separate `StyleAssetDetailDto` (extends `AssetDto`), not merged into the generic `AssetDto`. |
-| 7 | No reverse relation on `assetsRelations` (Phase 1 TDZ lesson). Extension-side relation only. |
+| #   | Decision                                                                                                                                                                                                                  |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | 7 fields: `style_type`, `positive_prompt`, `negative_prompt`, `color_palette`, `recommended_model`, `recommended_params`, `metadata`. Dropped the 4 fine-grained rule fields (premature) — `positive_prompt` covers them. |
+| 2   | `style_type` enum: all 6 values up front (`visual, video, writing, audio, ui, mixed`).                                                                                                                                    |
+| 3   | `color_palette` and `recommended_params` are JSONB columns (`z.record(z.unknown())` in contracts). Flexible, no sub-schema churn.                                                                                         |
+| 4   | Full CRUD (POST/GET/PATCH/DELETE), same shape as text/subject. PATCH is partial.                                                                                                                                          |
+| 5   | All style fields optional at create EXCEPT `style_type` (required). Allows progressive fill.                                                                                                                              |
+| 6   | Extension data is a separate `StyleAssetDetailDto` (extends `AssetDto`), not merged into the generic `AssetDto`.                                                                                                          |
+| 7   | No reverse relation on `assetsRelations` (Phase 1 TDZ lesson). Extension-side relation only.                                                                                                                              |
 
 ## 1. Data Layer
 
@@ -38,24 +38,44 @@ New file `packages/db/src/schema/style-assets.ts`, using the existing `assetsSch
 
 ```ts
 export const styleTypeEnum = assetsSchema.enum('style_type', [
-  'visual', 'video', 'writing', 'audio', 'ui', 'mixed',
+  'visual',
+  'video',
+  'writing',
+  'audio',
+  'ui',
+  'mixed',
 ])
 
-export const styleAssets = assetsSchema.table('style_assets', {
-  id: idColumn(),
-  assetId: uuid('asset_id').notNull().references(() => assets.id, { onDelete: 'cascade' }),
-  styleType: styleTypeEnum('style_type').notNull(),
-  positivePrompt: text('positive_prompt'),
-  negativePrompt: text('negative_prompt'),
-  colorPalette: jsonb('color_palette').$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
-  recommendedModel: varchar('recommended_model', { length: 120 }),
-  recommendedParams: jsonb('recommended_params').$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
-  metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
-  createdAt: createdAtColumn(),
-  updatedAt: updatedAtColumn(),
-}, (table) => ({
-  assetIdUnique: uniqueIndex('style_assets_asset_id_unique').on(table.assetId),
-}))
+export const styleAssets = assetsSchema.table(
+  'style_assets',
+  {
+    id: idColumn(),
+    assetId: uuid('asset_id')
+      .notNull()
+      .references(() => assets.id, { onDelete: 'cascade' }),
+    styleType: styleTypeEnum('style_type').notNull(),
+    positivePrompt: text('positive_prompt'),
+    negativePrompt: text('negative_prompt'),
+    colorPalette: jsonb('color_palette')
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    recommendedModel: varchar('recommended_model', { length: 120 }),
+    recommendedParams: jsonb('recommended_params')
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    metadata: jsonb('metadata')
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
+  },
+  (table) => ({
+    assetIdUnique: uniqueIndex('style_assets_asset_id_unique').on(table.assetId),
+  })
+)
 ```
 
 - 1:1 with `assets.assets`, `uniqueIndex` on `assetId`, `onDelete: cascade`.
@@ -111,12 +131,12 @@ export const UpdateStyleAssetRequestSchema = z.object({
 
 All routes under `/api/assets/styles`, all guarded by `requireUser`. Behavior mirrors text/subject modules exactly (create with compensating delete, owner-scoped read/update/delete, soft-delete, list via generic `?kind=style`).
 
-| Method | Path | Body | Response |
-|---|---|---|---|
-| POST | `/api/assets/styles` | `CreateStyleAssetRequestSchema` | `StyleAssetDetailDto` |
-| GET | `/api/assets/styles/:id` | — | `StyleAssetDetailDto` |
-| PATCH | `/api/assets/styles/:id` | `UpdateStyleAssetRequestSchema` | `StyleAssetDetailDto` |
-| DELETE | `/api/assets/styles/:id` | — | `{ deleted: true }` |
+| Method | Path                     | Body                            | Response              |
+| ------ | ------------------------ | ------------------------------- | --------------------- |
+| POST   | `/api/assets/styles`     | `CreateStyleAssetRequestSchema` | `StyleAssetDetailDto` |
+| GET    | `/api/assets/styles/:id` | —                               | `StyleAssetDetailDto` |
+| PATCH  | `/api/assets/styles/:id` | `UpdateStyleAssetRequestSchema` | `StyleAssetDetailDto` |
+| DELETE | `/api/assets/styles/:id` | —                               | `{ deleted: true }`   |
 
 `toStyleAssetDetailDto(asset, extension)` merges the main row (via `toAssetDto(asset, [])`) with the style extension.
 

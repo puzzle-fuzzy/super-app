@@ -6,12 +6,7 @@ import { Elysia } from 'elysia'
 
 import { authPlugin, requireUser } from '../../plugins/auth'
 import { ok } from '../../shared/response'
-import {
-  createStyleAsset,
-  deleteStyleAsset,
-  getStyleAsset,
-  updateStyleAsset,
-} from './service'
+import { createStyleAsset, deleteStyleAsset, getStyleAsset, updateStyleAsset } from './service'
 
 export const stylesModule = new Elysia({ name: 'styles' })
   .use(authPlugin)

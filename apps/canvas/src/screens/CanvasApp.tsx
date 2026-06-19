@@ -69,10 +69,42 @@ import type { AppNode } from '../types'
 /* -------------------------------------------------------------------------- */
 
 const nodeTypes = {
-  imageNode: (() => { const W = (props: any) => <ErrorBoundary level="node"><MediaNode {...props} /></ErrorBoundary>; W.displayName = 'ImageNode'; return W })(),
-  videoNode: (() => { const W = (props: any) => <ErrorBoundary level="node"><MediaNode {...props} /></ErrorBoundary>; W.displayName = 'VideoNode'; return W })(),
-  docNode: (() => { const W = (props: any) => <ErrorBoundary level="node"><DocNode {...props} /></ErrorBoundary>; W.displayName = 'DocNode'; return W })(),
-  textNode: (() => { const W = (props: any) => <ErrorBoundary level="node"><TextNode {...props} /></ErrorBoundary>; W.displayName = 'TextNode'; return W })(),
+  imageNode: (() => {
+    const W = (props: any) => (
+      <ErrorBoundary level="node">
+        <MediaNode {...props} />
+      </ErrorBoundary>
+    )
+    W.displayName = 'ImageNode'
+    return W
+  })(),
+  videoNode: (() => {
+    const W = (props: any) => (
+      <ErrorBoundary level="node">
+        <MediaNode {...props} />
+      </ErrorBoundary>
+    )
+    W.displayName = 'VideoNode'
+    return W
+  })(),
+  docNode: (() => {
+    const W = (props: any) => (
+      <ErrorBoundary level="node">
+        <DocNode {...props} />
+      </ErrorBoundary>
+    )
+    W.displayName = 'DocNode'
+    return W
+  })(),
+  textNode: (() => {
+    const W = (props: any) => (
+      <ErrorBoundary level="node">
+        <TextNode {...props} />
+      </ErrorBoundary>
+    )
+    W.displayName = 'TextNode'
+    return W
+  })(),
   groupNode: GroupNode,
 }
 
@@ -198,7 +230,9 @@ function ListView({
       setNewTitle('')
       setCreateOpen(false)
       await loadProjects()
-    } catch { /* Silent */ }
+    } catch {
+      /* Silent */
+    }
   }
 
   async function handleRename() {
@@ -209,7 +243,9 @@ function ListView({
       setRenameId(null)
       setRenameTitle('')
       await loadProjects()
-    } catch { /* Silent */ }
+    } catch {
+      /* Silent */
+    }
   }
 
   async function handleDelete(id: string) {
@@ -218,7 +254,9 @@ function ListView({
       setDeleteConfirm(null)
       setMenuOpenId(null)
       await loadProjects()
-    } catch { /* Silent */ }
+    } catch {
+      /* Silent */
+    }
   }
 
   /* ---- Render ---------------------------------------------------------- */
@@ -241,7 +279,12 @@ function ListView({
             >
               <House size={16} aria-hidden="true" />
             </a>
-            <UserMenu user={user} open={userMenuOpen} setOpen={setUserMenuOpen} onLogout={handleLogout} />
+            <UserMenu
+              user={user}
+              open={userMenuOpen}
+              setOpen={setUserMenuOpen}
+              onLogout={handleLogout}
+            />
           </div>
         </header>
 
@@ -342,9 +385,15 @@ function ListView({
                     </>
                   )}
                 </div>
-                <span className="mb-1 text-[11px] font-bold tracking-[0.14em] text-[#666666]">画布项目</span>
-                <h3 className="mt-[42px] mb-2.5 text-2xl font-bold tracking-[-0.02em]">{project.title}</h3>
-                <p className="m-0 mt-auto text-[12px] text-[#666666]">更新于 {formatRelativeTime(project.updatedAt)}</p>
+                <span className="mb-1 text-[11px] font-bold tracking-[0.14em] text-[#666666]">
+                  画布项目
+                </span>
+                <h3 className="mt-[42px] mb-2.5 text-2xl font-bold tracking-[-0.02em]">
+                  {project.title}
+                </h3>
+                <p className="m-0 mt-auto text-[12px] text-[#666666]">
+                  更新于 {formatRelativeTime(project.updatedAt)}
+                </p>
               </div>
             ))}
           </div>
@@ -429,7 +478,9 @@ function ListView({
         <DialogOverlay onClose={() => setDeleteConfirm(null)}>
           <div className="w-full max-w-[400px] rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
             <h3 className="m-0 mb-2 text-lg font-bold tracking-[-0.01em]">确认删除</h3>
-            <p className="m-0 mb-5 text-sm text-[#999999]">此操作不可撤销。确定要删除这个画布项目吗？</p>
+            <p className="m-0 mb-5 text-sm text-[#999999]">
+              此操作不可撤销。确定要删除这个画布项目吗？
+            </p>
             <div className="flex justify-end gap-3">
               <button
                 type="button"
@@ -487,7 +538,9 @@ function EditorRoute({
     }
 
     load()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [id])
 
   if (loading) {
@@ -560,7 +613,9 @@ function EditorViewInner({
           return { x, y, zoom }
         }
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return null
   }, [])
 
@@ -636,37 +691,31 @@ function EditorViewInner({
   }, [actions.handlePaste])
 
   // 选择变化
-  const handleSelectionChange: OnSelectionChangeFunc = useCallback(
-    ({ nodes: sel }) => {
-      const newIds = sel.map((n) => n.id)
-      const currentIds = useCanvasStore.getState().selectedNodeIds
-      if (newIds.length === currentIds.length && newIds.every((id) => currentIds.includes(id))) return
-      useCanvasStore.getState().setSelectedNodeIds(newIds)
-    },
-    [],
-  )
+  const handleSelectionChange: OnSelectionChangeFunc = useCallback(({ nodes: sel }) => {
+    const newIds = sel.map((n) => n.id)
+    const currentIds = useCanvasStore.getState().selectedNodeIds
+    if (newIds.length === currentIds.length && newIds.every((id) => currentIds.includes(id))) return
+    useCanvasStore.getState().setSelectedNodeIds(newIds)
+  }, [])
 
   // 连线（带自动保存）
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      setEdges((eds) => {
-        const next = [
-          ...eds,
-          {
-            ...connection,
-            id: `edge-${Date.now()}`,
-            style: { stroke: '#666', strokeWidth: 1.5 },
-            animated: true,
-          } as Edge,
-        ]
-        // 触发防抖保存
-        if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current)
-        debouncedSaveRef.current = setTimeout(() => doSaveRef.current(), 800)
-        return next
-      })
-    },
-    [],
-  )
+  const onConnect = useCallback((connection: Connection) => {
+    setEdges((eds) => {
+      const next = [
+        ...eds,
+        {
+          ...connection,
+          id: `edge-${Date.now()}`,
+          style: { stroke: '#666', strokeWidth: 1.5 },
+          animated: true,
+        } as Edge,
+      ]
+      // 触发防抖保存
+      if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current)
+      debouncedSaveRef.current = setTimeout(() => doSaveRef.current(), 800)
+      return next
+    })
+  }, [])
 
   // 添加便签节点
   function addTextNode() {
@@ -758,7 +807,11 @@ function EditorViewInner({
               const raw = e.dataTransfer.getData('application/super-asset')
               if (raw) {
                 let asset: AssetDto
-                try { asset = JSON.parse(raw) as AssetDto } catch { return }
+                try {
+                  asset = JSON.parse(raw) as AssetDto
+                } catch {
+                  return
+                }
                 const position = screenToFlowPosition({ x: e.clientX, y: e.clientY })
                 addNodeFromAsset(asset, position)
                 return
@@ -893,7 +946,9 @@ function AssetSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: (
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [kind])
 
   if (collapsed) {
@@ -1011,7 +1066,7 @@ function SidebarKindIcon({ kind }: { kind: AssetKind }) {
               ? UserRound
               : kind === 'style'
                 ? Palette
-              : ImageIcon
+                : ImageIcon
   return <Icon size={20} aria-hidden="true" className="text-[#666666]" />
 }
 
@@ -1054,7 +1109,11 @@ function UserMenu({
         aria-haspopup="true"
       >
         {user.avatarUrl ? (
-          <img className="h-7 w-7 rounded-full object-cover" src={user.avatarUrl} alt={user.name ?? user.email} />
+          <img
+            className="h-7 w-7 rounded-full object-cover"
+            src={user.avatarUrl}
+            alt={user.name ?? user.email}
+          />
         ) : (
           <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2a2a2a] text-[#999999]">
             <UserRound size={14} aria-hidden="true" />
@@ -1063,7 +1122,10 @@ function UserMenu({
         <span className="max-w-[120px] truncate text-[13px] font-medium text-[#e5e5e5]">
           {user.name ?? user.email}
         </span>
-        <ChevronDown size={14} className={`text-[#666666] transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          size={14}
+          className={`text-[#666666] transition-transform ${open ? 'rotate-180' : ''}`}
+        />
       </button>
       <div
         className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
@@ -1111,8 +1173,12 @@ function ScreenState({ title, description }: { title: string; description: strin
   return (
     <main className="grid min-h-screen place-items-center bg-[#141414] p-6">
       <div className="w-full max-w-[560px] rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
-        <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">SUPER CANVAS</p>
-        <h1 className="m-0 mb-3 text-[34px] font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]">{title}</h1>
+        <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
+          SUPER CANVAS
+        </p>
+        <h1 className="m-0 mb-3 text-[34px] font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]">
+          {title}
+        </h1>
         <p className="m-0 text-[#999999]">{description}</p>
       </div>
     </main>

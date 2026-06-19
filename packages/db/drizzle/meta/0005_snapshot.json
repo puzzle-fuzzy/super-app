@@ -128,12 +128,8 @@
           "tableFrom": "asset_files",
           "tableTo": "assets",
           "schemaTo": "assets",
-          "columnsFrom": [
-            "asset_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["asset_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -246,12 +242,8 @@
           "tableFrom": "asset_share_links",
           "tableTo": "assets",
           "schemaTo": "assets",
-          "columnsFrom": [
-            "asset_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["asset_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -260,12 +252,8 @@
           "tableFrom": "asset_share_links",
           "tableTo": "users",
           "schemaTo": "identity",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -351,12 +339,8 @@
           "tableFrom": "asset_tags",
           "tableTo": "assets",
           "schemaTo": "assets",
-          "columnsFrom": [
-            "asset_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["asset_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -544,12 +528,8 @@
           "tableFrom": "assets",
           "tableTo": "users",
           "schemaTo": "identity",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -558,12 +538,8 @@
           "tableFrom": "assets",
           "tableTo": "assets",
           "schemaTo": "assets",
-          "columnsFrom": [
-            "cover_asset_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cover_asset_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -643,12 +619,8 @@
           "tableFrom": "canvas_documents",
           "tableTo": "canvas_projects",
           "schemaTo": "canvas",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -761,12 +733,8 @@
           "tableFrom": "canvas_projects",
           "tableTo": "users",
           "schemaTo": "identity",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -775,12 +743,8 @@
           "tableFrom": "canvas_projects",
           "tableTo": "assets",
           "schemaTo": "assets",
-          "columnsFrom": [
-            "cover_asset_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["cover_asset_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -858,12 +822,8 @@
           "tableFrom": "canvas_versions",
           "tableTo": "canvas_projects",
           "schemaTo": "canvas",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -872,12 +832,8 @@
           "tableFrom": "canvas_versions",
           "tableTo": "users",
           "schemaTo": "identity",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -997,12 +953,8 @@
           "tableFrom": "sessions",
           "tableTo": "users",
           "schemaTo": "identity",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1196,12 +1148,8 @@
           "tableFrom": "subject_assets",
           "tableTo": "assets",
           "schemaTo": "assets",
-          "columnsFrom": [
-            "asset_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["asset_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1293,12 +1241,8 @@
           "tableFrom": "text_assets",
           "tableTo": "assets",
           "schemaTo": "assets",
-          "columnsFrom": [
-            "asset_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["asset_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1444,12 +1388,8 @@
           "tableFrom": "transfer_rooms",
           "tableTo": "assets",
           "schemaTo": "assets",
-          "columnsFrom": [
-            "asset_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["asset_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1458,12 +1398,8 @@
           "tableFrom": "transfer_rooms",
           "tableTo": "users",
           "schemaTo": "identity",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1473,9 +1409,7 @@
         "transfer_rooms_room_id_unique": {
           "name": "transfer_rooms_room_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "room_id"
-          ]
+          "columns": ["room_id"]
         }
       },
       "policies": {},
@@ -1487,112 +1421,52 @@
     "assets.asset_file_role": {
       "name": "asset_file_role",
       "schema": "assets",
-      "values": [
-        "original",
-        "thumbnail",
-        "preview",
-        "cover",
-        "subtitle",
-        "waveform",
-        "attachment"
-      ]
+      "values": ["original", "thumbnail", "preview", "cover", "subtitle", "waveform", "attachment"]
     },
     "assets.asset_kind": {
       "name": "asset_kind",
       "schema": "assets",
-      "values": [
-        "subject",
-        "image",
-        "video",
-        "audio",
-        "text",
-        "file",
-        "style",
-        "template"
-      ]
+      "values": ["subject", "image", "video", "audio", "text", "file", "style", "template"]
     },
     "assets.asset_source": {
       "name": "asset_source",
       "schema": "assets",
-      "values": [
-        "upload",
-        "ai_generation",
-        "canvas_export",
-        "transfer",
-        "manual",
-        "import"
-      ]
+      "values": ["upload", "ai_generation", "canvas_export", "transfer", "manual", "import"]
     },
     "assets.asset_status": {
       "name": "asset_status",
       "schema": "assets",
-      "values": [
-        "active",
-        "archived",
-        "deleted"
-      ]
+      "values": ["active", "archived", "deleted"]
     },
     "assets.asset_visibility": {
       "name": "asset_visibility",
       "schema": "assets",
-      "values": [
-        "private",
-        "shared",
-        "public"
-      ]
+      "values": ["private", "shared", "public"]
     },
     "canvas.canvas_project_status": {
       "name": "canvas_project_status",
       "schema": "canvas",
-      "values": [
-        "active",
-        "archived"
-      ]
+      "values": ["active", "archived"]
     },
     "identity.user_status": {
       "name": "user_status",
       "schema": "identity",
-      "values": [
-        "active",
-        "disabled",
-        "deleted"
-      ]
+      "values": ["active", "disabled", "deleted"]
     },
     "assets.consistency_level": {
       "name": "consistency_level",
       "schema": "assets",
-      "values": [
-        "low",
-        "medium",
-        "high"
-      ]
+      "values": ["low", "medium", "high"]
     },
     "assets.subject_type": {
       "name": "subject_type",
       "schema": "assets",
-      "values": [
-        "person",
-        "character",
-        "product",
-        "pet",
-        "object",
-        "scene",
-        "other"
-      ]
+      "values": ["person", "character", "product", "pet", "object", "scene", "other"]
     },
     "assets.text_type": {
       "name": "text_type",
       "schema": "assets",
-      "values": [
-        "prompt",
-        "novel",
-        "script",
-        "subtitle",
-        "note",
-        "dialogue",
-        "setting",
-        "other"
-      ]
+      "values": ["prompt", "novel", "script", "subtitle", "note", "dialogue", "setting", "other"]
     }
   },
   "schemas": {

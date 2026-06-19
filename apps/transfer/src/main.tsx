@@ -171,7 +171,10 @@ function TransferApp() {
           sendSocket({
             type: 'webrtc-signal',
             to: message.from,
-            payload: { transferId: payload.transferId, signal: { type: 'ice-candidate', candidate: event.candidate } },
+            payload: {
+              transferId: payload.transferId,
+              signal: { type: 'ice-candidate', candidate: event.candidate },
+            },
           })
         }
       }
@@ -181,7 +184,9 @@ function TransferApp() {
           if (typeof channelEvent.data === 'string') {
             const done = JSON.parse(channelEvent.data) as { type: string }
             if (done.type === 'done') {
-              const blob = new Blob(chunksRef.current, { type: currentOffer.fileType || 'application/octet-stream' })
+              const blob = new Blob(chunksRef.current, {
+                type: currentOffer.fileType || 'application/octet-stream',
+              })
               const url = URL.createObjectURL(blob)
               setCompleted({ fileName: currentOffer.fileName, url, size: blob.size })
               setProgress(100)
@@ -204,7 +209,10 @@ function TransferApp() {
       sendSocket({
         type: 'webrtc-signal',
         to: message.from,
-        payload: { transferId: payload.transferId, signal: { type: 'answer', sdp: connection.localDescription } },
+        payload: {
+          transferId: payload.transferId,
+          signal: { type: 'answer', sdp: connection.localDescription },
+        },
       })
       return
     }
@@ -360,7 +368,9 @@ function TransferApp() {
 /* -------------------------------------------------------------------------- */
 
 function wsUrlForRoom(roomId: string) {
-  const base = apiBaseUrl().replace(/^http:/, 'ws:').replace(/^https:/, 'wss:')
+  const base = apiBaseUrl()
+    .replace(/^http:/, 'ws:')
+    .replace(/^https:/, 'wss:')
   return `${base}/transfers/${encodeURIComponent(roomId)}/ws`
 }
 

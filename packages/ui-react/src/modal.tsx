@@ -62,7 +62,10 @@ function ModalHeader({ kicker, title }: { kicker?: string; title?: string }) {
     <div style={{ padding: '24px 24px 20px 24px' }} className="shrink-0">
       {kicker && <p className="m-0 text-xs font-bold text-[#666666]">{kicker}</p>}
       {title && (
-        <h2 style={{ marginTop: 10 }} className="text-2xl font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]">
+        <h2
+          style={{ marginTop: 10 }}
+          className="text-2xl font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]"
+        >
           {title}
         </h2>
       )}

@@ -84,9 +84,7 @@ describe('api-keys module', () => {
   })
 
   it('rejects empty name with 400', async () => {
-    const res = await app.handle(
-      jsonRequest('/api/api-keys/', primary.cookie, { name: '' })
-    )
+    const res = await app.handle(jsonRequest('/api/api-keys/', primary.cookie, { name: '' }))
     expect(res.status).toBe(400)
   })
 })

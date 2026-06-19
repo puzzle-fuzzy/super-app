@@ -37,14 +37,40 @@ export default function MediaNode({ data, type, id }: MediaNodeProps) {
           height: 200,
         }}
       >
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px', minWidth: 0 }}>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            padding: '0 16px',
+            minWidth: 0,
+          }}
+        >
           <span style={{ display: 'flex', alignItems: 'center', color: '#999999' }}>
             {isVideo ? <Film size={20} /> : <ImageIcon size={20} />}
           </span>
-          <span style={{ fontSize: 13, fontWeight: 500, color: '#e5e5e5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: '#e5e5e5',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
             {data.uploading.fileName}
           </span>
-          <div style={{ width: '100%', height: 6, background: '#374151', borderRadius: 3, overflow: 'hidden' }}>
+          <div
+            style={{
+              width: '100%',
+              height: 6,
+              background: '#374151',
+              borderRadius: 3,
+              overflow: 'hidden',
+            }}
+          >
             <div
               style={{
                 height: '100%',
@@ -64,12 +90,39 @@ export default function MediaNode({ data, type, id }: MediaNodeProps) {
 
   // 正常渲染
   return (
-    <div className="media-node" style={{ width: 320, position: 'relative', display: 'flex', flexDirection: 'column', borderRadius: 12, overflow: 'visible', background: '#1c1c1c', border: '1px solid #3a3a3a', boxShadow: '0 2px 8px rgba(0,0,0,0.25)' }}>
-      <Handle type="target" position={Position.Left} style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }} />
-      <Handle type="source" position={Position.Right} style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }} />
+    <div
+      className="media-node"
+      style={{
+        width: 320,
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: 12,
+        overflow: 'visible',
+        background: '#1c1c1c',
+        border: '1px solid #3a3a3a',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+      }}
+    >
+      <Handle
+        type="target"
+        position={Position.Left}
+        style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }}
+      />
       {isVideo ? (
         <div
-          style={{ width: '100%', background: '#000', borderRadius: 11, overflow: 'hidden', lineHeight: 0 }}
+          style={{
+            width: '100%',
+            background: '#000',
+            borderRadius: 11,
+            overflow: 'hidden',
+            lineHeight: 0,
+          }}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
@@ -85,7 +138,15 @@ export default function MediaNode({ data, type, id }: MediaNodeProps) {
           />
         </div>
       ) : !imageError ? (
-        <div style={{ width: '100%', overflow: 'hidden', borderRadius: 11, lineHeight: 0, background: '#242424' }}>
+        <div
+          style={{
+            width: '100%',
+            overflow: 'hidden',
+            borderRadius: 11,
+            lineHeight: 0,
+            background: '#242424',
+          }}
+        >
           <img
             style={{ width: '100%', height: 'auto', display: 'block' }}
             src={data.src}
@@ -95,7 +156,18 @@ export default function MediaNode({ data, type, id }: MediaNodeProps) {
           />
         </div>
       ) : (
-        <div style={{ width: '100%', height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#242424', borderRadius: 12, color: '#999999' }}>
+        <div
+          style={{
+            width: '100%',
+            height: 160,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#242424',
+            borderRadius: 12,
+            color: '#999999',
+          }}
+        >
           <ImageIcon size={32} />
         </div>
       )}

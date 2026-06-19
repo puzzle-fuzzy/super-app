@@ -48,12 +48,14 @@ export default function ModeToolbar({ userName }: ModeToolbarProps) {
         title="拖拽模式"
         onMouseEnter={(e) => {
           if (interactionMode !== 'pan') {
-            e.currentTarget.style.background = '#242424'; e.currentTarget.style.color = '#e5e5e5'
+            e.currentTarget.style.background = '#242424'
+            e.currentTarget.style.color = '#e5e5e5'
           }
         }}
         onMouseLeave={(e) => {
           if (interactionMode !== 'pan') {
-            e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#999999'
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = '#999999'
           }
         }}
       >
@@ -67,12 +69,14 @@ export default function ModeToolbar({ userName }: ModeToolbarProps) {
         title="选择模式"
         onMouseEnter={(e) => {
           if (interactionMode !== 'select') {
-            e.currentTarget.style.background = '#242424'; e.currentTarget.style.color = '#e5e5e5'
+            e.currentTarget.style.background = '#242424'
+            e.currentTarget.style.color = '#e5e5e5'
           }
         }}
         onMouseLeave={(e) => {
           if (interactionMode !== 'select') {
-            e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#999999'
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = '#999999'
           }
         }}
       >

@@ -10,13 +10,13 @@ Make the canvas editor usable as a composition surface for assets: open a collap
 
 ## Decisions (locked)
 
-| # | Decision |
-|---|----------|
-| 1 | All 7 asset kinds are draggable into the canvas (image, video, audio, file, text, subject, style). |
-| 2 | The sidebar lists the current user's own assets only, via `assetsApi.list` (reused as-is). |
-| 3 | Dragging creates a custom React Flow node storing `{ assetId, kind, title, thumbnailUrl? }`. Nodes persist in the project's `data.nodes` via the existing save — **no new table, no asset_relations**. |
-| 4 | HTML5 drag/drop (draggable sidebar items + `dataTransfer` + `onDrop` with `screenToFlowPosition`). |
-| 5 | Zero backend changes. |
+| #   | Decision                                                                                                                                                                                               |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | All 7 asset kinds are draggable into the canvas (image, video, audio, file, text, subject, style).                                                                                                     |
+| 2   | The sidebar lists the current user's own assets only, via `assetsApi.list` (reused as-is).                                                                                                             |
+| 3   | Dragging creates a custom React Flow node storing `{ assetId, kind, title, thumbnailUrl? }`. Nodes persist in the project's `data.nodes` via the existing save — **no new table, no asset_relations**. |
+| 4   | HTML5 drag/drop (draggable sidebar items + `dataTransfer` + `onDrop` with `screenToFlowPosition`).                                                                                                     |
+| 5   | Zero backend changes.                                                                                                                                                                                  |
 
 ## Non-Goals
 
@@ -53,7 +53,7 @@ Register `nodeTypes` mapping for kind-specific rendering. To keep the React Flow
   - `image`: `<img src={thumbnailUrl ?? files[0].url}>` (the thumbnail generated in Phase 0 enhancements).
   - `video`/`audio`: an icon (Video/Music) + title.
   - `file`: a file icon + title.
-  - `text`: title + a content-snippet (no separate fetch; the list DTO doesn't carry content — show title only to stay simple). *(Refinement: text list items only carry title; show title + 「文本」 label.)*
+  - `text`: title + a content-snippet (no separate fetch; the list DTO doesn't carry content — show title only to stay simple). _(Refinement: text list items only carry title; show title + 「文本」 label.)_
   - `subject`/`style`: title + kind label.
   - Common chrome: rounded card, title under the media, consistent with the existing note-node styling (`#1c1c1c` bg, `#3a3a3a` border).
 - **`default`** — the existing editable note node (unchanged).
@@ -63,6 +63,7 @@ Each asset node's `data` stores `{ assetId, kind, title, thumbnailUrl?, fileUrl?
 ## 3. Sidebar
 
 `AssetSidebar` component (rendered inside `EditorView`, to the left of `<ReactFlow>`):
+
 - Header: 「资产」 title + a collapse toggle (chevron). Collapsed state narrows the panel to an icon rail; expanded ~280px.
 - Kind filter row: chips for 全部/图片/视频/音频/文件/文本/主体/风格 (reuse the assets-app filter vocabulary).
 - Scrollable list of asset cards: thumbnail (image) or kind icon, title, kind label. Each card `draggable`, `onDragStart` sets `dataTransfer` with the asset payload + a marker `application/super-asset`.
@@ -82,6 +83,7 @@ Each asset node's `data` stores `{ assetId, kind, title, thumbnailUrl?, fileUrl?
 ## 5. Dependencies
 
 Add to `apps/canvas/package.json`:
+
 - `@super-app/api-client` (for `assetsApi`) — already present.
 - `@super-app/contracts` (for `AssetDto`/`AssetKind` types) — add.
 

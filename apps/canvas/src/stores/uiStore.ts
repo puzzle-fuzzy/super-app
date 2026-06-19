@@ -67,7 +67,11 @@ export const useUIStore = create<UIState>((set, get) => ({
   },
 
   openGroupNameModal: (mode, target) => {
-    set({ showGroupNameModal: true, groupNameModalMode: mode, groupNameModalTarget: target ?? null })
+    set({
+      showGroupNameModal: true,
+      groupNameModalMode: mode,
+      groupNameModalTarget: target ?? null,
+    })
   },
 
   closeGroupNameModal: () => {

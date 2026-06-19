@@ -40,8 +40,12 @@ export function selectionWaterfallLayout(nodes: AppNode[]): Map<string, { x: num
 
   // 按高度降序排列
   const sorted = [...nodes].sort((a, b) => {
-    const ha = (a.measured?.height ?? 200) + (a.type === 'groupNode' ? (a.data as { height: number }).height : 0)
-    const hb = (b.measured?.height ?? 200) + (b.type === 'groupNode' ? (b.data as { height: number }).height : 0)
+    const ha =
+      (a.measured?.height ?? 200) +
+      (a.type === 'groupNode' ? (a.data as { height: number }).height : 0)
+    const hb =
+      (b.measured?.height ?? 200) +
+      (b.type === 'groupNode' ? (b.data as { height: number }).height : 0)
     return hb - ha
   })
 
@@ -61,9 +65,12 @@ export function selectionWaterfallLayout(nodes: AppNode[]): Map<string, { x: num
 /** 计算一组节点的包围盒 */
 export function computeGroupBounds(
   nodes: AppNode[],
-  padding: number = GROUP_PADDING,
+  padding: number = GROUP_PADDING
 ): { x: number; y: number; width: number; height: number } {
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity
 
   for (const n of nodes) {
     const w = n.measured?.width ?? NODE_WIDTH

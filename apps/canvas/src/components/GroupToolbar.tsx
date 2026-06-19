@@ -47,8 +47,14 @@ export default function GroupToolbar({ position }: GroupToolbarProps) {
         style={btnStyle}
         onClick={() => handleOrganizeGroup(position.groupId)}
         title="整理小组成员"
-        onMouseEnter={(e) => { e.currentTarget.style.background = '#242424'; e.currentTarget.style.color = '#e5e5e5' }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#999999' }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#242424'
+          e.currentTarget.style.color = '#e5e5e5'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = '#999999'
+        }}
       >
         <LayoutGrid size={18} />
       </button>
@@ -58,8 +64,14 @@ export default function GroupToolbar({ position }: GroupToolbarProps) {
         style={btnStyle}
         onClick={() => openGroupNameModal('rename', position.groupId)}
         title="重命名"
-        onMouseEnter={(e) => { e.currentTarget.style.background = '#242424'; e.currentTarget.style.color = '#e5e5e5' }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#999999' }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#242424'
+          e.currentTarget.style.color = '#e5e5e5'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = '#999999'
+        }}
       >
         <Pencil size={18} />
       </button>
@@ -69,8 +81,14 @@ export default function GroupToolbar({ position }: GroupToolbarProps) {
         style={btnStyle}
         onClick={() => handleUngroup(position.groupId)}
         title="解散小组"
-        onMouseEnter={(e) => { e.currentTarget.style.background = '#450a0a'; e.currentTarget.style.color = '#f87171' }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#999999' }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#450a0a'
+          e.currentTarget.style.color = '#f87171'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = '#999999'
+        }}
       >
         <Ungroup size={18} />
       </button>

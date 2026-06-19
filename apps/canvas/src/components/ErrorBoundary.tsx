@@ -23,7 +23,15 @@ export default class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.level === 'app') {
         return (
-          <div style={{ display: 'grid', placeItems: 'center', height: '100vh', background: '#141414', color: '#e5e5e5' }}>
+          <div
+            style={{
+              display: 'grid',
+              placeItems: 'center',
+              height: '100vh',
+              background: '#141414',
+              color: '#e5e5e5',
+            }}
+          >
             <div style={{ textAlign: 'center' }}>
               <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>抱歉，发生了意外错误</p>
               <button

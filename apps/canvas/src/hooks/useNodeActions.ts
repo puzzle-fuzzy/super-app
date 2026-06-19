@@ -110,7 +110,12 @@ export function useNodeActions() {
             id: nodeId,
             type: 'docNode',
             position: layout.next(80),
-            data: { src: '', fileName: file.name, fileSize: file.size, uploading: { progress: 0, fileName: file.name } },
+            data: {
+              src: '',
+              fileName: file.name,
+              fileSize: file.size,
+              uploading: { progress: 0, fileName: file.name },
+            },
           } as DocNodeType
         }
 
@@ -126,16 +131,22 @@ export function useNodeActions() {
             nds.map((n) => {
               if (n.id !== nodeId) return n
               if (isImage) {
-                return { ...n, data: { src: fileUrl, fileName: file.name, assetId: asset.id } } as ImageNodeType
+                return {
+                  ...n,
+                  data: { src: fileUrl, fileName: file.name, assetId: asset.id },
+                } as ImageNodeType
               }
               if (isVideo) {
-                return { ...n, data: { src: fileUrl, fileName: file.name, assetId: asset.id } } as VideoNodeType
+                return {
+                  ...n,
+                  data: { src: fileUrl, fileName: file.name, assetId: asset.id },
+                } as VideoNodeType
               }
               return {
                 ...n,
                 data: { src: fileUrl, fileName: file.name, fileSize: file.size, assetId: asset.id },
               } as DocNodeType
-            }),
+            })
           )
         } catch {
           // 上传失败，移除占位节点
@@ -143,56 +154,61 @@ export function useNodeActions() {
         }
       }
     },
-    [screenToFlowPosition, mousePosition],
+    [screenToFlowPosition, mousePosition]
   )
 
   // ---- 从侧边栏拖入资产 ----
 
-  const addNodeFromAsset = useCallback(
-    (asset: AssetDto, position: { x: number; y: number }) => {
-      const store = useCanvasStore.getState()
-      const fileUrl = asset.files?.[0]?.url ?? asset.thumbnailUrl ?? ''
-      const kind = asset.kind
-      const nodeId = `asset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  const addNodeFromAsset = useCallback((asset: AssetDto, position: { x: number; y: number }) => {
+    const store = useCanvasStore.getState()
+    const fileUrl = asset.files?.[0]?.url ?? asset.thumbnailUrl ?? ''
+    const kind = asset.kind
+    const nodeId = `asset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
-      let node: AppNode
+    let node: AppNode
 
-      if (kind === 'image') {
-        node = {
-          id: nodeId,
-          type: 'imageNode',
-          position,
-          data: { src: fileUrl, fileName: asset.title, assetId: asset.id },
-        } as ImageNodeType
-      } else if (kind === 'video') {
-        node = {
-          id: nodeId,
-          type: 'videoNode',
-          position,
-          data: { src: fileUrl, fileName: asset.title, assetId: asset.id },
-        } as VideoNodeType
-      } else if (kind === 'text') {
-        const content = typeof asset.metadata?.content === 'string' ? asset.metadata.content : asset.description ?? asset.title
-        node = {
-          id: nodeId,
-          type: 'textNode',
-          position,
-          data: { description: content },
-        } as TextNodeType
-      } else {
-        // audio, file, subject, style, template → docNode
-        node = {
-          id: nodeId,
-          type: 'docNode',
-          position,
-          data: { src: fileUrl, fileName: asset.title, fileSize: asset.files?.[0]?.size ?? 0, assetId: asset.id },
-        } as DocNodeType
-      }
+    if (kind === 'image') {
+      node = {
+        id: nodeId,
+        type: 'imageNode',
+        position,
+        data: { src: fileUrl, fileName: asset.title, assetId: asset.id },
+      } as ImageNodeType
+    } else if (kind === 'video') {
+      node = {
+        id: nodeId,
+        type: 'videoNode',
+        position,
+        data: { src: fileUrl, fileName: asset.title, assetId: asset.id },
+      } as VideoNodeType
+    } else if (kind === 'text') {
+      const content =
+        typeof asset.metadata?.content === 'string'
+          ? asset.metadata.content
+          : (asset.description ?? asset.title)
+      node = {
+        id: nodeId,
+        type: 'textNode',
+        position,
+        data: { description: content },
+      } as TextNodeType
+    } else {
+      // audio, file, subject, style, template → docNode
+      node = {
+        id: nodeId,
+        type: 'docNode',
+        position,
+        data: {
+          src: fileUrl,
+          fileName: asset.title,
+          fileSize: asset.files?.[0]?.size ?? 0,
+          assetId: asset.id,
+        },
+      } as DocNodeType
+    }
 
-      store.setNodes((nds) => [...nds, node])
-    },
-    [],
-  )
+    store.setNodes((nds) => [...nds, node])
+  }, [])
 
   // ---- 从 URL 添加 ----
 
@@ -212,7 +228,7 @@ export function useNodeActions() {
 
       store.setNodes((nds) => [...nds, node])
     },
-    [screenToFlowPosition, mousePosition],
+    [screenToFlowPosition, mousePosition]
   )
 
   // ---- 从文本添加 ----
@@ -232,7 +248,7 @@ export function useNodeActions() {
 
       store.setNodes((nds) => [...nds, node])
     },
-    [screenToFlowPosition, mousePosition],
+    [screenToFlowPosition, mousePosition]
   )
 
   return { addNodeFromFiles, addNodeFromAsset, addNodeFromUrl, addNodeFromText }

@@ -61,6 +61,7 @@ packages/
 ### API module structure
 
 Each module in `services/api/src/modules/<name>/` has:
+
 - `index.ts` — Elysia routes
 - `service.ts` — business logic functions called by routes
 - `<name>.test.ts` — integration tests
@@ -88,21 +89,22 @@ The architecture explicitly forbids: Ant Design, shadcn/ui, Material UI, Element
 
 Dark theme with these hardcoded color values (do NOT use design-token CSS variables in component code — use literal hex values):
 
-| Role | Value |
-|------|-------|
-| Page background | `#141414` |
-| Card/panel background | `#1c1c1c` |
+| Role                     | Value     |
+| ------------------------ | --------- |
+| Page background          | `#141414` |
+| Card/panel background    | `#1c1c1c` |
 | Input/control background | `#242424` |
-| Border default | `#2a2a2a` |
-| Border hover/focus | `#3a3a3a` |
-| Text primary | `#e5e5e5` |
-| Text muted | `#999999` |
-| Text subtle | `#666666` |
-| Dropdown background | `#1d1d1d` |
+| Border default           | `#2a2a2a` |
+| Border hover/focus       | `#3a3a3a` |
+| Text primary             | `#e5e5e5` |
+| Text muted               | `#999999` |
+| Text subtle              | `#666666` |
+| Dropdown background      | `#1d1d1d` |
 
 ### Layout pattern
 
 Every app page uses this centered container:
+
 ```
 <main className="min-h-screen bg-[#141414] text-[#e5e5e5]">
   <section className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16
@@ -131,6 +133,7 @@ Each app's `styles.css` should be minimal: Tailwind imports, `@source` for ui-re
 ## Environment Variables
 
 All env vars live in repo root `.env` (not in individual apps). Frontend-exposed vars use `SUPER_PUBLIC_` prefix. Access via:
+
 - Frontend: `clientEnv.SUPER_PUBLIC_*` from `@super-app/env/client`
 - Backend: `serverEnv.*` from `@super-app/env/server`
 - Never use `process.env` or `import.meta.env` directly

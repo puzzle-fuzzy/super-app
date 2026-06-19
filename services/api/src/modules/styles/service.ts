@@ -111,8 +111,10 @@ export async function updateStyleAsset({
   if (input.positivePrompt !== undefined) extensionFields.positivePrompt = input.positivePrompt
   if (input.negativePrompt !== undefined) extensionFields.negativePrompt = input.negativePrompt
   if (input.colorPalette !== undefined) extensionFields.colorPalette = input.colorPalette
-  if (input.recommendedModel !== undefined) extensionFields.recommendedModel = input.recommendedModel
-  if (input.recommendedParams !== undefined) extensionFields.recommendedParams = input.recommendedParams
+  if (input.recommendedModel !== undefined)
+    extensionFields.recommendedModel = input.recommendedModel
+  if (input.recommendedParams !== undefined)
+    extensionFields.recommendedParams = input.recommendedParams
 
   if (Object.keys(extensionFields).length > 0) {
     extensionFields.updatedAt = new Date()

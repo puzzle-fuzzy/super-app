@@ -29,7 +29,7 @@ export default function FullscreenPreview() {
     function trapFocus(e: KeyboardEvent) {
       if (e.key !== 'Tab') return
       const focusable = el!.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       )
       const first = focusable[0]
       const last = focusable[focusable.length - 1]
@@ -109,6 +109,6 @@ export default function FullscreenPreview() {
         />
       )}
     </div>,
-    document.body,
+    document.body
   )
 }

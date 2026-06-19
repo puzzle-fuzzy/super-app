@@ -10,10 +10,9 @@ export default function TextNode({ data }: TextNodeProps) {
   const setTextPreview = useUIStore((s) => s.setTextPreview)
 
   // 检查内容是否溢出
-  const overflowing =
-    contentRef.current
-      ? contentRef.current.scrollHeight > contentRef.current.clientHeight
-      : false
+  const overflowing = contentRef.current
+    ? contentRef.current.scrollHeight > contentRef.current.clientHeight
+    : false
 
   return (
     <button
@@ -36,8 +35,16 @@ export default function TextNode({ data }: TextNodeProps) {
       }}
       className="text-node-btn"
     >
-      <Handle type="target" position={Position.Left} style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }} />
-      <Handle type="source" position={Position.Right} style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }} />
+      <Handle
+        type="target"
+        position={Position.Left}
+        style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }}
+      />
       <div
         ref={contentRef}
         style={{

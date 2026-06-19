@@ -27,7 +27,8 @@ export function useCanvasActions() {
     (e: ClipboardEvent) => {
       // 忽略在输入框中的粘贴
       const tag = (e.target as HTMLElement)?.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable)
+        return
 
       const items = e.clipboardData?.items
       if (!items) return
@@ -68,7 +69,7 @@ export function useCanvasActions() {
 
       addNodeFromText(text)
     },
-    [screenToFlowPosition, addNodeFromFiles, addNodeFromUrl, addNodeFromText],
+    [screenToFlowPosition, addNodeFromFiles, addNodeFromUrl, addNodeFromText]
   )
 
   // ---- 拖拽进入画布 ----
@@ -88,7 +89,7 @@ export function useCanvasActions() {
         addNodeFromFiles(Array.from(files), pos)
       }
     },
-    [screenToFlowPosition, addNodeFromFiles],
+    [screenToFlowPosition, addNodeFromFiles]
   )
 
   // ---- 视口变化保存 ----
@@ -103,113 +104,103 @@ export function useCanvasActions() {
   const dragStartPositions = useRef<Map<string, { x: number; y: number }>>(new Map())
   const dragRemovedFromGroup = useRef<Set<string>>(new Set())
 
-  const handleNodeDragStart = useCallback(
-    (_e: MouseEvent | TouchEvent, node: AppNode) => {
-      const store = useCanvasStore.getState()
-      const startPos = new Map<string, { x: number; y: number }>()
+  const handleNodeDragStart = useCallback((_e: MouseEvent | TouchEvent, node: AppNode) => {
+    const store = useCanvasStore.getState()
+    const startPos = new Map<string, { x: number; y: number }>()
 
-      if (node.type === 'groupNode') {
-        // 缓存小组及其所有成员的位置
-        for (const n of store.nodes) {
-          if (n.id === node.id || getNodeGroupId(n) === node.id) {
-            startPos.set(n.id, { x: n.position.x, y: n.position.y })
-          }
+    if (node.type === 'groupNode') {
+      // 缓存小组及其所有成员的位置
+      for (const n of store.nodes) {
+        if (n.id === node.id || getNodeGroupId(n) === node.id) {
+          startPos.set(n.id, { x: n.position.x, y: n.position.y })
         }
-      } else {
-        startPos.set(node.id, { x: node.position.x, y: node.position.y })
       }
+    } else {
+      startPos.set(node.id, { x: node.position.x, y: node.position.y })
+    }
 
-      dragStartPositions.current = startPos
-      dragRemovedFromGroup.current = new Set()
-    },
-    [],
-  )
+    dragStartPositions.current = startPos
+    dragRemovedFromGroup.current = new Set()
+  }, [])
 
-  const handleNodeDrag = useCallback(
-    (_e: MouseEvent | TouchEvent, node: AppNode) => {
-      const store = useCanvasStore.getState()
-      const startPos = dragStartPositions.current
+  const handleNodeDrag = useCallback((_e: MouseEvent | TouchEvent, node: AppNode) => {
+    const store = useCanvasStore.getState()
+    const startPos = dragStartPositions.current
 
-      if (node.type === 'groupNode') {
-        // 移动小组 → 同时移动所有成员
-        const start = startPos.get(node.id)
-        if (!start) return
-        const dx = node.position.x - start.x
-        const dy = node.position.y - start.y
+    if (node.type === 'groupNode') {
+      // 移动小组 → 同时移动所有成员
+      const start = startPos.get(node.id)
+      if (!start) return
+      const dx = node.position.x - start.x
+      const dy = node.position.y - start.y
 
-        store.setNodes((nds) =>
-          nds.map((n) => {
-            if (getNodeGroupId(n) === node.id) {
-              const memberStart = startPos.get(n.id)
-              if (memberStart) {
-                return { ...n, position: { x: memberStart.x + dx, y: memberStart.y + dy } }
-              }
+      store.setNodes((nds) =>
+        nds.map((n) => {
+          if (getNodeGroupId(n) === node.id) {
+            const memberStart = startPos.get(n.id)
+            if (memberStart) {
+              return { ...n, position: { x: memberStart.x + dx, y: memberStart.y + dy } }
             }
-            return n
-          }),
-        )
-      } else {
-        // 移动成员 → 检查是否脱离小组
-        const data = getNodeGroupId(node)
-        if (data && !dragRemovedFromGroup.current.has(node.id)) {
-          const group = store.nodes.find((n) => n.id === data && n.type === 'groupNode') as
-            | GroupNodeType
-            | undefined
-          if (group) {
-            const gData = group.data as GroupNodeType['data']
-            const cx = node.position.x + (node.measured?.width ?? 320) / 2
-            const cy = node.position.y + (node.measured?.height ?? 200) / 2
+          }
+          return n
+        })
+      )
+    } else {
+      // 移动成员 → 检查是否脱离小组
+      const data = getNodeGroupId(node)
+      if (data && !dragRemovedFromGroup.current.has(node.id)) {
+        const group = store.nodes.find((n) => n.id === data && n.type === 'groupNode') as
+          | GroupNodeType
+          | undefined
+        if (group) {
+          const gData = group.data as GroupNodeType['data']
+          const cx = node.position.x + (node.measured?.width ?? 320) / 2
+          const cy = node.position.y + (node.measured?.height ?? 200) / 2
 
-            if (
-              cx < group.position.x ||
-              cx > group.position.x + gData.width ||
-              cy < group.position.y ||
-              cy > group.position.y + gData.height
-            ) {
-              // 脱离小组
-              dragRemovedFromGroup.current.add(node.id)
-              store.setNodes((nds) => {
-                const updated = nds.map((n) =>
-                  n.id === node.id
-                    ? setNodeGroupId(n, undefined)
-                    : n,
+          if (
+            cx < group.position.x ||
+            cx > group.position.x + gData.width ||
+            cy < group.position.y ||
+            cy > group.position.y + gData.height
+          ) {
+            // 脱离小组
+            dragRemovedFromGroup.current.add(node.id)
+            store.setNodes((nds) => {
+              const updated = nds.map((n) =>
+                n.id === node.id ? setNodeGroupId(n, undefined) : n
+              ) as AppNode[]
+              // 重新计算小组边界
+              const members = updated.filter(
+                (n) => n.id !== node.id && n.type !== 'groupNode' && getNodeGroupId(n) === data
+              )
+              if (members.length > 0) {
+                const bounds = computeGroupBounds(members)
+                return updated.map((n) =>
+                  n.id === data
+                    ? ({
+                        ...n,
+                        position: { x: bounds.x, y: bounds.y },
+                        data: {
+                          ...n.data,
+                          width: Math.max(bounds.width, 200),
+                          height: Math.max(bounds.height, 120),
+                        } as GroupNodeData,
+                      } as AppNode)
+                    : n
                 ) as AppNode[]
-                // 重新计算小组边界
-                const members = updated.filter(
-                  (n) =>
-                    n.id !== node.id &&
-                    n.type !== 'groupNode' &&
-                    getNodeGroupId(n) === data,
-                )
-                if (members.length > 0) {
-                  const bounds = computeGroupBounds(members)
-                  return updated.map((n) =>
-                    n.id === data
-                      ? ({
-                          ...n,
-                          position: { x: bounds.x, y: bounds.y },
-                          data: { ...n.data, width: Math.max(bounds.width, 200), height: Math.max(bounds.height, 120) } as GroupNodeData,
-                        } as AppNode)
-                      : n,
-                  ) as AppNode[]
-                }
-                return updated
-              })
-            }
+              }
+              return updated
+            })
           }
         }
       }
-    },
-    [],
-  )
+    }
+  }, [])
 
-  const handleNodeDragStop = useCallback(
-    (_e: MouseEvent | TouchEvent, _node: AppNode) => {
-      dragStartPositions.current = new Map()
-      dragRemovedFromGroup.current = new Set()
-    },
-    [],
-  )
+  const handleNodeDragStop = useCallback((_e: MouseEvent | TouchEvent, _node: AppNode) => {
+    dragStartPositions.current = new Map()
+    dragRemovedFromGroup.current = new Set()
+  }, [])
 
   // ---- 下载选中节点 ----
 

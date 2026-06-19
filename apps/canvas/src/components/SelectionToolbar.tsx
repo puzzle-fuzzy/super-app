@@ -1,12 +1,4 @@
-import {
-  Download,
-  Trash2,
-  Group,
-  Maximize,
-  Copy,
-  Share2,
-  LayoutGrid,
-} from 'lucide-react'
+import { Download, Trash2, Group, Maximize, Copy, Share2, LayoutGrid } from 'lucide-react'
 import { useCanvasStore } from '../stores/canvasStore'
 import { useUIStore } from '../stores/uiStore'
 import { getNodeGroupId, type AppNode } from '../types'
@@ -27,12 +19,9 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
   if (selectedCount === 0) return null
 
   const selectedNodes = nodes.filter((n) => selectedNodeIds(nodes))
-  const hasMedia = selectedNodes.some(
-    (n) => n.type === 'imageNode' || n.type === 'videoNode',
-  )
+  const hasMedia = selectedNodes.some((n) => n.type === 'imageNode' || n.type === 'videoNode')
   const canGroup =
-    selectedCount >= 2 &&
-    selectedNodes.every((n) => n.type !== 'groupNode' && !getNodeGroupId(n))
+    selectedCount >= 2 && selectedNodes.every((n) => n.type !== 'groupNode' && !getNodeGroupId(n))
 
   function handleFullscreen() {
     const media = selectedNodes.find((n) => n.type === 'imageNode' || n.type === 'videoNode')
@@ -90,8 +79,14 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
           style={btnStyle}
           onClick={handleOrganize}
           title="整理排列"
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#242424'; e.currentTarget.style.color = '#e5e5e5' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#999999' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#242424'
+            e.currentTarget.style.color = '#e5e5e5'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = '#999999'
+          }}
         >
           <LayoutGrid size={18} />
         </button>
@@ -103,8 +98,14 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
           style={btnStyle}
           onClick={() => openGroupNameModal('create')}
           title="创建小组"
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#242424'; e.currentTarget.style.color = '#e5e5e5' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#999999' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#242424'
+            e.currentTarget.style.color = '#e5e5e5'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = '#999999'
+          }}
         >
           <Group size={18} />
         </button>
@@ -116,8 +117,14 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
           style={btnStyle}
           onClick={handleFullscreen}
           title="全屏预览"
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#242424'; e.currentTarget.style.color = '#e5e5e5' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#999999' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#242424'
+            e.currentTarget.style.color = '#e5e5e5'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = '#999999'
+          }}
         >
           <Maximize size={18} />
         </button>
@@ -129,8 +136,14 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
           style={btnStyle}
           onClick={handleCopyUrl}
           title="复制链接"
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#242424'; e.currentTarget.style.color = '#e5e5e5' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#999999' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#242424'
+            e.currentTarget.style.color = '#e5e5e5'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = '#999999'
+          }}
         >
           <Copy size={18} />
         </button>
@@ -141,8 +154,14 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
         style={btnStyle}
         onClick={handleDeleteSelected}
         title="删除"
-        onMouseEnter={(e) => { e.currentTarget.style.background = '#450a0a'; e.currentTarget.style.color = '#f87171' }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#999999' }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#450a0a'
+          e.currentTarget.style.color = '#f87171'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = '#999999'
+        }}
       >
         <Trash2 size={18} />
       </button>

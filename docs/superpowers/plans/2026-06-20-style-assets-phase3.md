@@ -11,6 +11,7 @@
 **Spec:** `docs/superpowers/specs/2026-06-20-style-assets-phase3-design.md`
 
 **Verified patterns (do NOT re-litigate — from Phase 1/2):**
+
 - Guard wiring: `.guard({ beforeHandle: requireUser }, (g) => g.group('/path', ...))`.
 - Extension table: NO reverse relation on `assetsRelations` (TDZ deadlock). Extension-side relation only.
 - Drizzle enum==column-name bug: review generated SQL, qualify `"assets"."style_type"` if unqualified.

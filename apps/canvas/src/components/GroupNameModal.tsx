@@ -34,7 +34,7 @@ export default function GroupNameModal() {
 
   const initialValue =
     mode === 'rename' && target
-      ? (nodes.find((n) => n.id === target)?.data as { label?: string })?.label ?? ''
+      ? ((nodes.find((n) => n.id === target)?.data as { label?: string })?.label ?? '')
       : ''
 
   function handleSubmit() {
@@ -133,6 +133,6 @@ export default function GroupNameModal() {
         </div>
       </div>
     </div>,
-    document.body,
+    document.body
   )
 }

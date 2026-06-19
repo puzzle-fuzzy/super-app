@@ -66,11 +66,20 @@ export default function TextPreviewModal() {
         >
           <X size={18} />
         </button>
-        <div style={{ padding: 24, fontSize: 14, lineHeight: 1.7, color: '#e5e5e5', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+        <div
+          style={{
+            padding: 24,
+            fontSize: 14,
+            lineHeight: 1.7,
+            color: '#e5e5e5',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+          }}
+        >
           {text}
         </div>
       </div>
     </div>,
-    document.body,
+    document.body
   )
 }

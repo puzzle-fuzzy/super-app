@@ -9,6 +9,7 @@
 **Spec:** `docs/superpowers/specs/2026-06-20-canvas-asset-panel-design.md`
 
 **Key existing facts (from CanvasApp.tsx, read in brainstorm):**
+
 - `EditorView` (line ~514) renders `<ReactFlow>` with `useNodesState`/`useEdgesState`; saves via `canvasApi.update({ data: { nodes, edges } })`.
 - Currently NOT wrapped in `ReactFlowProvider` — must add it for `useReactFlow()`.
 - Imports from `@xyflow/react` already present; `useReactFlow`, `ReactFlowProvider` need adding.
@@ -73,7 +74,7 @@
 
 **Files:** Modify `CanvasApp.tsx`.
 
-- [ ] Wrap `EditorView`'s return in `<ReactFlowProvider>...</ReactFlowProvider>` (so `useReactFlow` works). Move the existing `EditorView` body into an inner component (e.g. `EditorViewInner`) that's rendered inside the provider, OR keep `EditorView` and add the provider around the `<main>` — but `useReactFlow` must be called by a component *inside* the provider. Cleanest: rename current `EditorView` → `EditorViewInner`, create a thin `EditorView` that wraps `<ReactFlowProvider><EditorViewInner {...props} /></ReactFlowProvider>`.
+- [ ] Wrap `EditorView`'s return in `<ReactFlowProvider>...</ReactFlowProvider>` (so `useReactFlow` works). Move the existing `EditorView` body into an inner component (e.g. `EditorViewInner`) that's rendered inside the provider, OR keep `EditorView` and add the provider around the `<main>` — but `useReactFlow` must be called by a component _inside_ the provider. Cleanest: rename current `EditorView` → `EditorViewInner`, create a thin `EditorView` that wraps `<ReactFlowProvider><EditorViewInner {...props} /></ReactFlowProvider>`.
 - [ ] In `EditorViewInner`: `const { screenToFlowPosition } = useReactFlow()`. Add `const [sidebarCollapsed, setSidebarCollapsed] = useState(false)`.
 - [ ] Pass `nodeTypes={nodeTypes}` to `<ReactFlow>`.
 - [ ] Add `onDrop` handler:

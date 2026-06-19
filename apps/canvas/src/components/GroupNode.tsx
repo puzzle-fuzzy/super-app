@@ -15,9 +15,7 @@ export default function GroupNode({ data, id }: GroupNodeProps) {
         height: data.height,
         borderRadius: 12,
         background: 'rgba(99, 102, 241, 0.06)',
-        border: isFocused
-          ? '2px solid #6366f1'
-          : '2px dashed rgba(99, 102, 241, 0.4)',
+        border: isFocused ? '2px solid #6366f1' : '2px dashed rgba(99, 102, 241, 0.4)',
         position: 'relative',
         cursor: 'grab',
         transition: 'border-color 0.15s, background 0.15s',

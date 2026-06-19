@@ -12,7 +12,7 @@ interface SelectedNodePos {
 
 function extractSelectedPositions(
   nodes: ReturnType<typeof useCanvasStore.getState>['nodes'],
-  ids: string[],
+  ids: string[]
 ): SelectedNodePos[] {
   const idSet = ids.length > 10 ? new Set(ids) : null
   const result: SelectedNodePos[] = []
@@ -28,7 +28,12 @@ function extractSelectedPositions(
 function shallowEqualPositions(a: SelectedNodePos[], b: SelectedNodePos[]): boolean {
   if (a.length !== b.length) return false
   for (let i = 0; i < a.length; i++) {
-    if (a[i].id !== b[i].id || a[i].x !== b[i].x || a[i].y !== b[i].y || a[i].width !== b[i].width) {
+    if (
+      a[i].id !== b[i].id ||
+      a[i].x !== b[i].x ||
+      a[i].y !== b[i].y ||
+      a[i].width !== b[i].width
+    ) {
       return false
     }
   }

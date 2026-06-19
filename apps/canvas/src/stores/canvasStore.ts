@@ -136,7 +136,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   handleCreateGroup: (label) => {
     const { nodes, selectedNodeIds } = get()
     const selected = nodes.filter(
-      (n) => selectedNodeIds.includes(n.id) && n.type !== 'groupNode' && !getNodeGroupId(n),
+      (n) => selectedNodeIds.includes(n.id) && n.type !== 'groupNode' && !getNodeGroupId(n)
     )
 
     if (selected.length < 2) return
@@ -157,9 +157,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     }
 
     const updated = nodes.map((n) =>
-      selectedNodeIds.includes(n.id) && n.type !== 'groupNode'
-        ? setNodeGroupId(n, groupNode.id)
-        : n,
+      selectedNodeIds.includes(n.id) && n.type !== 'groupNode' ? setNodeGroupId(n, groupNode.id) : n
     )
 
     set({ nodes: [groupNode, ...updated], selectedNodeIds: [] })
@@ -183,7 +181,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       nodes: s.nodes.map((n) =>
         n.id === groupId && n.type === 'groupNode'
           ? { ...n, data: { ...n.data, label: newLabel } as GroupNodeData }
-          : n,
+          : n
       ),
     }))
     persist()

@@ -10,9 +10,33 @@ function getFileIcon(fileName: string) {
   const ext = fileName.includes('.') ? fileName.split('.').pop()!.toLowerCase() : ''
   const archiveExts = ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'tgz']
   const codeExts = [
-    'js', 'ts', 'jsx', 'tsx', 'html', 'css', 'scss', 'less', 'json', 'xml',
-    'yaml', 'yml', 'md', 'py', 'rb', 'go', 'rs', 'java', 'c', 'cpp', 'h',
-    'sh', 'bash', 'sql', 'graphql', 'vue', 'svelte',
+    'js',
+    'ts',
+    'jsx',
+    'tsx',
+    'html',
+    'css',
+    'scss',
+    'less',
+    'json',
+    'xml',
+    'yaml',
+    'yml',
+    'md',
+    'py',
+    'rb',
+    'go',
+    'rs',
+    'java',
+    'c',
+    'cpp',
+    'h',
+    'sh',
+    'bash',
+    'sql',
+    'graphql',
+    'vue',
+    'svelte',
   ]
 
   if (archiveExts.includes(ext)) return <FileArchive size={28} />
@@ -46,11 +70,28 @@ export default function DocNode({ data }: DocNodeProps) {
             <span style={{ display: 'flex', color: '#6366f1' }}>
               <File size={20} />
             </span>
-            <span style={{ fontSize: 13, fontWeight: 500, color: '#e5e5e5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: '#e5e5e5',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
               {data.uploading.fileName}
             </span>
           </div>
-          <div style={{ width: '100%', height: 6, background: '#374151', borderRadius: 3, overflow: 'hidden' }}>
+          <div
+            style={{
+              width: '100%',
+              height: 6,
+              background: '#374151',
+              borderRadius: 3,
+              overflow: 'hidden',
+            }}
+          >
             <div
               style={{
                 height: '100%',
@@ -83,13 +124,30 @@ export default function DocNode({ data }: DocNodeProps) {
         position: 'relative',
       }}
     >
-      <Handle type="target" position={Position.Left} style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }} />
-      <Handle type="source" position={Position.Right} style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }} />
+      <Handle
+        type="target"
+        position={Position.Left}
+        style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }}
+      />
       <div style={{ flexShrink: 0, color: '#6366f1', display: 'flex' }}>
         {getFileIcon(data.fileName)}
       </div>
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontSize: 13, fontWeight: 500, color: '#e5e5e5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span
+          style={{
+            fontSize: 13,
+            fontWeight: 500,
+            color: '#e5e5e5',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
           {data.fileName}
         </span>
         <span style={{ fontSize: 11, color: '#666666' }}>{formatFileSize(data.fileSize)}</span>

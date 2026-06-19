@@ -145,7 +145,11 @@ function ConsoleAppContent({
                 aria-haspopup="true"
               >
                 {user.avatarUrl ? (
-                  <img className="h-7 w-7 rounded-full object-cover" src={user.avatarUrl} alt={user.name ?? user.email} />
+                  <img
+                    className="h-7 w-7 rounded-full object-cover"
+                    src={user.avatarUrl}
+                    alt={user.name ?? user.email}
+                  />
                 ) : (
                   <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2a2a2a] text-[#999999]">
                     <UserRound size={14} aria-hidden="true" />
@@ -165,7 +169,10 @@ function ConsoleAppContent({
                 <button
                   type="button"
                   className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left text-[13px] font-medium text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-                  onClick={() => { setUserMenuOpen(false); handleLogout() }}
+                  onClick={() => {
+                    setUserMenuOpen(false)
+                    handleLogout()
+                  }}
                 >
                   <LogOut size={15} aria-hidden="true" />
                   退出登录
@@ -196,7 +203,9 @@ function ConsoleAppContent({
         {/* Created key banner */}
         {createdKey && (
           <div className="mb-6 rounded-[14px] border border-[#fbbf24] bg-[#2a2200] p-5">
-            <p className="m-0 mb-2 text-[13px] font-semibold text-[#fbbf24]">密钥已创建，请立即复制保存（仅显示一次）</p>
+            <p className="m-0 mb-2 text-[13px] font-semibold text-[#fbbf24]">
+              密钥已创建，请立即复制保存（仅显示一次）
+            </p>
             <div className="flex items-center gap-2">
               <code className="flex-1 rounded-lg bg-[#141414] px-3.5 py-2.5 text-[13px] text-[#e5e5e5] break-all font-mono">
                 {createdKey}
@@ -247,7 +256,8 @@ function ConsoleAppContent({
                 <div className="min-w-0 flex-1">
                   <p className="m-0 text-[15px] font-semibold text-[#e5e5e5]">{key.name}</p>
                   <p className="m-0 mt-0.5 text-[13px] text-[#666666]">
-                    <code className="font-mono">{key.keyPrefix}</code>••••创建于 {formatTime(key.createdAt)}
+                    <code className="font-mono">{key.keyPrefix}</code>••••创建于{' '}
+                    {formatTime(key.createdAt)}
                   </p>
                 </div>
                 <button
@@ -273,7 +283,10 @@ function ConsoleAppContent({
               type="text"
               value={newKeyName}
               onChange={(e) => setNewKeyName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); if (e.key === 'Escape') setCreateOpen(false) }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleCreate()
+                if (e.key === 'Escape') setCreateOpen(false)
+              }}
               placeholder="密钥名称（例如：生产环境）"
               autoFocus
               className="mb-4 w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a] focus:border-[#666666]"
@@ -303,13 +316,20 @@ function ConsoleAppContent({
 
 function DialogOverlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   useEffect(() => {
-    function onEscape(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
+    function onEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
     document.addEventListener('keydown', onEscape)
     return () => document.removeEventListener('keydown', onEscape)
   }, [onClose])
 
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-6" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+    <div
+      className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-6"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+    >
       {children}
     </div>
   )
@@ -319,8 +339,12 @@ function ScreenState({ title, description }: { title: string; description: strin
   return (
     <main className="grid min-h-screen place-items-center bg-[#141414] p-6">
       <div className="w-full max-w-[560px] rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
-        <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">SUPER CONSOLE</p>
-        <h1 className="m-0 mb-3 text-[34px] font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]">{title}</h1>
+        <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
+          SUPER CONSOLE
+        </p>
+        <h1 className="m-0 mb-3 text-[34px] font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]">
+          {title}
+        </h1>
         <p className="m-0 text-[#999999]">{description}</p>
       </div>
     </main>

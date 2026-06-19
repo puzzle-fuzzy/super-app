@@ -13,9 +13,9 @@ export function useGroupToolbar() {
   return useMemo(() => {
     if (!focusedGroupId) return null
 
-    const group = nodes.find(
-      (n) => n.id === focusedGroupId && n.type === 'groupNode',
-    ) as GroupNodeType | undefined
+    const group = nodes.find((n) => n.id === focusedGroupId && n.type === 'groupNode') as
+      | GroupNodeType
+      | undefined
 
     if (!group) return null
 

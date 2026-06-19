@@ -59,9 +59,7 @@ export function SiteApp() {
             你的创意资产与 AI 工作区
           </h1>
           <p className="mx-auto mb-8 max-w-[520px] text-[17px] leading-[1.75] text-[#999999]">
-            Super
-            提供资产上传、画布编辑、P2P
-            传输和模型接口管理，帮你把灵感变为成果。
+            Super 提供资产上传、画布编辑、P2P 传输和模型接口管理，帮你把灵感变为成果。
           </p>
           <div className="flex items-center justify-center gap-3">
             <a
