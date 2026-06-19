@@ -1,0 +1,131 @@
+@import '@super-app/design-tokens/css';
+@import 'tailwindcss';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #10100f;
+  color: #f7f2e8;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+.transfer-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(244, 216, 143, 0.18), transparent 28rem), #10100f;
+}
+
+.transfer-card {
+  width: min(560px, 100%);
+  padding: clamp(28px, 6vw, 48px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.transfer-kicker {
+  margin: 0;
+  color: #f4d88f;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.transfer-card h1 {
+  margin: 10px 0 0;
+  font-size: clamp(36px, 9vw, 64px);
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+}
+
+.transfer-card p {
+  color: #b9b1a2;
+  line-height: 1.7;
+}
+
+.peer-pill {
+  display: inline-flex;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(244, 216, 143, 0.14);
+  color: #f4d88f;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.offer-card {
+  display: grid;
+  gap: 8px;
+  margin-top: 24px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.offer-card span,
+.offer-card small {
+  color: #b9b1a2;
+  font-size: 13px;
+}
+
+.offer-card strong {
+  overflow-wrap: anywhere;
+  font-size: 20px;
+}
+
+.offer-card button,
+.download-link {
+  display: inline-flex;
+  width: max-content;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: #f4d88f;
+  color: #1c1608;
+  cursor: pointer;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.progress-track {
+  height: 10px;
+  overflow: hidden;
+  margin-top: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #f4d88f;
+}
+
+.download-link {
+  margin-top: 22px;
+}

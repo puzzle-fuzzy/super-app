@@ -94,6 +94,13 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },
+    {
+      command: `${loadLocalEnv} pnpm --filter @super-app/transfer dev`,
+      env: localEnv,
+      url: 'http://localhost:5106/transfer/',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
   ],
   projects: [
     {

@@ -1,5 +1,11 @@
 import type { ApiError as ApiErrorPayload, ApiResponse } from '@super-app/contracts/api'
-import type { AssetDto, AssetKind, AssetListResponse } from '@super-app/contracts/assets'
+import type {
+  AssetDto,
+  AssetKind,
+  AssetListResponse,
+  AssetShareLinkDto,
+  AssetTransferSessionDto,
+} from '@super-app/contracts/assets'
 import type {
   CreateSubjectAssetRequest,
   SubjectAssetDetailDto,
@@ -103,6 +109,14 @@ export const assetsApi = {
 
   remove(id: string) {
     return apiFetch<{ deleted: true }>(`/assets/${id}`, { method: 'DELETE' })
+  },
+
+  createShareLink(id: string) {
+    return apiFetch<AssetShareLinkDto>(`/assets/${id}/share-link`, { method: 'POST' })
+  },
+
+  createTransferSession(id: string) {
+    return apiFetch<AssetTransferSessionDto>(`/assets/${id}/transfer-session`, { method: 'POST' })
   },
 }
 

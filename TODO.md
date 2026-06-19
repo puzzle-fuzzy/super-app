@@ -20,4 +20,5 @@
 - [x] Scaffold `apps/workspace`.
 - [x] Add auth app end-to-end browser flow.
 - [x] Implement assets API module.
-- [ ] Polish `apps/assets` product UI.
+- [x] Polish `apps/assets` product UI.
+- [x] Implement asset share links and 30-second transfer rooms.

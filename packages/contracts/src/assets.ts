@@ -83,6 +83,26 @@ export const AssetListResponseSchema = z.object({
 
 export type AssetListResponse = z.infer<typeof AssetListResponseSchema>
 
+export const AssetShareLinkDtoSchema = z.object({
+  assetId: z.string(),
+  token: z.string(),
+  url: z.string().url(),
+  expiresAt: z.string().nullable(),
+  createdAt: z.string(),
+})
+
+export type AssetShareLinkDto = z.infer<typeof AssetShareLinkDtoSchema>
+
+export const AssetTransferSessionDtoSchema = z.object({
+  roomId: z.string(),
+  asset: AssetDtoSchema,
+  pageUrl: z.string().url(),
+  wsUrl: z.string().url(),
+  expiresAt: z.string(),
+})
+
+export type AssetTransferSessionDto = z.infer<typeof AssetTransferSessionDtoSchema>
+
 /**
  * Reserved for a future OSS pre-upload register flow (client uploads to OSS,
  * then registers metadata). Not used by the Phase 0 multipart upload endpoint.

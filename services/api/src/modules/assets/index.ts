@@ -1,85 +1,116 @@
 import type { AssetKind } from '@super-app/contracts/assets'
 import { Elysia, t } from 'elysia'
+import path from 'node:path'
 
 import { authPlugin, requireUser } from '../../plugins/auth'
 import { storagePlugin } from '../../plugins/storage'
 import { AppError } from '../../shared/errors'
 import { ok } from '../../shared/response'
 import {
+  createAssetShareLink,
+  createAssetTransferSession,
   deleteAsset,
   getAsset,
   listAssets,
+  loadSharedAssetFile,
   maxUploadBytes,
   parseAllowedMimeTypes,
   uploadAsset,
 } from './service'
+import { serverEnv } from '@super-app/env/server'
 
 export const assetsModule = new Elysia({ name: 'assets' })
   .use(authPlugin)
   .use(storagePlugin)
-  .guard({ beforeHandle: requireUser }, (guarded) =>
-    guarded.group('/assets', (assets) =>
-      assets
-        .post(
-          '/upload',
-          async ({ user, db, storage, body }) => {
-            const file = body.file
-            const allowed = parseAllowedMimeTypes()
-            const max = maxUploadBytes()
+  .group('/assets', (assets) =>
+    assets
+      .get('/shared/:token', async ({ db, params }) => {
+        const shared = await loadSharedAssetFile({ db, token: params.token })
+        const filePath = resolveStoragePath(shared.storageKey)
+        const file = Bun.file(filePath)
 
-            // Validate against the multipart-declared size first, before
-            // buffering the body into memory, to avoid DoS via oversized uploads.
-            if (file.size > max) {
-              throw new AppError(413, 'VALIDATION_ERROR', 'File too large')
-            }
-            if (!allowed.has(file.type)) {
-              throw new AppError(415, 'VALIDATION_ERROR', 'Unsupported file type')
-            }
+        if (!(await file.exists())) {
+          throw new AppError(404, 'NOT_FOUND', 'Shared asset file not found')
+        }
 
-            const bytes = await file.arrayBuffer()
-            // Re-check the actual byte length in case the declared size was wrong/zero.
-            if (bytes.byteLength > max) {
-              throw new AppError(413, 'VALIDATION_ERROR', 'File too large')
-            }
-
-            const asset = await uploadAsset({
-              db,
-              storage,
-              owner: user!,
-              fileName: file.name,
-              mimeType: file.type,
-              size: bytes.byteLength,
-              body: Buffer.from(bytes),
-            })
-
-            return ok(asset)
+        return new Response(file, {
+          headers: {
+            'Content-Type': shared.mimeType,
+            'Content-Length': String(shared.size),
+            'Content-Disposition': `attachment; filename="${downloadFileName(shared.title)}"`,
           },
-          {
-            body: t.Object({
-              file: t.File(),
-            }),
-          }
-        )
-        .get('/', async ({ user, db, query }) => {
-          const parsedQuery = parseAssetListQuery(query)
-          const result = await listAssets({
-            db,
-            owner: user!,
-            kind: parsedQuery.kind,
-            limit: parsedQuery.limit,
-            cursor: parsedQuery.cursor,
+        })
+      })
+      .guard({ beforeHandle: requireUser }, (guarded) =>
+        guarded
+          .post(
+            '/upload',
+            async ({ user, db, storage, body }) => {
+              const file = body.file
+              const allowed = parseAllowedMimeTypes()
+              const max = maxUploadBytes()
+
+              // Validate against the multipart-declared size first, before
+              // buffering the body into memory, to avoid DoS via oversized uploads.
+              if (file.size > max) {
+                throw new AppError(413, 'VALIDATION_ERROR', 'File too large')
+              }
+              if (!allowed.has(file.type)) {
+                throw new AppError(415, 'VALIDATION_ERROR', 'Unsupported file type')
+              }
+
+              const bytes = await file.arrayBuffer()
+              // Re-check the actual byte length in case the declared size was wrong/zero.
+              if (bytes.byteLength > max) {
+                throw new AppError(413, 'VALIDATION_ERROR', 'File too large')
+              }
+
+              const asset = await uploadAsset({
+                db,
+                storage,
+                owner: user!,
+                fileName: file.name,
+                mimeType: file.type,
+                size: bytes.byteLength,
+                body: Buffer.from(bytes),
+              })
+
+              return ok(asset)
+            },
+            {
+              body: t.Object({
+                file: t.File(),
+              }),
+            }
+          )
+          .get('/', async ({ user, db, query }) => {
+            const parsedQuery = parseAssetListQuery(query)
+            const result = await listAssets({
+              db,
+              owner: user!,
+              kind: parsedQuery.kind,
+              limit: parsedQuery.limit,
+              cursor: parsedQuery.cursor,
+            })
+            return ok(result)
           })
-          return ok(result)
-        })
-        .get('/:id', async ({ user, db, params }) => {
-          const asset = await getAsset({ db, owner: user!, id: params.id })
-          return ok(asset)
-        })
-        .delete('/:id', async ({ user, db, params }) => {
-          await deleteAsset({ db, owner: user!, id: params.id })
-          return ok({ deleted: true })
-        })
-    )
+          .get('/:id', async ({ user, db, params }) => {
+            const asset = await getAsset({ db, owner: user!, id: params.id })
+            return ok(asset)
+          })
+          .post('/:id/share-link', async ({ user, db, params }) => {
+            const share = await createAssetShareLink({ db, owner: user!, id: params.id })
+            return ok(share)
+          })
+          .post('/:id/transfer-session', async ({ user, db, params }) => {
+            const session = await createAssetTransferSession({ db, owner: user!, id: params.id })
+            return ok(session)
+          })
+          .delete('/:id', async ({ user, db, params }) => {
+            await deleteAsset({ db, owner: user!, id: params.id })
+            return ok({ deleted: true })
+          })
+      )
   )
 
 const assetKinds = new Set<AssetKind>([
@@ -125,4 +156,17 @@ function parseLimit(value: string | undefined): number | undefined {
   }
 
   return limit
+}
+
+function resolveStoragePath(storageKey: string): string {
+  const storageRoot = path.resolve(serverEnv.STORAGE_DIR)
+  const resolved = path.resolve(storageRoot, storageKey)
+  if (resolved !== storageRoot && !resolved.startsWith(storageRoot + path.sep)) {
+    throw new AppError(404, 'NOT_FOUND', 'Shared asset file not found')
+  }
+  return resolved
+}
+
+function downloadFileName(title: string): string {
+  return title.replace(/[^\w\u4e00-\u9fa5 .-]/g, '_')
 }

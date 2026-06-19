@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import type { AssetDto, AssetKind } from '@super-app/contracts/assets'
+import type { AssetTransferSessionDto } from '@super-app/contracts/assets'
 import type {
   CreateSubjectAssetRequest,
   SubjectAssetDetailDto,
@@ -89,6 +90,13 @@ interface SubjectEditorState {
 
 type EditorState = TextEditorState | SubjectEditorState | null
 
+interface TransferNotice {
+  assetId: string
+  pageUrl: string
+  expiresAt: string
+  status: string
+}
+
 export function AssetsApp() {
   const { user, isLoading, error } = useRequireAuth()
   const [filter, setFilter] = useState<FilterKind>('all')
@@ -99,7 +107,11 @@ export function AssetsApp() {
   const [listError, setListError] = useState<string | null>(null)
   const [editor, setEditor] = useState<EditorState>(null)
   const [pendingDelete, setPendingDelete] = useState<AssetDto | null>(null)
+  const [transferNotice, setTransferNotice] = useState<TransferNotice | null>(null)
+  const [sharingAssetId, setSharingAssetId] = useState<string | null>(null)
+  const [transferringAssetId, setTransferringAssetId] = useState<string | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+  const activeTransferRef = useRef<ReturnType<typeof startAssetTransferSender> | null>(null)
 
   const kind = filter === 'all' ? undefined : filter
   const activeFilter = FILTERS.find((option) => option.value === filter) ?? FILTERS[0]
@@ -193,6 +205,62 @@ export function AssetsApp() {
       setPendingDelete(null)
     } catch (err) {
       setListError(err instanceof Error ? err.message : '删除失败')
+    }
+  }
+
+  async function handleCreateShareLink(asset: AssetDto) {
+    setSharingAssetId(asset.id)
+    setListError(null)
+
+    try {
+      const share = await assetsApi.createShareLink(asset.id)
+      await copyToClipboard(share.url)
+      setTransferNotice({
+        assetId: asset.id,
+        pageUrl: share.url,
+        expiresAt: share.expiresAt ?? '',
+        status: '分享链接已复制，可直接发给对方下载。',
+      })
+    } catch (err) {
+      setListError(err instanceof Error ? err.message : '创建分享链接失败')
+    } finally {
+      setSharingAssetId(null)
+    }
+  }
+
+  async function handleStartTransfer(asset: AssetDto) {
+    const original = asset.files.find((file) => file.role === 'original')
+    if (!original) {
+      setListError('这个资产没有可传输的原始文件')
+      return
+    }
+
+    setTransferringAssetId(asset.id)
+    setListError(null)
+    activeTransferRef.current?.close()
+
+    try {
+      const session = await assetsApi.createTransferSession(asset.id)
+      const file = await assetFileFromUrl(original.url, asset.title, original.mimeType)
+      activeTransferRef.current = startAssetTransferSender(session, file, (status) => {
+        setTransferNotice({
+          assetId: asset.id,
+          pageUrl: session.pageUrl,
+          expiresAt: session.expiresAt,
+          status,
+        })
+      })
+      await copyToClipboard(session.pageUrl)
+      setTransferNotice({
+        assetId: asset.id,
+        pageUrl: session.pageUrl,
+        expiresAt: session.expiresAt,
+        status: '局域网传输链接已复制，30 秒内打开即可接收。',
+      })
+    } catch (err) {
+      setListError(err instanceof Error ? err.message : '创建传输失败')
+    } finally {
+      setTransferringAssetId(null)
     }
   }
 
@@ -406,6 +474,10 @@ export function AssetsApp() {
                     if (asset.kind === 'text') openEditText(asset)
                     if (asset.kind === 'subject') openEditSubject(asset)
                   }}
+                  onShare={() => handleCreateShareLink(asset)}
+                  onTransfer={() => handleStartTransfer(asset)}
+                  sharing={sharingAssetId === asset.id}
+                  transferring={transferringAssetId === asset.id}
                 />
               ))}
             </section>
@@ -430,6 +502,10 @@ export function AssetsApp() {
           onConfirm={confirmDelete}
         />
       ) : null}
+
+      {transferNotice ? (
+        <TransferNoticeDialog notice={transferNotice} onClose={() => setTransferNotice(null)} />
+      ) : null}
     </main>
   )
 }
@@ -438,12 +514,21 @@ function AssetCard({
   asset,
   onDelete,
   onEdit,
+  onShare,
+  onTransfer,
+  sharing,
+  transferring,
 }: {
   asset: AssetDto
   onDelete: () => void
   onEdit: () => void
+  onShare: () => void
+  onTransfer: () => void
+  sharing: boolean
+  transferring: boolean
 }) {
   const canEdit = asset.kind === 'text' || asset.kind === 'subject'
+  const canTransfer = asset.files.some((file) => file.role === 'original')
 
   return (
     <article className="asset-card">
@@ -456,6 +541,14 @@ function AssetCard({
       </div>
 
       <div className="asset-card-actions">
+        {canTransfer ? (
+          <button type="button" onClick={onTransfer} disabled={transferring}>
+            {transferring ? '创建中' : '传输'}
+          </button>
+        ) : null}
+        <button type="button" onClick={onShare} disabled={sharing || !canTransfer}>
+          {sharing ? '创建中' : '分享链接'}
+        </button>
         {canEdit ? (
           <button type="button" onClick={onEdit}>
             编辑
@@ -466,6 +559,36 @@ function AssetCard({
         </button>
       </div>
     </article>
+  )
+}
+
+function TransferNoticeDialog({
+  notice,
+  onClose,
+}: {
+  notice: TransferNotice
+  onClose: () => void
+}) {
+  return (
+    <div className="confirm-backdrop" role="dialog" aria-label="传输分享">
+      <div className="confirm-card transfer-card">
+        <p className="panel-kicker">传输分享</p>
+        <h2>链接已准备好</h2>
+        <p>{notice.status}</p>
+        <code>{notice.pageUrl}</code>
+        {notice.expiresAt ? (
+          <p>有效期至 {new Date(notice.expiresAt).toLocaleTimeString()}</p>
+        ) : null}
+        <div className="editor-actions">
+          <button type="button" onClick={onClose}>
+            关闭
+          </button>
+          <button type="button" onClick={() => copyToClipboard(notice.pageUrl)}>
+            复制链接
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -734,4 +857,222 @@ function assetLabel(asset: AssetDto) {
   }
 
   return asset.kind
+}
+
+async function assetFileFromUrl(url: string, title: string, mimeType?: string): Promise<File> {
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error('读取资产文件失败')
+  }
+  const blob = await response.blob()
+  return new File([blob], title, { type: mimeType || blob.type || 'application/octet-stream' })
+}
+
+async function copyToClipboard(text: string): Promise<void> {
+  if (navigator.clipboard) {
+    await navigator.clipboard.writeText(text)
+  }
+}
+
+function startAssetTransferSender(
+  session: AssetTransferSessionDto,
+  file: File,
+  onStatus: (status: string) => void
+) {
+  const socket = new WebSocket(session.wsUrl)
+  const connections = new Map<string, RTCPeerConnection>()
+  const transferIdsByPeer = new Map<string, string>()
+  let selfPeerId: string | null = null
+  let closed = false
+
+  const closeTimer = window.setTimeout(
+    () => {
+      close()
+      onStatus('传输窗口已过期。需要重新创建链接。')
+    },
+    Math.max(new Date(session.expiresAt).getTime() - Date.now(), 0)
+  )
+
+  socket.addEventListener('open', () => {
+    onStatus('等待接收设备打开链接。')
+  })
+
+  socket.addEventListener('message', (event) => {
+    const message = parseSignalingMessage(event.data)
+    if (!message) return
+
+    if (message.type === 'peer-id') {
+      selfPeerId = (message.payload as { id: string }).id
+      return
+    }
+
+    if (message.type === 'peers') {
+      const ids = (message.payload as { ids: string[] }).ids.filter((id) => id !== selfPeerId)
+      ids.forEach((peerId) => sendFileOffer(peerId))
+      return
+    }
+
+    if (message.type === 'peer-joined') {
+      const peerId = (message.payload as { id: string }).id
+      if (peerId !== selfPeerId) {
+        sendFileOffer(peerId)
+      }
+      return
+    }
+
+    if (message.type === 'receiver-ready') {
+      const peerId = message.from
+      if (peerId && peerId !== selfPeerId) {
+        sendFileOffer(peerId)
+      }
+      return
+    }
+
+    if (message.type === 'file-accept') {
+      const peerId = message.from
+      const transferId = (message.payload as { transferId: string }).transferId
+      if (peerId) {
+        void sendFileToPeer(peerId, transferId)
+      }
+      return
+    }
+
+    if (message.type === 'webrtc-signal') {
+      const peerId = message.from
+      if (!peerId) return
+      const payload = message.payload as {
+        transferId: string
+        signal: { type: string; sdp?: RTCSessionDescriptionInit; candidate?: RTCIceCandidateInit }
+      }
+      const connection = connections.get(peerId)
+      if (!connection) return
+
+      if (payload.signal.type === 'answer' && payload.signal.sdp) {
+        void connection.setRemoteDescription(new RTCSessionDescription(payload.signal.sdp))
+      }
+      if (payload.signal.type === 'ice-candidate' && payload.signal.candidate) {
+        void connection.addIceCandidate(new RTCIceCandidate(payload.signal.candidate))
+      }
+    }
+  })
+
+  socket.addEventListener('close', () => {
+    if (!closed) {
+      onStatus('传输连接已关闭。')
+    }
+  })
+
+  function sendFileOffer(peerId: string) {
+    if (transferIdsByPeer.has(peerId)) return
+    const transferId = `${session.roomId}-${peerId}`
+    transferIdsByPeer.set(peerId, transferId)
+    sendSocket({
+      type: 'file-offer',
+      to: peerId,
+      payload: {
+        transferId,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+      },
+    })
+    onStatus('接收设备已连接，等待对方确认。')
+  }
+
+  async function sendFileToPeer(peerId: string, transferId: string) {
+    const connection = new RTCPeerConnection({
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    })
+    const channel = connection.createDataChannel('asset-file', { ordered: true })
+    connections.set(peerId, connection)
+
+    connection.onicecandidate = (event) => {
+      if (event.candidate) {
+        sendSocket({
+          type: 'webrtc-signal',
+          to: peerId,
+          payload: {
+            transferId,
+            signal: { type: 'ice-candidate', candidate: event.candidate },
+          },
+        })
+      }
+    }
+
+    channel.onopen = async () => {
+      onStatus('正在传输文件。')
+      await sendFileChunks(channel, file)
+      channel.send(JSON.stringify({ type: 'done' }))
+      onStatus('文件已发送完成。')
+      window.setTimeout(() => connection.close(), 1200)
+    }
+
+    const offer = await connection.createOffer()
+    await connection.setLocalDescription(offer)
+    sendSocket({
+      type: 'webrtc-signal',
+      to: peerId,
+      payload: {
+        transferId,
+        signal: { type: 'offer', sdp: connection.localDescription },
+      },
+    })
+  }
+
+  function sendSocket(message: object) {
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(message))
+    }
+  }
+
+  function close() {
+    closed = true
+    window.clearTimeout(closeTimer)
+    for (const connection of connections.values()) {
+      connection.close()
+    }
+    connections.clear()
+    if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+      socket.close()
+    }
+  }
+
+  return { close }
+}
+
+async function sendFileChunks(channel: RTCDataChannel, file: File) {
+  const chunkSize = 65_536
+  const bufferThreshold = 10_485_760
+  const bufferLow = 2_097_152
+
+  for (let offset = 0; offset < file.size; offset += chunkSize) {
+    const end = Math.min(offset + chunkSize, file.size)
+    channel.send(await file.slice(offset, end).arrayBuffer())
+
+    if (channel.bufferedAmount > bufferThreshold) {
+      channel.bufferedAmountLowThreshold = bufferLow
+      await new Promise<void>((resolve) => {
+        channel.onbufferedamountlow = () => {
+          channel.onbufferedamountlow = null
+          resolve()
+        }
+      })
+    }
+  }
+}
+
+interface SignalingMessage {
+  type: string
+  from?: string
+  payload?: unknown
+}
+
+function parseSignalingMessage(raw: unknown): SignalingMessage | null {
+  if (typeof raw !== 'string') return null
+  try {
+    const parsed = JSON.parse(raw) as SignalingMessage
+    return typeof parsed.type === 'string' ? parsed : null
+  } catch {
+    return null
+  }
 }

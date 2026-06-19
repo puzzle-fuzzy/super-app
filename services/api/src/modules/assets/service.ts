@@ -4,16 +4,19 @@ import type {
   AssetFileDto,
   AssetKind,
   AssetListResponse,
+  AssetShareLinkDto,
+  AssetTransferSessionDto,
 } from '@super-app/contracts/assets'
 import type { Db } from '@super-app/db'
-import { assetFiles, assets } from '@super-app/db/schema'
+import { assetFiles, assetShareLinks, assets } from '@super-app/db/schema'
 import type { StorageProvider } from '@super-app/storage'
-import { and, desc, eq, inArray, lt, or, type SQL } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNull, lt, or, type SQL } from 'drizzle-orm'
 
 import { serverEnv } from '@super-app/env/server'
 
 import { AppError } from '../../shared/errors'
 import { generateThumbnail, probeMedia, type MediaProbe } from '../../shared/media'
+import { registerTransferRoom } from '../transfers/rooms'
 
 const MAX_LIMIT = 50
 const DEFAULT_LIMIT = 20
@@ -215,6 +218,109 @@ export async function deleteAsset(input: {
   }
 }
 
+export async function createAssetShareLink(input: {
+  db: Db
+  owner: CurrentUser
+  id: string
+}): Promise<AssetShareLinkDto> {
+  const { db, owner, id } = input
+  await assertOwnedActiveAsset(db, owner, id)
+
+  const token = generateShareToken()
+  const [share] = await db
+    .insert(assetShareLinks)
+    .values({
+      assetId: id,
+      ownerId: owner.id,
+      token,
+    })
+    .returning()
+
+  if (!share) {
+    throw new AppError(500, 'INTERNAL_ERROR', 'Failed to create asset share link')
+  }
+
+  return toAssetShareLinkDto(share)
+}
+
+export async function loadSharedAssetFile(input: { db: Db; token: string }): Promise<{
+  title: string
+  storageKey: string
+  mimeType: string
+  size: number
+}> {
+  const { db, token } = input
+  const now = new Date()
+  const [row] = await db
+    .select({
+      title: assets.title,
+      status: assets.status,
+      storageKey: assetFiles.storageKey,
+      mimeType: assetFiles.mimeType,
+      size: assetFiles.size,
+      expiresAt: assetShareLinks.expiresAt,
+    })
+    .from(assetShareLinks)
+    .innerJoin(assets, eq(assetShareLinks.assetId, assets.id))
+    .innerJoin(assetFiles, eq(assetFiles.assetId, assets.id))
+    .where(
+      and(
+        eq(assetShareLinks.token, token),
+        isNull(assetShareLinks.revokedAt),
+        eq(assets.status, 'active'),
+        eq(assetFiles.role, 'original')
+      )
+    )
+    .limit(1)
+
+  if (!row || (row.expiresAt && row.expiresAt <= now)) {
+    throw new AppError(404, 'NOT_FOUND', 'Shared asset not found')
+  }
+
+  return {
+    title: row.title,
+    storageKey: row.storageKey,
+    mimeType: row.mimeType ?? 'application/octet-stream',
+    size: row.size ?? 0,
+  }
+}
+
+export async function createAssetTransferSession(input: {
+  db: Db
+  owner: CurrentUser
+  id: string
+}): Promise<AssetTransferSessionDto> {
+  const { db, owner, id } = input
+  const asset = await getAsset({ db, owner, id })
+  const original = asset.files.find((file) => file.role === 'original')
+  if (!original) {
+    throw new AppError(404, 'NOT_FOUND', 'Asset file not found')
+  }
+  const roomId = crypto.randomUUID()
+  const expiresAt = new Date(Date.now() + transferRoomTtlMs())
+  const transferBaseUrl = serverEnv.TRANSFER_APP_URL.replace(/\/?$/, '/')
+  const apiBaseUrl = serverEnv.API_BASE_URL.replace(/\/$/, '')
+  const wsBaseUrl = apiBaseUrl.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:')
+
+  registerTransferRoom({
+    roomId,
+    expiresAt,
+    assetId: asset.id,
+    title: asset.title,
+    storageKey: original.storageKey,
+    mimeType: original.mimeType ?? 'application/octet-stream',
+    size: original.size ?? 0,
+  })
+
+  return {
+    roomId,
+    asset,
+    pageUrl: `${transferBaseUrl}?room=${encodeURIComponent(roomId)}`,
+    wsUrl: `${wsBaseUrl}/transfers/${encodeURIComponent(roomId)}/ws`,
+    expiresAt: expiresAt.toISOString(),
+  }
+}
+
 async function loadAssetWithFiles(db: Db, assetId: string): Promise<AssetDto | null> {
   const [asset] = await db.select().from(assets).where(eq(assets.id, assetId)).limit(1)
   if (!asset) {
@@ -292,6 +398,37 @@ export function toAssetDto(
     createdAt: asset.createdAt.toISOString(),
     updatedAt: asset.updatedAt.toISOString(),
   }
+}
+
+function toAssetShareLinkDto(share: typeof assetShareLinks.$inferSelect): AssetShareLinkDto {
+  const apiBaseUrl = serverEnv.API_BASE_URL.replace(/\/$/, '')
+  return {
+    assetId: share.assetId,
+    token: share.token,
+    url: `${apiBaseUrl}/assets/shared/${share.token}`,
+    expiresAt: share.expiresAt?.toISOString() ?? null,
+    createdAt: share.createdAt.toISOString(),
+  }
+}
+
+async function assertOwnedActiveAsset(db: Db, owner: CurrentUser, id: string): Promise<void> {
+  const [asset] = await db
+    .select({ id: assets.id })
+    .from(assets)
+    .where(and(eq(assets.id, id), eq(assets.ownerId, owner.id), eq(assets.status, 'active')))
+    .limit(1)
+
+  if (!asset) {
+    throw new AppError(404, 'NOT_FOUND', 'Asset not found')
+  }
+}
+
+function generateShareToken(): string {
+  return Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url')
+}
+
+function transferRoomTtlMs(): number {
+  return serverEnv.TRANSFER_ROOM_TTL_SECONDS * 1000
 }
 
 function sanitizeFileName(name: string): string {

@@ -203,6 +203,68 @@ describe('assets module', () => {
     expect(res.status).toBe(404)
   })
 
+  it('creates an anonymous download share link for an owned asset', async () => {
+    const uploadRes = await app.handle(
+      new Request('http://localhost/api/assets/upload', {
+        method: 'POST',
+        headers: { cookie: primary.cookie },
+        body: multipartBody(await pngBytes(), 'share-me.png', 'image/png'),
+      })
+    )
+    const uploaded = await uploadRes.json()
+    const original = uploaded.data.files.find((f: { role: string }) => f.role === 'original')
+
+    const shareRes = await app.handle(
+      new Request(`http://localhost/api/assets/${uploaded.data.id}/share-link`, {
+        method: 'POST',
+        headers: { cookie: primary.cookie },
+      })
+    )
+
+    expect(shareRes.status).toBe(200)
+    const shareBody = await shareRes.json()
+    expect(shareBody.success).toBe(true)
+    expect(shareBody.data.assetId).toBe(uploaded.data.id)
+    expect(shareBody.data.url).toContain('/api/assets/shared/')
+    expect(shareBody.data.token.length).toBeGreaterThan(20)
+
+    const downloadRes = await app.handle(new Request(shareBody.data.url))
+    expect(downloadRes.status).toBe(200)
+    expect(downloadRes.headers.get('content-type')).toBe(original.mimeType)
+    expect(downloadRes.headers.get('content-disposition')).toContain('share-me.png')
+    expect((await downloadRes.arrayBuffer()).byteLength).toBe(original.size)
+  })
+
+  it('creates a 30 second transfer session for an owned asset', async () => {
+    const uploadRes = await app.handle(
+      new Request('http://localhost/api/assets/upload', {
+        method: 'POST',
+        headers: { cookie: primary.cookie },
+        body: multipartBody(await pngBytes(), 'lan-transfer.png', 'image/png'),
+      })
+    )
+    const uploaded = await uploadRes.json()
+    const before = Date.now()
+
+    const sessionRes = await app.handle(
+      new Request(`http://localhost/api/assets/${uploaded.data.id}/transfer-session`, {
+        method: 'POST',
+        headers: { cookie: primary.cookie },
+      })
+    )
+
+    expect(sessionRes.status).toBe(200)
+    const sessionBody = await sessionRes.json()
+    expect(sessionBody.success).toBe(true)
+    expect(sessionBody.data.asset.id).toBe(uploaded.data.id)
+    expect(new URL(sessionBody.data.pageUrl).pathname).toStartWith('/transfer')
+    expect(sessionBody.data.wsUrl).toContain('/api/transfers/')
+
+    const expiresAt = new Date(sessionBody.data.expiresAt).getTime()
+    expect(expiresAt).toBeGreaterThan(before + 29_000)
+    expect(expiresAt).toBeLessThanOrEqual(before + 31_000)
+  })
+
   it('returns 401 for unauthenticated upload', async () => {
     const res = await app.handle(
       new Request('http://localhost/api/assets/upload', {

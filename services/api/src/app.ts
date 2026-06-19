@@ -10,6 +10,7 @@ import { assetsModule } from './modules/assets'
 import { subjectsModule } from './modules/subjects'
 import { systemModule } from './modules/system'
 import { textsModule } from './modules/texts'
+import { transfersModule } from './modules/transfers'
 import { corsPlugin } from './plugins/cors'
 import { errorHandler } from './middlewares/error-handler'
 
@@ -27,7 +28,13 @@ const baseApp = new Elysia()
   .use(corsPlugin)
   .use(errorHandler)
   .group('/api', (api) =>
-    api.use(systemModule).use(authModule).use(assetsModule).use(textsModule).use(subjectsModule)
+    api
+      .use(systemModule)
+      .use(authModule)
+      .use(assetsModule)
+      .use(textsModule)
+      .use(subjectsModule)
+      .use(transfersModule)
   )
 
 export const app =

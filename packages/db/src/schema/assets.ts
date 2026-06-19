@@ -7,6 +7,7 @@ import {
   jsonb,
   pgSchema,
   text,
+  timestamp,
   uniqueIndex,
   uuid,
   varchar,
@@ -135,6 +136,28 @@ export const assetFiles = assetsSchema.table(
   })
 )
 
+export const assetShareLinks = assetsSchema.table(
+  'asset_share_links',
+  {
+    id: idColumn(),
+    assetId: uuid('asset_id')
+      .notNull()
+      .references(() => assets.id, { onDelete: 'cascade' }),
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    token: varchar('token', { length: 96 }).notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    createdAt: createdAtColumn(),
+  },
+  (table) => ({
+    tokenUnique: uniqueIndex('asset_share_links_token_unique').on(table.token),
+    assetIdIndex: index('asset_share_links_asset_id_idx').on(table.assetId),
+    ownerIdIndex: index('asset_share_links_owner_id_idx').on(table.ownerId),
+  })
+)
+
 export const assetsRelations = relations(assets, ({ one, many }) => ({
   owner: one(users, {
     fields: [assets.ownerId],
@@ -163,9 +186,22 @@ export const assetFilesRelations = relations(assetFiles, ({ one }) => ({
   }),
 }))
 
+export const assetShareLinksRelations = relations(assetShareLinks, ({ one }) => ({
+  asset: one(assets, {
+    fields: [assetShareLinks.assetId],
+    references: [assets.id],
+  }),
+  owner: one(users, {
+    fields: [assetShareLinks.ownerId],
+    references: [users.id],
+  }),
+}))
+
 export type Asset = typeof assets.$inferSelect
 export type NewAsset = typeof assets.$inferInsert
 export type AssetTag = typeof assetTags.$inferSelect
 export type NewAssetTag = typeof assetTags.$inferInsert
 export type AssetFile = typeof assetFiles.$inferSelect
 export type NewAssetFile = typeof assetFiles.$inferInsert
+export type AssetShareLink = typeof assetShareLinks.$inferSelect
+export type NewAssetShareLink = typeof assetShareLinks.$inferInsert

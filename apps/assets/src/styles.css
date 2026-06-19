@@ -545,6 +545,18 @@ textarea:focus-visible {
   width: min(440px, 100%);
 }
 
+.transfer-card code {
+  display: block;
+  overflow-wrap: anywhere;
+  margin: 16px 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--accent);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .editor-panel h2,
 .confirm-card h2 {
   font-size: 28px;

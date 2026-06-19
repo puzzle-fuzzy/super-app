@@ -17,6 +17,7 @@
 - Added Playwright E2E coverage for the auth-to-workspace browser flow.
 - Added the assets API, storage-backed upload flow, and `apps/assets` asset center.
 - Added text and subject asset extension flows with API, frontend editing, and E2E coverage.
+- Added asset share links, 30-second transfer rooms, WebSocket signaling, and the `apps/transfer` receiver app.
 - Initialized Git repository metadata and line-ending normalization.
 
 ### Changed
@@ -27,3 +28,4 @@
 - Migrated React/Vite apps from Tailwind config files to the Tailwind CSS v4 Vite plugin.
 - Aligned local app URLs with Vite base paths and normalized API CORS checks to origins.
 - Hardened asset extension endpoints and assets list query validation.
+- Reworked the assets app actions to include asset transfer and share-link creation.
