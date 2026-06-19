@@ -1,13 +1,5 @@
 import { useState, useEffect } from 'react'
-import {
-  Box,
-  ChevronDown,
-  Image,
-  Key,
-  LogOut,
-  Send,
-  UserRound,
-} from 'lucide-react'
+import { Box, ChevronDown, Image, Key, LogOut, Send, UserRound } from 'lucide-react'
 
 import { assetsApi, canvasApi } from '@super-app/api-client'
 import { clientEnv } from '@super-app/env/client'
@@ -38,21 +30,21 @@ const SHORTCUTS: Shortcut[] = [
     label: '画布',
     description: '创建项目，把资产拖入画布并保存云端文档。',
     href: clientEnv.SUPER_PUBLIC_CANVAS_APP_URL,
-    status: '即将上线',
+    status: '可用',
     icon: Box,
   },
   {
     label: '传输',
     description: 'P2P 文本与文件传输，完成后可保存到资产中心。',
     href: clientEnv.SUPER_PUBLIC_TRANSFER_APP_URL,
-    status: '即将上线',
+    status: '可用',
     icon: Send,
   },
   {
     label: 'API 控制台',
     description: '管理 API Key、额度、调用记录和后续模型能力。',
     href: clientEnv.SUPER_PUBLIC_CONSOLE_APP_URL,
-    status: '即将上线',
+    status: '可用',
     icon: Key,
   },
 ]
