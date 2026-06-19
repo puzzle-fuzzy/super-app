@@ -136,15 +136,24 @@ export function AssetsApp() {
           {items.map((asset) => (
             <article className="asset-card" key={asset.id}>
               <div className="asset-thumb">
-                {asset.kind === 'image' ? (
-                  <img src={asset.files[0]?.url} alt={asset.title} />
+                {asset.thumbnailUrl || asset.kind === 'image' ? (
+                  <img
+                    src={asset.thumbnailUrl ?? asset.files[0]?.url}
+                    alt={asset.title}
+                    loading="lazy"
+                  />
                 ) : (
                   <span className="asset-kind-badge">{asset.kind}</span>
                 )}
               </div>
               <div className="asset-meta">
                 <h3>{asset.title}</h3>
-                <p>{asset.kind}</p>
+                <p>
+                  {asset.kind}
+                  {asset.files[0]?.width && asset.files[0]?.height
+                    ? ` · ${asset.files[0].width}×${asset.files[0].height}`
+                    : ''}
+                </p>
               </div>
               <button type="button" onClick={() => handleDelete(asset.id)}>
                 删除

@@ -51,20 +51,26 @@ describe('assets module', () => {
       new Request('http://localhost/api/assets/upload', {
         method: 'POST',
         headers: { cookie: primary.cookie },
-        body: multipartBody(pngBytes(), 'sample.png', 'image/png'),
+        body: multipartBody(await pngBytes(), 'sample.png', 'image/png'),
       })
     )
     expect(uploadRes.status).toBe(200)
     const uploaded = await uploadRes.json()
     expect(uploaded.success).toBe(true)
     expect(uploaded.data.kind).toBe('image')
-    expect(uploaded.data.files).toHaveLength(1)
-    expect(uploaded.data.files[0].role).toBe('original')
+    // original carries probed dimensions; thumbnail is generated for images.
+    const original = uploaded.data.files.find((f: { role: string }) => f.role === 'original')
+    expect(original).toBeTruthy()
+    expect(original.width).toBe(64)
+    expect(original.height).toBe(64)
+    const thumbnail = uploaded.data.files.find((f: { role: string }) => f.role === 'thumbnail')
+    expect(thumbnail).toBeTruthy()
+    expect(uploaded.data.thumbnailUrl).toBeTruthy()
 
     const assetId = uploaded.data.id
 
-    // The file exists on disk.
-    const filePath = path.join(serverEnv.STORAGE_DIR, uploaded.data.files[0].storageKey)
+    // The original file exists on disk.
+    const filePath = path.join(serverEnv.STORAGE_DIR, original.storageKey)
     expect(await Bun.file(filePath).exists()).toBe(true)
 
     // Listed in the full list.
@@ -118,7 +124,7 @@ describe('assets module', () => {
       new Request('http://localhost/api/assets/upload', {
         method: 'POST',
         headers: { cookie: primary.cookie },
-        body: multipartBody(pngBytes(), 'ephemeral.png', 'image/png'),
+        body: multipartBody(await pngBytes(), 'ephemeral.png', 'image/png'),
       })
     )
     const uploaded = await uploadRes.json()
@@ -183,7 +189,7 @@ describe('assets module', () => {
       new Request('http://localhost/api/assets/upload', {
         method: 'POST',
         headers: { cookie: other.cookie },
-        body: multipartBody(pngBytes(), 'other.png', 'image/png'),
+        body: multipartBody(await pngBytes(), 'other.png', 'image/png'),
       })
     )
     const uploaded = await uploadRes.json()
@@ -201,7 +207,7 @@ describe('assets module', () => {
     const res = await app.handle(
       new Request('http://localhost/api/assets/upload', {
         method: 'POST',
-        body: multipartBody(pngBytes(), 'anon.png', 'image/png'),
+        body: multipartBody(await pngBytes(), 'anon.png', 'image/png'),
       })
     )
     expect(res.status).toBe(401)
@@ -226,15 +232,15 @@ async function createUser(name: string): Promise<TestUser> {
   return user
 }
 
-function pngBytes(): Uint8Array {
-  // Minimal 1x1 PNG.
-  return new Uint8Array([
-    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
-    0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
-    0x89, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x62, 0x00, 0x01, 0x00, 0x00,
-    0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
-    0x42, 0x60, 0x82,
-  ])
+async function pngBytes(): Promise<Uint8Array> {
+  // A properly-encoded 64x64 PNG (sharp-generated) so the probe + thumbnail
+  // paths run against a real image, not a minimal header stub.
+  const sharp = (await import('sharp')).default
+  return sharp({
+    create: { width: 64, height: 64, channels: 3, background: { r: 80, g: 120, b: 200 } },
+  })
+    .png()
+    .toBuffer()
 }
 
 function maxUploadBytes(): number {

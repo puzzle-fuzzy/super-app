@@ -8,11 +8,12 @@ import type {
 import type { Db } from '@super-app/db'
 import { assetFiles, assets } from '@super-app/db/schema'
 import type { StorageProvider } from '@super-app/storage'
-import { and, desc, eq, lt, or, type SQL } from 'drizzle-orm'
+import { and, desc, eq, inArray, lt, or, type SQL } from 'drizzle-orm'
 
 import { serverEnv } from '@super-app/env/server'
 
 import { AppError } from '../../shared/errors'
+import { generateThumbnail, probeMedia, type MediaProbe } from '../../shared/media'
 
 const MAX_LIMIT = 50
 const DEFAULT_LIMIT = 20
@@ -77,6 +78,9 @@ export async function uploadAsset(input: UploadAssetInput): Promise<AssetDto> {
   try {
     const stored = await storage.put({ key: storageKey, body, mimeType })
 
+    // Probe dimensions/duration (best-effort; never blocks the upload).
+    const probe = await probeMedia(body, mimeType, kind).catch((): MediaProbe => ({}))
+
     await db.insert(assetFiles).values({
       assetId: asset.id,
       role: 'original',
@@ -84,7 +88,32 @@ export async function uploadAsset(input: UploadAssetInput): Promise<AssetDto> {
       storageKey: stored.key,
       mimeType,
       size,
+      width: probe.width,
+      height: probe.height,
+      duration: probe.duration,
     })
+
+    // Generate + store a thumbnail for images/videos (best-effort).
+    const thumbnail = await generateThumbnail(body, mimeType, kind).catch(() => null)
+    if (thumbnail) {
+      const thumbKey = `${owner.id}/${asset.id}/thumbnail/${sanitizeFileName(fileName)}.jpg`
+      const thumbStored = await storage.put({
+        key: thumbKey,
+        body: thumbnail.body,
+        mimeType: thumbnail.mimeType,
+      })
+      await db.insert(assetFiles).values({
+        assetId: asset.id,
+        role: 'thumbnail',
+        storageBucket: thumbStored.bucket,
+        storageKey: thumbStored.key,
+        mimeType: thumbnail.mimeType,
+        size: thumbnail.body.byteLength,
+      })
+      // Convenience pointer on the main row so listings can render thumbnails
+      // without joining asset_files.
+      await db.update(assets).set({ thumbnailKey: thumbKey }).where(eq(assets.id, asset.id))
+    }
   } catch (error) {
     await db.delete(assets).where(eq(assets.id, asset.id))
     throw error
@@ -134,8 +163,12 @@ export async function listAssets(input: ListAssetsInput): Promise<AssetListRespo
   const hasMore = rows.length > effectiveLimit
   const page = hasMore ? rows.slice(0, effectiveLimit) : rows
 
-  const fileResults = await Promise.all(page.map((row) => loadFilesForAsset(db, row.id)))
-  const items: AssetDto[] = page.map((row, index) => toAssetDto(row, fileResults[index]))
+  // Batch-fetch all files for the page in one query (avoids N+1 per-row fetches).
+  const filesByAsset = await loadFilesForAssets(
+    db,
+    page.map((row) => row.id)
+  )
+  const items: AssetDto[] = page.map((row) => toAssetDto(row, filesByAsset.get(row.id) ?? []))
 
   const nextCursor =
     hasMore && page.length > 0
@@ -200,6 +233,29 @@ async function loadFilesForAsset(
     .from(assetFiles)
     .where(eq(assetFiles.assetId, assetId))
     .orderBy(desc(assetFiles.createdAt))
+}
+
+async function loadFilesForAssets(
+  db: Db,
+  assetIds: string[]
+): Promise<Map<string, (typeof assetFiles.$inferSelect)[]>> {
+  if (assetIds.length === 0) {
+    return new Map()
+  }
+  const rows = await db
+    .select()
+    .from(assetFiles)
+    .where(inArray(assetFiles.assetId, assetIds))
+    .orderBy(desc(assetFiles.createdAt))
+
+  const grouped = new Map<string, (typeof assetFiles.$inferSelect)[]>()
+  for (const id of assetIds) {
+    grouped.set(id, [])
+  }
+  for (const row of rows) {
+    grouped.get(row.assetId)?.push(row)
+  }
+  return grouped
 }
 
 export function toAssetDto(
