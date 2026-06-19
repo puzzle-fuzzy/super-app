@@ -19,7 +19,7 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "build:frontends": "turbo build --filter=./apps/*",
+    "build:frontends": "NODE_ENV=production turbo build --filter=./apps/* --force",
     "collect:frontends": "bun scripts/collect-frontends.ts",
     "build:web": "pnpm build:frontends && pnpm collect:frontends",
     "lint": "turbo lint",
