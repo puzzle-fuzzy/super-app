@@ -105,24 +105,45 @@ function normalizeReturnTo(returnTo?: string) {
 
   try {
     const url = new URL(value)
+    const allowedOrigins = getAllowedReturnOrigins()
 
-    // Accept any valid URL — the origin whitelist is too restrictive for
-    // development where users access the app via LAN IPs (192.168.x.x, etc.).
-    // Open-redirect concerns don't apply here since all Super apps share the
-    // same cookie domain in production.
+    if (allowedOrigins.has(url.origin)) {
+      const authOrigin = new URL(clientEnv.SUPER_PUBLIC_AUTH_APP_URL).origin
 
-    const authOrigin = new URL(clientEnv.SUPER_PUBLIC_AUTH_APP_URL).origin
+      if (url.origin === authOrigin) {
+        return `${url.pathname}${url.search}${url.hash}`
+      }
 
-    if (url.origin === authOrigin) {
-      return `${url.pathname}${url.search}${url.hash}`
+      return url.toString()
     }
-
-    return url.toString()
   } catch {
-    // Not a valid absolute URL — ignore
+    return fallback
   }
 
   return fallback
+}
+
+function getAllowedReturnOrigins() {
+  const origins = new Set(
+    [
+      clientEnv.SUPER_PUBLIC_SITE_URL,
+      clientEnv.SUPER_PUBLIC_DOCS_URL,
+      clientEnv.SUPER_PUBLIC_AUTH_APP_URL,
+      clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL,
+      clientEnv.SUPER_PUBLIC_CANVAS_APP_URL,
+      clientEnv.SUPER_PUBLIC_ASSETS_APP_URL,
+      clientEnv.SUPER_PUBLIC_TRANSFER_APP_URL,
+      clientEnv.SUPER_PUBLIC_CONSOLE_APP_URL,
+    ].map((value) => new URL(value).origin)
+  )
+
+  // Also allow the current page's origin so that accessing via a LAN IP
+  // (e.g. http://192.168.3.147:5103) does not silently drop the return_to.
+  if (isBrowser()) {
+    origins.add(window.location.origin)
+  }
+
+  return origins
 }
 
 function getCurrentBrowserUrl() {
