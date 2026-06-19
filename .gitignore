@@ -3,6 +3,7 @@ node_modules/
 dist/
 .turbo/
 .vscode/
+.claude/
 coverage/
 test-results/
 playwright-report/
