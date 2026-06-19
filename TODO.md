@@ -26,4 +26,8 @@
 - [ ] Harden transfer room lifecycle: persisted room records, explicit expiry cleanup, and clearer expired-link UX.
 - [ ] Add manual QA coverage for real LAN device-to-device transfer beyond Playwright fallback download.
 - [ ] Connect assets transfer/share actions into workspace entry points.
-- [ ] Start the canvas app MVP with saved canvas projects and asset insertion.
+- [x] Implement Canvas API endpoints (CRUD projects, versioning, pagination).
+- [ ] Scaffold Canvas frontend app (canvas editor UI).
+- [ ] Integrate workspace with live recent-assets and recent-projects data.
+- [ ] Build API Console application for API key management.
+- [ ] Add asset tags UI (display and edit).

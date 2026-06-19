@@ -8,7 +8,21 @@
       "Bash(git commit -m 'fix\\(api\\): add --env-file flag to load .env from monorepo root *)",
       "Bash(git commit -m 'chore: add .claude to .gitignore *)",
       "Bash(git push *)",
-      "Bash(git commit -m 'feat: set favicon to super logo CDN URL *)"
+      "Bash(git commit -m 'feat: set favicon to super logo CDN URL *)",
+      "Bash(npx tsc *)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm install *)",
+      "Bash(git commit -m 'feat\\(assets\\): add ui-react component library with Select and Modal *)",
+      "Bash(git commit -m 'feat\\(workspace\\): redesign workspace page with Tailwind CSS, add home button to assets *)",
+      "Bash(pnpm --filter @super-app/api test -- --testPathPattern canvas)",
+      "Bash(pnpm --filter @super-app/api typecheck)",
+      "Bash(pnpm --filter @super-app/api-client typecheck)",
+      "Bash(pnpm --filter @super-app/contracts typecheck)",
+      "Bash(git commit -m 'feat\\(canvas\\): add Canvas API with CRUD, versioning, and tests *)"
+    ],
+    "additionalDirectories": [
+      "/tmp",
+      "/private/tmp"
     ]
   }
 }

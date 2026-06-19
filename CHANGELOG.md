@@ -18,6 +18,7 @@
 - Added the assets API, storage-backed upload flow, and `apps/assets` asset center.
 - Added text and subject asset extension flows with API, frontend editing, and E2E coverage.
 - Added asset share links, 30-second transfer rooms, WebSocket signaling, and the `apps/transfer` receiver app.
+- Added Canvas API module with CRUD endpoints for projects, document versioning, and pagination.
 - Initialized Git repository metadata and line-ending normalization.
 
 ### Changed

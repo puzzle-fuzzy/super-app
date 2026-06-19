@@ -16,6 +16,12 @@ import type {
   TextAssetDetailDto,
   UpdateTextAssetRequest,
 } from '@super-app/contracts/text-assets'
+import type {
+  CanvasProjectDetailDto,
+  CanvasProjectListResponse,
+  CreateCanvasProjectRequest,
+  UpdateCanvasProjectRequest,
+} from '@super-app/contracts/canvas'
 import type { CurrentUser, LoginRequest, RegisterRequest } from '@super-app/contracts/auth'
 import { redirectToLogin } from '@super-app/auth-client'
 import { clientEnv } from '@super-app/env/client'
@@ -165,6 +171,38 @@ export const subjectsApi = {
 
   remove(id: string) {
     return apiFetch<{ deleted: true }>(`/assets/subjects/${id}`, { method: 'DELETE' })
+  },
+}
+
+export const canvasApi = {
+  create(input: CreateCanvasProjectRequest) {
+    return apiFetch<CanvasProjectDetailDto>('/canvas/projects/', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
+  },
+
+  list(params?: { limit?: number; cursor?: string }) {
+    const qs = new URLSearchParams()
+    if (params?.limit) qs.set('limit', String(params.limit))
+    if (params?.cursor) qs.set('cursor', params.cursor)
+    const query = qs.toString()
+    return apiFetch<CanvasProjectListResponse>(`/canvas/projects/${query ? `?${query}` : ''}`)
+  },
+
+  get(id: string) {
+    return apiFetch<CanvasProjectDetailDto>(`/canvas/projects/${id}`)
+  },
+
+  update(id: string, input: UpdateCanvasProjectRequest) {
+    return apiFetch<CanvasProjectDetailDto>(`/canvas/projects/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    })
+  },
+
+  remove(id: string) {
+    return apiFetch<{ deleted: true }>(`/canvas/projects/${id}`, { method: 'DELETE' })
   },
 }
 

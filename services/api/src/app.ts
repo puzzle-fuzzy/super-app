@@ -7,6 +7,7 @@ import path from 'node:path'
 
 import { authModule } from './modules/auth'
 import { assetsModule } from './modules/assets'
+import { canvasModule } from './modules/canvas'
 import { subjectsModule } from './modules/subjects'
 import { systemModule } from './modules/system'
 import { textsModule } from './modules/texts'
@@ -34,6 +35,7 @@ const baseApp = new Elysia()
       .use(assetsModule)
       .use(textsModule)
       .use(subjectsModule)
+      .use(canvasModule)
       .use(transfersModule)
   )
 

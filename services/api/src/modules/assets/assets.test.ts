@@ -264,7 +264,7 @@ describe('assets module', () => {
     expect((await downloadRes.arrayBuffer()).byteLength).toBe(original.size)
   })
 
-  it('creates a 30 second transfer session for an owned asset', async () => {
+  it('creates a 3-minute transfer session for an owned asset', async () => {
     const uploadRes = await app.handle(
       new Request('http://localhost/api/assets/upload', {
         method: 'POST',
@@ -290,8 +290,8 @@ describe('assets module', () => {
     expect(sessionBody.data.wsUrl).toContain('/api/transfers/')
 
     const expiresAt = new Date(sessionBody.data.expiresAt).getTime()
-    expect(expiresAt).toBeGreaterThan(before + 29_000)
-    expect(expiresAt).toBeLessThanOrEqual(before + 31_000)
+    expect(expiresAt).toBeGreaterThan(before + 179_000)
+    expect(expiresAt).toBeLessThanOrEqual(before + 181_000)
   })
 
   it('returns 401 for unauthenticated upload', async () => {

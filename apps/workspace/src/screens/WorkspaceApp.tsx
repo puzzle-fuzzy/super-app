@@ -198,7 +198,7 @@ export function WorkspaceApp() {
           <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
             CLOUD WORKSPACE
           </p>
-          <h1 className="m-0 text-[clamp(34px,5vw,56px)] font-bold leading-none tracking-[-0.02em]">
+          <h1 className="m-0 pb-8 text-[clamp(34px,5vw,56px)] font-bold leading-none tracking-[-0.02em]">
             欢迎回来，{user.name || user.email}
           </h1>
         </div>
