@@ -12,6 +12,7 @@ import {
   Grid3X3,
   House,
   ImageIcon,
+  LayoutTemplate,
   Link2,
   LogOut,
   Music,
@@ -44,12 +45,18 @@ import type {
   UpdateStyleAssetRequest,
 } from '@super-app/contracts/style-assets'
 import type {
+  CreateTemplateAssetRequest,
+  TemplateAssetDetailDto,
+  TemplateType,
+  UpdateTemplateAssetRequest,
+} from '@super-app/contracts/template-assets'
+import type {
   CreateTextAssetRequest,
   TextAssetDetailDto,
   TextType,
   UpdateTextAssetRequest,
 } from '@super-app/contracts/text-assets'
-import { assetsApi, stylesApi, subjectsApi, textsApi } from '@super-app/api-client'
+import { assetsApi, stylesApi, subjectsApi, templatesApi, textsApi } from '@super-app/api-client'
 import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
 import { clientEnv } from '@super-app/env/client'
@@ -72,7 +79,7 @@ const FILTERS: FilterOption[] = [
   { value: 'text', label: '文本', helper: '提示词和备注' },
   { value: 'subject', label: '主体', helper: '人物和商品' },
   { value: 'style', label: '风格', helper: '可复用生成风格' },
-  { value: 'template', label: '模板', helper: '即将上线', disabled: true },
+  { value: 'template', label: '模板', helper: '可复用结构' },
 ]
 
 const TEXT_TYPE_OPTIONS: { value: TextType; label: string }[] = [
@@ -103,6 +110,16 @@ const STYLE_TYPE_OPTIONS: { value: StyleType; label: string }[] = [
   { value: 'audio', label: '音频' },
   { value: 'ui', label: '界面' },
   { value: 'mixed', label: '混合' },
+]
+
+const TEMPLATE_TYPE_OPTIONS: { value: TemplateType; label: string }[] = [
+  { value: 'canvas', label: '画布' },
+  { value: 'generation', label: '生成工作流' },
+  { value: 'video_storyboard', label: '视频分镜' },
+  { value: 'prompt', label: '提示词' },
+  { value: 'page', label: '页面' },
+  { value: 'poster', label: '海报' },
+  { value: 'workflow', label: '工作流' },
 ]
 
 const CONSISTENCY_OPTIONS = [
@@ -172,7 +189,21 @@ interface StyleEditorState {
   recommendedParams: string
 }
 
-type EditorState = TextEditorState | SubjectEditorState | StyleEditorState | null
+interface TemplateEditorState {
+  kind: 'template'
+  id?: string
+  title: string
+  templateType: TemplateType
+  // JSON field edited as text; parsed on save.
+  templateData: string
+}
+
+type EditorState =
+  | TextEditorState
+  | SubjectEditorState
+  | StyleEditorState
+  | TemplateEditorState
+  | null
 
 interface TransferNotice {
   assetId: string
@@ -320,6 +351,15 @@ export function AssetsApp() {
       recommendedModel: '',
       colorPalette: '',
       recommendedParams: '',
+    })
+  }
+
+  function openNewTemplate() {
+    setEditor({
+      kind: 'template',
+      title: '',
+      templateType: 'prompt',
+      templateData: '',
     })
   }
 
@@ -476,6 +516,22 @@ export function AssetsApp() {
       .catch((err) => setListError(err instanceof Error ? err.message : '加载风格失败'))
   }
 
+  function openEditTemplate(asset: AssetDto) {
+    setListError(null)
+    templatesApi
+      .get(asset.id)
+      .then((detail: TemplateAssetDetailDto) => {
+        setEditor({
+          kind: 'template',
+          id: detail.id,
+          title: detail.title,
+          templateType: detail.templateType,
+          templateData: detail.templateData ? JSON.stringify(detail.templateData) : '',
+        })
+      })
+      .catch((err) => setListError(err instanceof Error ? err.message : '加载模板失败'))
+  }
+
   async function saveEditor() {
     if (!editor) return
 
@@ -537,7 +593,7 @@ export function AssetsApp() {
             setItems((prev) => [created, ...prev])
           }
         }
-      } else {
+      } else if (editor.kind === 'style') {
         // style
         if (!editor.title.trim()) {
           throw new Error('标题不能为空')
@@ -575,6 +631,45 @@ export function AssetsApp() {
           setItems((prev) => prev.map((it) => (it.id === updated.id ? updated : it)))
         } else {
           const created = await stylesApi.create(payload as CreateStyleAssetRequest)
+          if (!kind || created.kind === kind) {
+            setItems((prev) => [created, ...prev])
+          }
+        }
+      } else {
+        // template
+        if (!editor.title.trim()) {
+          throw new Error('标题不能为空')
+        }
+
+        const parseTemplateJson = (text: string): Record<string, unknown> => {
+          const trimmed = text.trim()
+          if (!trimmed) return {}
+          try {
+            const parsed = JSON.parse(trimmed)
+            if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+              throw new Error('JSON 必须是对象')
+            }
+            return parsed as Record<string, unknown>
+          } catch (e) {
+            throw new Error('模板数据 JSON 格式错误：' + (e as Error).message)
+          }
+        }
+
+        const templateData = parseTemplateJson(editor.templateData)
+        const payload = {
+          title: editor.title,
+          templateType: editor.templateType,
+          templateData,
+        }
+
+        if (editor.id) {
+          const updated = await templatesApi.update(
+            editor.id,
+            payload as UpdateTemplateAssetRequest
+          )
+          setItems((prev) => prev.map((it) => (it.id === updated.id ? updated : it)))
+        } else {
+          const created = await templatesApi.create(payload as CreateTemplateAssetRequest)
           if (!kind || created.kind === kind) {
             setItems((prev) => [created, ...prev])
           }
@@ -643,6 +738,10 @@ export function AssetsApp() {
               <button type="button" className={secondaryButton} onClick={openNewStyle}>
                 <Palette size={16} aria-hidden="true" />
                 新建风格
+              </button>
+              <button type="button" className={secondaryButton} onClick={openNewTemplate}>
+                <LayoutTemplate size={16} aria-hidden="true" />
+                新建模板
               </button>
               <a
                 href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
@@ -787,6 +886,7 @@ export function AssetsApp() {
                     if (asset.kind === 'text') openEditText(asset)
                     if (asset.kind === 'subject') openEditSubject(asset)
                     if (asset.kind === 'style') openEditStyle(asset)
+                    if (asset.kind === 'template') openEditTemplate(asset)
                   }}
                   onShare={() => handleCreateShareLink(asset)}
                   onTransfer={() => handleStartTransfer(asset)}
@@ -852,7 +952,11 @@ function AssetCard({
   onToggleMenu: () => void
   onCloseMenu: () => void
 }) {
-  const canEdit = asset.kind === 'text' || asset.kind === 'subject' || asset.kind === 'style'
+  const canEdit =
+    asset.kind === 'text' ||
+    asset.kind === 'subject' ||
+    asset.kind === 'style' ||
+    asset.kind === 'template'
   const canTransfer = asset.files.some((file) => file.role === 'original')
   const originalFile = asset.files.find((file) => file.role === 'original') ?? asset.files[0]
   const isMedia = asset.kind === 'image' || asset.kind === 'video'
@@ -1117,7 +1221,13 @@ function EditorPanel({
         kicker="创作编辑"
         title={
           (editor.id ? '编辑' : '新建') +
-          (editor.kind === 'text' ? '文本' : editor.kind === 'subject' ? '主体' : '风格')
+          (editor.kind === 'text'
+            ? '文本'
+            : editor.kind === 'subject'
+              ? '主体'
+              : editor.kind === 'style'
+                ? '风格'
+                : '模板')
         }
       />
       <Modal.Body>
@@ -1135,8 +1245,10 @@ function EditorPanel({
             <TextEditorFields editor={editor} setEditor={setEditor} />
           ) : editor.kind === 'subject' ? (
             <SubjectEditorFields editor={editor} setEditor={setEditor} />
-          ) : (
+          ) : editor.kind === 'style' ? (
             <StyleEditorFields editor={editor} setEditor={setEditor} />
+          ) : (
+            <TemplateEditorFields editor={editor} setEditor={setEditor} />
           )}
         </div>
       </Modal.Body>
@@ -1319,6 +1431,36 @@ function StyleEditorFields({
           rows={3}
           value={editor.recommendedParams}
           onChange={(event) => setEditor({ ...editor, recommendedParams: event.target.value })}
+        />
+      </label>
+    </>
+  )
+}
+
+function TemplateEditorFields({
+  editor,
+  setEditor,
+}: {
+  editor: TemplateEditorState
+  setEditor: (editor: TemplateEditorState) => void
+}) {
+  return (
+    <>
+      <div className={fieldClass}>
+        <span className={fieldLabel}>模板类型</span>
+        <Select
+          options={TEMPLATE_TYPE_OPTIONS}
+          value={editor.templateType}
+          onChange={(value) => setEditor({ ...editor, templateType: value as TemplateType })}
+        />
+      </div>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>模板数据 JSON（可选，如 {`{"nodes":[],"layers":[]}`})</span>
+        <textarea
+          className={`${fieldControl} font-mono text-[13px] leading-relaxed`}
+          rows={8}
+          value={editor.templateData}
+          onChange={(event) => setEditor({ ...editor, templateData: event.target.value })}
         />
       </label>
     </>
