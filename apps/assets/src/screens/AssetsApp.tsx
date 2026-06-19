@@ -3,7 +3,6 @@ import { Modal, Select } from '@super-app/ui-react'
 import {
   Box,
   Check,
-  ChevronDown,
   Copy,
   Download,
   Ellipsis,
@@ -754,8 +753,9 @@ export function AssetsApp() {
               <div className="relative" data-user-menu-root>
                 <button
                   type="button"
-                  className="flex items-center gap-2 rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] px-2 py-1.5 text-sm text-[#e5e5e5] transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
+                  className="grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
                   onClick={() => setUserMenuOpen((prev) => !prev)}
+                  aria-label="打开用户菜单"
                   aria-expanded={userMenuOpen}
                   aria-haspopup="true"
                 >
@@ -763,34 +763,34 @@ export function AssetsApp() {
                     <img
                       className="h-7 w-7 rounded-full object-cover"
                       src={user.avatarUrl}
-                      alt={user.name ?? user.email}
+                      alt=""
                     />
                   ) : (
                     <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2a2a2a] text-[#999999]">
                       <UserRound size={14} aria-hidden="true" />
                     </span>
                   )}
-                  <span className="max-w-[120px] truncate text-[13px] font-medium">
-                    {user.name ?? user.email}
-                  </span>
-                  <ChevronDown
-                    size={14}
-                    className={`text-[#666666] transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
-                    aria-hidden="true"
-                  />
                 </button>
                 <div
-                  className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
+                  className={`absolute top-full right-0 z-50 mt-2 min-w-52 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
                     userMenuOpen ? 'grid' : 'hidden'
                   }`}
                 >
+                  <div className="grid gap-1 border-b border-[#2a2a2a] px-2.5 py-2.5">
+                    <strong className="truncate text-[13px] leading-tight font-semibold text-[#e5e5e5]">
+                      {user.name ?? 'Super 用户'}
+                    </strong>
+                    <span className="truncate text-xs leading-tight text-[#666666]">
+                      {user.email}
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
                       setUserMenuOpen(false)
                       handleLogout()
                     }}
-                    className={menuItem}
+                    className={`${menuItem} mt-1`}
                   >
                     <LogOut size={15} aria-hidden="true" />
                     退出登录

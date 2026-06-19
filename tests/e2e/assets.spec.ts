@@ -24,6 +24,11 @@ test('uploads an asset from the assets app after registering', async ({ context,
 
   await expect(page).toHaveURL(assetsUrl)
   await expect(page.getByRole('heading', { name: '素材库' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '退出登录' })).toHaveCount(0)
+  await page.getByRole('button', { name: '打开用户菜单' }).click()
+  await expect(page.getByRole('button', { name: '退出登录' })).toBeVisible()
+  await page.getByRole('heading', { name: '素材库' }).click()
+  await expect(page.getByRole('button', { name: '退出登录' })).toHaveCount(0)
 
   // Empty state before any upload.
   await expect(page.getByRole('heading', { name: '还没有资产' })).toBeVisible()
