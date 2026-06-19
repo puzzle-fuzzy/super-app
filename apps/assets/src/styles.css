@@ -222,3 +222,78 @@ input {
   margin: 12px 0 0;
   color: var(--color-muted);
 }
+
+.text-editor-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 24px;
+}
+
+.text-editor {
+  display: grid;
+  width: min(640px, 100%);
+  gap: 16px;
+  max-height: 88vh;
+  overflow: auto;
+  padding: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-panel);
+}
+
+.text-editor h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+}
+
+.editor-field {
+  display: grid;
+  gap: 6px;
+}
+
+.editor-field span {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.editor-field input,
+.editor-field select,
+.editor-field textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--color-foreground);
+  outline: none;
+  padding: 10px 12px;
+  font: inherit;
+  resize: vertical;
+}
+
+.editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.editor-actions button {
+  height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-foreground);
+  cursor: pointer;
+}
+
+.editor-actions button:last-child {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #101010;
+  font-weight: 700;
+}
