@@ -826,7 +826,7 @@ function AssetActions({
           <button
             type="button"
             onClick={() => runAction(onDelete)}
-            className={`${menuItem} text-[#ffaaa3]`}
+            className={`${menuItem} text-[#ffaaa3] hover:bg-[#3a1f1d] hover:text-[#ffb8b2]`}
           >
             <Trash2 size={15} aria-hidden="true" />
             删除
