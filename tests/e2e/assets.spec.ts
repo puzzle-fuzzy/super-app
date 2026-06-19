@@ -23,7 +23,7 @@ test('uploads an asset from the assets app after registering', async ({ context,
   await page.getByRole('button', { name: '创建并进入' }).click()
 
   await expect(page).toHaveURL(assetsUrl)
-  await expect(page.getByRole('heading', { name: '资产中心' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '素材库' })).toBeVisible()
 
   // Empty state before any upload.
   await expect(page.getByRole('heading', { name: '还没有资产' })).toBeVisible()

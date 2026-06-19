@@ -17,6 +17,7 @@
     "@super-app/contracts": "workspace:*",
     "@super-app/design-tokens": "workspace:*",
     "@super-app/env": "workspace:*",
+    "lucide-react": "^1.21.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

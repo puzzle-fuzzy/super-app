@@ -1,4 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
+import {
+  Box,
+  Copy,
+  File as FileIcon,
+  FileText,
+  Grid3X3,
+  ImageIcon,
+  Link2,
+  LogOut,
+  Music,
+  Pencil,
+  Plus,
+  Search,
+  Send,
+  Share2,
+  Trash2,
+  Type as TypeIcon,
+  Upload,
+  UserRound,
+  Video,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 import type { AssetDto, AssetKind } from '@super-app/contracts/assets'
 import type { AssetTransferSessionDto } from '@super-app/contracts/assets'
@@ -100,6 +122,7 @@ interface TransferNotice {
 export function AssetsApp() {
   const { user, isLoading, error } = useRequireAuth()
   const [filter, setFilter] = useState<FilterKind>('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [items, setItems] = useState<AssetDto[]>([])
   const [isListLoading, setIsListLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -115,6 +138,9 @@ export function AssetsApp() {
 
   const kind = filter === 'all' ? undefined : filter
   const activeFilter = FILTERS.find((option) => option.value === filter) ?? FILTERS[0]
+  const visibleItems = items.filter((item) =>
+    item.title.toLowerCase().includes(searchQuery.trim().toLowerCase())
+  )
 
   useEffect(() => {
     if (!user) return
@@ -380,76 +406,88 @@ export function AssetsApp() {
     <main className="assets-shell bg-background text-foreground">
       <section className="assets-workspace" aria-label="资产中心">
         <header className="assets-topbar">
-          <div className="topbar-nav">
-            <div className="rail-brand">
-              <span>S</span>
-              <div>
-                <strong>Super</strong>
-                <small>我的素材库</small>
-              </div>
+          <div className="topbar-copy">
+            <div>
+              <h1>素材库</h1>
+              <p>管理和浏览你的所有创意资产</p>
             </div>
-            <button type="button" className="quiet-action" onClick={handleLogout}>
-              退出登录
-            </button>
-          </div>
-
-          <div className="hero-panel">
-            <div className="topbar-copy">
-              <p className="eyebrow">Super 素材库</p>
-              <h1>资产中心</h1>
-              <p>收好图片、文件、提示词和角色设定。下一次打开画布时，素材已经在这里等你。</p>
-            </div>
-
-            <div className="quick-compose" aria-label="快速创建">
-              <span>继续创作</span>
+            <div className="topbar-actions">
+              <label className="asset-search">
+                <Search size={16} aria-hidden="true" />
+                <input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="搜索素材..."
+                />
+              </label>
               <button
                 type="button"
-                className="secondary-action"
+                className="primary-action"
                 onClick={() => fileInput.current?.click()}
+                disabled={uploading}
               >
-                {uploading ? '上传中...' : '上传文件'}
+                <Upload size={16} aria-hidden="true" />
+                {uploading ? '上传中...' : '上传素材'}
               </button>
               <button type="button" className="secondary-action" onClick={openNewText}>
+                <FileText size={16} aria-hidden="true" />
                 新建文本
               </button>
-              <button type="button" className="primary-action" onClick={openNewSubject}>
+              <button type="button" className="secondary-action" onClick={openNewSubject}>
+                <UserRound size={16} aria-hidden="true" />
                 新建主体
               </button>
+              <button
+                type="button"
+                className="icon-action"
+                onClick={handleLogout}
+                aria-label="退出登录"
+              >
+                <LogOut size={16} aria-hidden="true" />
+              </button>
             </div>
-
-            <input
-              ref={fileInput}
-              className="file-input"
-              type="file"
-              onChange={handleUpload}
-              disabled={uploading}
-            />
-            <div className="workspace-orb" aria-hidden="true" />
           </div>
+          <input
+            ref={fileInput}
+            className="file-input"
+            type="file"
+            onChange={handleUpload}
+            disabled={uploading}
+          />
         </header>
 
-        <nav className="asset-type-nav" role="tablist" aria-label="资产类型">
-          {FILTERS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              role="tab"
-              aria-label={option.label}
-              aria-selected={filter === option.value}
-              disabled={option.disabled}
-              className={filter === option.value ? 'active' : ''}
-              onClick={() => !option.disabled && setFilter(option.value)}
-            >
-              <span>{option.label}</span>
-              <small>{option.disabled ? '即将上线' : option.helper}</small>
+        <nav className="asset-controls" aria-label="资产视图">
+          <div className="asset-type-nav" role="tablist" aria-label="资产类型">
+            {FILTERS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                role="tab"
+                aria-label={option.label}
+                aria-selected={filter === option.value}
+                disabled={option.disabled}
+                className={filter === option.value ? 'active' : ''}
+                onClick={() => !option.disabled && setFilter(option.value)}
+              >
+                <span>{option.label}</span>
+                <small>
+                  {filter === option.value ? visibleItems.length : option.disabled ? 'soon' : ''}
+                </small>
+              </button>
+            ))}
+          </div>
+          <div className="view-switch" aria-label="视图模式">
+            <button type="button" className="active">
+              <Grid3X3 size={14} aria-hidden="true" />
+              网格
             </button>
-          ))}
+          </div>
         </nav>
 
         <section className="collection-strip" aria-label="当前集合">
           <div>
             <span>正在浏览</span>
-            <strong>{isListLoading ? '同步中' : `${items.length} 个资产`}</strong>
+            <strong>{isListLoading ? '同步中' : `${visibleItems.length} 个素材`}</strong>
           </div>
           <p>
             {activeFilter.label} · {activeFilter.helper}
@@ -461,11 +499,11 @@ export function AssetsApp() {
         <section className="assets-content">
           {isListLoading ? (
             <AssetSkeletons />
-          ) : items.length === 0 ? (
+          ) : visibleItems.length === 0 ? (
             <EmptyState filter={filter} onNewText={openNewText} onNewSubject={openNewSubject} />
           ) : (
             <section className="asset-grid" aria-label="资产列表">
-              {items.map((asset) => (
+              {visibleItems.map((asset) => (
                 <AssetCard
                   asset={asset}
                   key={asset.id}
@@ -529,36 +567,113 @@ function AssetCard({
 }) {
   const canEdit = asset.kind === 'text' || asset.kind === 'subject'
   const canTransfer = asset.files.some((file) => file.role === 'original')
+  const isMedia = asset.kind === 'image' || asset.kind === 'video'
+  const Icon = iconForAsset(asset.kind)
 
   return (
-    <article className="asset-card">
+    <article className={`asset-card ${isMedia ? 'media-card' : 'object-card'}`}>
       <div className="asset-card-main">
-        <AssetPreview asset={asset} />
+        {isMedia ? (
+          <div className="asset-media-wrap">
+            <AssetPreview asset={asset} />
+            <span className="asset-kind-badge">{assetKindLabel(asset.kind)}</span>
+            {asset.kind === 'video' ? (
+              <span className="asset-play-mark">
+                <Video size={18} aria-hidden="true" />
+              </span>
+            ) : null}
+            <AssetActions
+              canEdit={canEdit}
+              canTransfer={canTransfer}
+              onDelete={onDelete}
+              onEdit={onEdit}
+              onShare={onShare}
+              onTransfer={onTransfer}
+              sharing={sharing}
+              transferring={transferring}
+              dark
+            />
+          </div>
+        ) : (
+          <div className="asset-object-body">
+            <span className="asset-object-icon">
+              <Icon size={18} aria-hidden="true" />
+            </span>
+            <span className="asset-kind-text">{assetKindLabel(asset.kind)}</span>
+            <p>{assetSummary(asset)}</p>
+            <AssetActions
+              canEdit={canEdit}
+              canTransfer={canTransfer}
+              onDelete={onDelete}
+              onEdit={onEdit}
+              onShare={onShare}
+              onTransfer={onTransfer}
+              sharing={sharing}
+              transferring={transferring}
+            />
+          </div>
+        )}
         <span className="asset-meta">
           <strong>{asset.title}</strong>
           <small>{assetLabel(asset)}</small>
         </span>
       </div>
-
-      <div className="asset-card-actions">
-        {canTransfer ? (
-          <button type="button" onClick={onTransfer} disabled={transferring}>
-            {transferring ? '创建中' : '传输'}
-          </button>
-        ) : null}
-        <button type="button" onClick={onShare} disabled={sharing || !canTransfer}>
-          {sharing ? '创建中' : '分享链接'}
-        </button>
-        {canEdit ? (
-          <button type="button" onClick={onEdit}>
-            编辑
-          </button>
-        ) : null}
-        <button type="button" onClick={onDelete}>
-          删除
-        </button>
-      </div>
     </article>
+  )
+}
+
+function AssetActions({
+  canEdit,
+  canTransfer,
+  onDelete,
+  onEdit,
+  onShare,
+  onTransfer,
+  sharing,
+  transferring,
+  dark,
+}: {
+  canEdit: boolean
+  canTransfer: boolean
+  onDelete: () => void
+  onEdit: () => void
+  onShare: () => void
+  onTransfer: () => void
+  sharing: boolean
+  transferring: boolean
+  dark?: boolean
+}) {
+  return (
+    <div className={`asset-card-actions ${dark ? 'on-media' : ''}`}>
+      {canTransfer ? (
+        <button
+          type="button"
+          onClick={onTransfer}
+          disabled={transferring}
+          title="局域网传输"
+          aria-label="传输"
+        >
+          <Send size={15} aria-hidden="true" />
+        </button>
+      ) : null}
+      <button
+        type="button"
+        onClick={onShare}
+        disabled={sharing || !canTransfer}
+        title="复制分享链接"
+        aria-label="分享链接"
+      >
+        <Share2 size={15} aria-hidden="true" />
+      </button>
+      {canEdit ? (
+        <button type="button" onClick={onEdit} title="编辑" aria-label="编辑">
+          <Pencil size={15} aria-hidden="true" />
+        </button>
+      ) : null}
+      <button type="button" onClick={onDelete} title="删除" aria-label="删除">
+        <Trash2 size={15} aria-hidden="true" />
+      </button>
+    </div>
   )
 }
 
@@ -584,6 +699,7 @@ function TransferNoticeDialog({
             关闭
           </button>
           <button type="button" onClick={() => copyToClipboard(notice.pageUrl)}>
+            <Copy size={15} aria-hidden="true" />
             复制链接
           </button>
         </div>
@@ -603,7 +719,7 @@ function AssetPreview({ asset }: { asset: AssetDto }) {
 
   return (
     <span className={`asset-thumb symbolic ${asset.kind}`}>
-      <span>{asset.kind.slice(0, 2)}</span>
+      <span>{assetKindLabel(asset.kind).slice(0, 2)}</span>
     </span>
   )
 }
@@ -818,6 +934,7 @@ function EmptyState({
       <p>先上传一张参考图，或者写下第一段提示词，让这里变成你的创作素材库。</p>
       <div>
         <button type="button" onClick={filter === 'subject' ? onNewSubject : onNewText}>
+          <Plus size={16} aria-hidden="true" />
           {filter === 'subject' ? '创建第一个主体' : '写第一段文本'}
         </button>
       </div>
@@ -852,11 +969,81 @@ function StateScreen({ title, description }: { title: string; description: strin
 }
 
 function assetLabel(asset: AssetDto) {
-  if (asset.files[0]?.width && asset.files[0]?.height) {
-    return `${asset.kind} · ${asset.files[0].width}×${asset.files[0].height}`
+  const file = asset.files.find((item) => item.role === 'original') ?? asset.files[0]
+  const parts = [assetKindLabel(asset.kind)]
+
+  if (file?.width && file?.height) {
+    parts.push(`${file.width} × ${file.height}`)
+  }
+  if (file?.size) {
+    parts.push(formatBytes(file.size))
   }
 
-  return asset.kind
+  parts.push(formatDate(asset.createdAt))
+  return parts.join(' · ')
+}
+
+function assetSummary(asset: AssetDto) {
+  if (asset.description) {
+    return asset.description
+  }
+
+  const labels: Record<AssetKind, string> = {
+    image: '视觉参考、画面草稿或生成结果，可用于画布和后续创作。',
+    video: '动态素材已归档，可以快速分享或在局域网内传输。',
+    audio: '声音素材，可作为剪辑、配音或环境声参考。',
+    text: '提示词、设定、脚本或备注文本，适合继续编辑复用。',
+    subject: '人物、商品、场景或物体主体，用于保持生成一致性。',
+    file: '文档、压缩包或附件资料，保留原始文件便于下载。',
+    style: '风格参考资产。',
+    template: '模板资产。',
+  }
+
+  return labels[asset.kind]
+}
+
+function assetKindLabel(kind: AssetKind) {
+  const labels: Record<AssetKind, string> = {
+    image: '图片',
+    video: '视频',
+    audio: '音频',
+    file: '文件',
+    text: '文本',
+    subject: '主体',
+    style: '风格',
+    template: '模板',
+  }
+
+  return labels[kind]
+}
+
+function iconForAsset(kind: AssetKind): LucideIcon {
+  const icons: Record<AssetKind, LucideIcon> = {
+    image: ImageIcon,
+    video: Video,
+    audio: Music,
+    file: FileIcon,
+    text: TypeIcon,
+    subject: Box,
+    style: Link2,
+    template: FileText,
+  }
+
+  return icons[kind]
+}
+
+function formatBytes(size: number) {
+  if (size < 1024) return `${size} B`
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
+  if (size < 1024 * 1024 * 1024) return `${(size / 1024 / 1024).toFixed(1)} MB`
+  return `${(size / 1024 / 1024 / 1024).toFixed(1)} GB`
+}
+
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+  })
 }
 
 async function assetFileFromUrl(url: string, title: string, mimeType?: string): Promise<File> {
