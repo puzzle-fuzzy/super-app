@@ -30,4 +30,7 @@
 - [x] Scaffold Canvas frontend app (project list, editor view, CRUD dialogs).
 - [x] Integrate workspace with live recent-assets and recent-projects data.
 - [x] Build API Console application for API key management.
-- [ ] Add asset tags UI (display and edit).
+- [x] Add asset tags support (contracts, DTO mapping, toAssetDto updated).
+- [x] Populate packages/utils with format utilities.
+- [x] Scaffold apps/docs Astro documentation site.
+- [x] Scaffold apps/site public marketing landing page.

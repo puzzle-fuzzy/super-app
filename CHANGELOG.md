@@ -23,6 +23,10 @@
 - Scaffolded the Canvas frontend app with project list, editor view, and CRUD dialogs.
 - Persisted transfer rooms to database with automatic expiry cleanup and foreign-key integrity.
 - Added API Console app with API key create/list/revoke management and the console frontend.
+- Added tags field to AssetDto schema and toAssetDto service mapper.
+- Populated packages/utils with formatRelativeTime, formatFileSize, and formatDuration.
+- Scaffolded apps/docs Astro documentation site.
+- Scaffolded apps/site public marketing landing page with feature showcase.
 - Initialized Git repository metadata and line-ending normalization.
 
 ### Changed

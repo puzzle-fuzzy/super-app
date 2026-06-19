@@ -35,7 +35,12 @@
       "Bash(docker exec *)",
       "Bash(pnpm --filter @super-app/console lint)",
       "Bash(git commit -m 'feat\\(console\\): add API key management and Console frontend app *)",
-      "Bash(git commit -m 'feat\\(assets\\): add tags field to AssetDto and toAssetDto mapper *)"
+      "Bash(git commit -m 'feat\\(assets\\): add tags field to AssetDto and toAssetDto mapper *)",
+      "Bash(pnpm --filter @super-app/utils typecheck)",
+      "Bash(pnpm --filter @super-app/site typecheck)",
+      "Bash(pnpm --filter @super-app/docs typecheck)",
+      "Bash(pnpm --filter @super-app/site lint)",
+      "Bash(git commit -m 'feat: populate packages/utils, scaffold docs and site apps *)"
     ],
     "additionalDirectories": [
       "/tmp",
