@@ -1,6 +1,11 @@
 import type { ApiError as ApiErrorPayload, ApiResponse } from '@super-app/contracts/api'
 import type { AssetDto, AssetKind, AssetListResponse } from '@super-app/contracts/assets'
 import type {
+  CreateSubjectAssetRequest,
+  SubjectAssetDetailDto,
+  UpdateSubjectAssetRequest,
+} from '@super-app/contracts/subject-assets'
+import type {
   CreateTextAssetRequest,
   TextAssetDetailDto,
   UpdateTextAssetRequest,
@@ -122,6 +127,30 @@ export const textsApi = {
 
   remove(id: string) {
     return apiFetch<{ deleted: true }>(`/assets/texts/${id}`, { method: 'DELETE' })
+  },
+}
+
+export const subjectsApi = {
+  create(input: CreateSubjectAssetRequest) {
+    return apiFetch<SubjectAssetDetailDto>('/assets/subjects/', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
+  },
+
+  get(id: string) {
+    return apiFetch<SubjectAssetDetailDto>(`/assets/subjects/${id}`)
+  },
+
+  update(id: string, input: UpdateSubjectAssetRequest) {
+    return apiFetch<SubjectAssetDetailDto>(`/assets/subjects/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    })
+  },
+
+  remove(id: string) {
+    return apiFetch<{ deleted: true }>(`/assets/subjects/${id}`, { method: 'DELETE' })
   },
 }
 
