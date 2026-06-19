@@ -13,6 +13,11 @@ import type {
   UpdateSubjectAssetRequest,
 } from '@super-app/contracts/subject-assets'
 import type {
+  CreateStyleAssetRequest,
+  StyleAssetDetailDto,
+  UpdateStyleAssetRequest,
+} from '@super-app/contracts/style-assets'
+import type {
   CreateTextAssetRequest,
   TextAssetDetailDto,
   UpdateTextAssetRequest,
@@ -172,6 +177,30 @@ export const subjectsApi = {
 
   remove(id: string) {
     return apiFetch<{ deleted: true }>(`/assets/subjects/${id}`, { method: 'DELETE' })
+  },
+}
+
+export const stylesApi = {
+  create(input: CreateStyleAssetRequest) {
+    return apiFetch<StyleAssetDetailDto>('/assets/styles/', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
+  },
+
+  get(id: string) {
+    return apiFetch<StyleAssetDetailDto>(`/assets/styles/${id}`)
+  },
+
+  update(id: string, input: UpdateStyleAssetRequest) {
+    return apiFetch<StyleAssetDetailDto>(`/assets/styles/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    })
+  },
+
+  remove(id: string) {
+    return apiFetch<{ deleted: true }>(`/assets/styles/${id}`, { method: 'DELETE' })
   },
 }
 
