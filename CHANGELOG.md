@@ -20,6 +20,7 @@
 - Added asset share links, 30-second transfer rooms, WebSocket signaling, and the `apps/transfer` receiver app.
 - Added Canvas API module with CRUD endpoints for projects, document versioning, and pagination.
 - Integrated workspace recent-content panels with live API data for assets and canvas projects.
+- Scaffolded the Canvas frontend app with project list, editor view, and CRUD dialogs.
 - Initialized Git repository metadata and line-ending normalization.
 
 ### Changed

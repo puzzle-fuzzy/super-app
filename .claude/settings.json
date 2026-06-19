@@ -21,7 +21,10 @@
       "Bash(git commit -m 'feat\\(canvas\\): add Canvas API with CRUD, versioning, and tests *)",
       "Bash(pnpm --filter @super-app/workspace typecheck)",
       "Bash(pnpm --filter @super-app/workspace lint)",
-      "Bash(git commit -m 'feat\\(workspace\\): connect recent-content panels to live API data *)"
+      "Bash(git commit -m 'feat\\(workspace\\): connect recent-content panels to live API data *)",
+      "Bash(pnpm --filter @super-app/canvas typecheck)",
+      "Bash(pnpm --filter @super-app/canvas lint)",
+      "Bash(git commit -m 'feat\\(canvas\\): scaffold Canvas frontend application *)"
     ],
     "additionalDirectories": [
       "/tmp",
