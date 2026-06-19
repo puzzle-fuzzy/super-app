@@ -22,6 +22,13 @@
       "when": 1781877836803,
       "tag": "0002_skinny_vivisector",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781879814803,
+      "tag": "0003_true_midnight",
+      "breakpoints": true
     }
   ]
 }
