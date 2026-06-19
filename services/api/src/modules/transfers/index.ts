@@ -43,12 +43,17 @@ export const transfersModule = new Elysia({ name: 'transfers' })
   )
   .get(
     '/transfers/:roomId/file',
-    ({ params }) => {
+    async ({ params }) => {
       const room = requireActiveTransferRoom(params.roomId)
       const filePath = resolveStoragePath(room.storageKey)
       const file = Bun.file(filePath)
+      if (!(await file.exists())) {
+        throw new AppError(404, 'NOT_FOUND', 'Transfer file not found')
+      }
+
       return new Response(file, {
         headers: {
+          'Cache-Control': 'no-store',
           'Content-Type': room.mimeType,
           'Content-Length': String(room.size),
           'Content-Disposition': `attachment; filename="${downloadFileName(room.title)}"`,
