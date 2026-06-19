@@ -47,20 +47,6 @@
     {
       "idx": 6,
       "version": "7",
-      "when": 1781890826328,
-      "tag": "0006_confused_ego",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1781891196948,
-      "tag": "0007_kind_king_bedlam",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
       "when": 1781891244679,
       "tag": "0008_normal_manta",
       "breakpoints": true
