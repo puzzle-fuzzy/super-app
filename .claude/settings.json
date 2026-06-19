@@ -3,7 +3,12 @@
     "allow": [
       "Bash(git remote *)",
       "Bash(git config *)",
-      "Bash(git commit -m 'chore: add project metadata, license, and tighten config *)"
+      "Bash(git commit -m 'chore: add project metadata, license, and tighten config *)",
+      "Bash(bun --env-file=../../.env -e \"const e = process.env; console.log\\('SUPER_PUBLIC_SITE_URL:', e.SUPER_PUBLIC_SITE_URL\\); console.log\\('API_PORT:', e.API_PORT\\); console.log\\('DATABASE_URL:', e.DATABASE_URL ? 'SET' : 'MISSING'\\);\")",
+      "Bash(git commit -m 'fix\\(api\\): add --env-file flag to load .env from monorepo root *)",
+      "Bash(git commit -m 'chore: add .claude to .gitignore *)",
+      "Bash(git push *)",
+      "Bash(git commit -m 'feat: set favicon to super logo CDN URL *)"
     ]
   }
 }
