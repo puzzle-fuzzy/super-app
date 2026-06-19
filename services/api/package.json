@@ -19,7 +19,8 @@
     "@elysia/cors": "^1.4.2",
     "@elysia/openapi": "^1.4.15",
     "drizzle-orm": "^0.44.2",
-    "elysia": "latest"
+    "elysia": "latest",
+    "sharp": "^0.34.2"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
