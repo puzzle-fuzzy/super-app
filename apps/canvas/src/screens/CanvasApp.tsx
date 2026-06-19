@@ -14,6 +14,7 @@ import {
   PanelLeftClose,
   PenLine,
   Plus,
+  RotateCcw,
   StickyNote,
   Trash2,
   Type as TypeIcon,
@@ -914,33 +915,73 @@ function ImageGenerationChat({
 }) {
   const [prompt, setPrompt] = useState('')
   const [messages, setMessages] = useState<
-    Array<{ role: 'user' | 'assistant'; text: string; imageUrl?: string }>
+    Array<{
+      id: string
+      role: 'user' | 'assistant'
+      text: string
+      imageUrl?: string
+      status?: 'error'
+      retryPrompt?: string
+    }>
   >([])
   const [generating, setGenerating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const trimmed = prompt.trim()
     if (!trimmed || generating) return
 
-    setGenerating(true)
-    setError(null)
-    setMessages((prev) => [...prev, { role: 'user', text: trimmed }])
     setPrompt('')
+    await runGeneration(trimmed)
+  }
+
+  async function runGeneration(
+    trimmed: string,
+    options: { appendUser?: boolean; retryMessageId?: string } = {}
+  ) {
+    setGenerating(true)
+    if (options.appendUser !== false) {
+      setMessages((prev) => [...prev, { id: messageId(), role: 'user', text: trimmed }])
+    }
+    if (options.retryMessageId) {
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === options.retryMessageId
+            ? { ...message, text: '正在重新生成...', status: undefined, retryPrompt: undefined }
+            : message
+        )
+      )
+    }
 
     try {
       const result = await onGenerate(trimmed)
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          text: '图片已生成，并放入画布。',
-          imageUrl: result.imageUrl,
-        },
-      ])
+      const successMessage = {
+        id: options.retryMessageId ?? messageId(),
+        role: 'assistant' as const,
+        text: '图片已生成，并放入画布。',
+        imageUrl: result.imageUrl,
+      }
+      setMessages((prev) =>
+        options.retryMessageId
+          ? prev.map((message) =>
+              message.id === options.retryMessageId ? successMessage : message
+            )
+          : [...prev, successMessage]
+      )
     } catch (err) {
-      setError(err instanceof Error ? err.message : '生成失败')
+      const message = err instanceof Error ? err.message : '生成失败'
+      const failureMessage = {
+        id: options.retryMessageId ?? messageId(),
+        role: 'assistant' as const,
+        text: message,
+        status: 'error' as const,
+        retryPrompt: trimmed,
+      }
+      setMessages((prev) =>
+        options.retryMessageId
+          ? prev.map((item) => (item.id === options.retryMessageId ? failureMessage : item))
+          : [...prev, failureMessage]
+      )
     } finally {
       setGenerating(false)
     }
@@ -960,14 +1001,32 @@ function ImageGenerationChat({
         ) : (
           messages.map((message, index) => (
             <div
-              key={`${message.role}-${index}`}
+              key={`${message.id}-${index}`}
               className={`max-w-[88%] rounded-xl px-3 py-2 text-[13px] leading-relaxed ${
                 message.role === 'user'
                   ? 'ml-auto bg-[#e5e5e5] text-[#141414]'
-                  : 'mr-auto bg-[#242424] text-[#d4d4d4]'
+                  : message.status === 'error'
+                    ? 'mr-auto border border-[#5a2a27] bg-[#2a1d1b] text-[#ffaaa3]'
+                    : 'mr-auto bg-[#242424] text-[#d4d4d4]'
               }`}
             >
               <p className="m-0">{message.text}</p>
+              {message.retryPrompt ? (
+                <button
+                  type="button"
+                  disabled={generating}
+                  onClick={() =>
+                    runGeneration(message.retryPrompt!, {
+                      appendUser: false,
+                      retryMessageId: message.id,
+                    })
+                  }
+                  className="mt-2 inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#7a3831] bg-[#3a2420] px-3 text-xs font-semibold text-[#ffd4cf] transition-colors hover:border-[#b9564b] hover:bg-[#4a2b25] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RotateCcw size={13} aria-hidden="true" />
+                  重试
+                </button>
+              ) : null}
               {message.imageUrl ? (
                 <img
                   className="mt-2 aspect-square w-full rounded-lg object-cover"
@@ -979,7 +1038,6 @@ function ImageGenerationChat({
           ))
         )}
       </div>
-      {error ? <p className="m-0 px-4 pb-2 text-xs text-[#ffaaa3]">{error}</p> : null}
       <form onSubmit={submit} className="grid gap-2 border-t border-[#2a2a2a] p-3">
         <textarea
           value={prompt}
@@ -999,6 +1057,10 @@ function ImageGenerationChat({
       </form>
     </aside>
   )
+}
+
+function messageId(): string {
+  return `message-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
 /* ---- Helpers ---- */

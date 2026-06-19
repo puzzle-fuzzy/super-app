@@ -56,3 +56,65 @@ test('generates an image node from the canvas chat panel', async ({ page }) => {
   await expect(page.getByAltText(prompt)).toBeVisible()
   expect(requests).toEqual([{ prompt, model: 'qwen-image-2.0-pro', size: '2048*2048' }])
 })
+
+test('retries a failed canvas image generation request', async ({ page }) => {
+  const email = `e2e-canvas-generate-retry-${Date.now()}-${test.info().parallelIndex}@super.test`
+  const password = 'super-e2e-password'
+  const prompt = '一次失败后重试的海报'
+  const generatedUrl = 'https://fake-provider.local/retry-generated.png'
+  let attempts = 0
+
+  await page.route('**/api/canvas/generate-image', async (route) => {
+    attempts += 1
+    if (attempts === 1) {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: false,
+          error: { code: 'INTERNAL_ERROR', message: '生成服务暂时不可用' },
+        }),
+      })
+      return
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        data: {
+          prompt,
+          model: 'qwen-image-2.0-pro',
+          imageUrl: generatedUrl,
+          requestId: 'fake-retry-request-id',
+        },
+      }),
+    })
+  })
+  await page.route(generatedUrl, async (route) => {
+    await route.fulfill({ path: samplePng, contentType: 'image/png' })
+  })
+
+  await page.goto(canvasUrl)
+  await page.getByRole('tab', { name: '注册' }).click()
+  await page.getByLabel('名称').fill('Canvas Retry User')
+  await page.getByLabel('邮箱').fill(email)
+  await page.getByLabel('密码').fill(password)
+  await page.getByRole('button', { name: '创建并进入' }).click()
+
+  await expect(page).toHaveURL(canvasUrl)
+  await page.getByRole('button', { name: '新建画布' }).first().click()
+  await page.getByPlaceholder('输入项目名称').fill('生成重试测试画布')
+  await page.getByRole('button', { name: '创建' }).click()
+  await page.getByText('生成重试测试画布').click()
+
+  await page.getByPlaceholder('描述你想生成的图片...').fill(prompt)
+  await page.getByRole('button', { name: '生成图片' }).click()
+
+  await expect(page.getByText('生成服务暂时不可用')).toBeVisible()
+  await page.getByRole('button', { name: '重试' }).click()
+
+  await expect(page.getByAltText(prompt)).toBeVisible()
+  expect(attempts).toBe(2)
+})
