@@ -25,7 +25,7 @@
 - [x] Harden transfer download missing-file and cache-control edge cases.
 - [x] Harden transfer room lifecycle: persisted room records, explicit expiry cleanup.
 - [ ] Add manual QA coverage for real LAN device-to-device transfer beyond Playwright fallback download.
-- [ ] Connect assets transfer/share actions into workspace entry points.
+- [x] Connect assets transfer/share actions into workspace entry points.
 - [x] Implement Canvas API endpoints (CRUD projects, versioning, pagination).
 - [x] Scaffold Canvas frontend app (project list, editor view, CRUD dialogs).
 - [x] Integrate workspace with live recent-assets and recent-projects data.
