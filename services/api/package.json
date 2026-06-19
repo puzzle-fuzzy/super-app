@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test src"
   },
   "dependencies": {
     "@super-app/contracts": "workspace:*",

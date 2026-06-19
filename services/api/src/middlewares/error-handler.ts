@@ -4,6 +4,7 @@ import { AppError } from '../shared/errors'
 import { fail } from '../shared/response'
 
 export const errorHandler = new Elysia({ name: 'error-handler' }).onError(
+  { as: 'global' },
   ({ code, error, set }) => {
     if (error instanceof AppError) {
       set.status = error.status

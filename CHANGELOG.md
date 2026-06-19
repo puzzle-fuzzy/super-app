@@ -10,9 +10,11 @@
 - Added `@super-app/db` with Drizzle schema, client, config, and initial migration for MVP identity, asset, and canvas tables.
 - Added modular `@super-app/api` Elysia service skeleton with `GET /api/health`.
 - Added API DB plugin and MVP auth endpoints for register, login, logout, and current user lookup.
+- Added local Docker Compose PostgreSQL setup and auth integration tests.
 - Initialized Git repository metadata and line-ending normalization.
 
 ### Changed
 
 - Organized `.env.example` with Chinese section comments.
 - Updated API response helpers to re-export shared contracts.
+- Scoped API error handling globally so module errors return the unified JSON shape.

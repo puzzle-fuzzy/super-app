@@ -49,3 +49,14 @@ returnTo is accepted by contracts but not yet used by the API response
 OAuth is not implemented
 password reset is not implemented
 ```
+
+## Tests
+
+The module has integration tests that call the Elysia app directly and use the local PostgreSQL database:
+
+```bash
+set -a
+source .env.example
+set +a
+pnpm --filter @super-app/api test
+```

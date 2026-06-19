@@ -9,5 +9,7 @@
 - [x] Add `packages/db` Drizzle schema and migrations.
 - [x] Add API database plugin.
 - [x] Implement auth API module.
-- [ ] Add auth integration tests with a test database.
+- [x] Add local Docker PostgreSQL.
+- [x] Apply database migrations locally.
+- [x] Add auth integration tests with a test database.
 - [ ] Implement `packages/api-client`.

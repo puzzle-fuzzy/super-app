@@ -127,6 +127,24 @@ created_by
 
 ## Commands
 
+Start local PostgreSQL with Docker:
+
+```bash
+pnpm db:local:up
+```
+
+The local container is named:
+
+```txt
+super-postgres
+```
+
+It exposes PostgreSQL on:
+
+```txt
+127.0.0.1:5432
+```
+
 Generate migrations:
 
 ```bash
