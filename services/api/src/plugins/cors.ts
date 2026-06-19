@@ -11,7 +11,7 @@ const allowedOrigins = [
   serverEnv.SUPER_PUBLIC_ASSETS_APP_URL,
   serverEnv.SUPER_PUBLIC_TRANSFER_APP_URL,
   serverEnv.SUPER_PUBLIC_CONSOLE_APP_URL,
-]
+].map((value) => new URL(value).origin)
 
 export const corsPlugin = new Elysia({ name: 'cors' }).use(
   cors({

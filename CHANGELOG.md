@@ -14,6 +14,7 @@
 - Added `@super-app/auth-client` and `@super-app/api-client` for shared frontend auth and API access.
 - Added shared design tokens, Tailwind preset, and the React/Vite `apps/auth` login/register app.
 - Added the React/Vite `apps/workspace` authenticated home app.
+- Added Playwright E2E coverage for the auth-to-workspace browser flow.
 - Initialized Git repository metadata and line-ending normalization.
 
 ### Changed
@@ -22,3 +23,4 @@
 - Updated API response helpers to re-export shared contracts.
 - Scoped API error handling globally so module errors return the unified JSON shape.
 - Migrated React/Vite apps from Tailwind config files to the Tailwind CSS v4 Vite plugin.
+- Aligned local app URLs with Vite base paths and normalized API CORS checks to origins.

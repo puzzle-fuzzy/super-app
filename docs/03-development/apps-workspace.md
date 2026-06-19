@@ -7,6 +7,7 @@
 ```bash
 pnpm --filter @super-app/workspace dev
 pnpm --filter @super-app/workspace build
+pnpm test:e2e
 ```
 
 Local URL:

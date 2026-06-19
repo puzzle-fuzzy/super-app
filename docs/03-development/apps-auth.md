@@ -7,6 +7,7 @@
 ```bash
 pnpm --filter @super-app/auth dev
 pnpm --filter @super-app/auth build
+pnpm test:e2e
 ```
 
 Local URL:
@@ -24,6 +25,8 @@ cp .env.example .env
 ```
 
 `.env` is ignored by Git.
+
+The root E2E suite starts PostgreSQL, runs migrations, starts the API, and launches the auth and workspace Vite apps against `.env.example`.
 
 ## Rules
 

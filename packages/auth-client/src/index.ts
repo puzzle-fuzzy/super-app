@@ -92,7 +92,7 @@ async function parseApiResponse<T>(response: Response): Promise<T> {
 }
 
 function normalizeReturnTo(returnTo?: string) {
-  const fallback = getCurrentBrowserPath()
+  const fallback = getCurrentBrowserUrl()
   const value = returnTo ?? fallback
 
   if (!value) {
@@ -138,12 +138,12 @@ function getAllowedReturnOrigins() {
   )
 }
 
-function getCurrentBrowserPath() {
+function getCurrentBrowserUrl() {
   if (!isBrowser()) {
     return undefined
   }
 
-  return `${window.location.pathname}${window.location.search}${window.location.hash}`
+  return window.location.href
 }
 
 function ensureTrailingSlash(value: string) {

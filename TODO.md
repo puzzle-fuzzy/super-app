@@ -18,5 +18,5 @@
 - [x] Migrate Vite apps to Tailwind CSS v4 Vite plugin.
 - [x] Scaffold `apps/auth`.
 - [x] Scaffold `apps/workspace`.
-- [ ] Add auth app end-to-end browser flow.
+- [x] Add auth app end-to-end browser flow.
 - [ ] Implement assets API module.
