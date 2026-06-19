@@ -39,6 +39,7 @@ test('uploads an asset from the assets app after registering', async ({ context,
   await expect(page.getByText('sample.png').first()).toBeVisible()
 
   // The asset can be shared over a short-lived LAN transfer room.
+  await page.getByRole('button', { name: '更多操作' }).first().click()
   await page.getByRole('button', { name: '传输' }).first().click()
   const transferDialog = page.getByRole('dialog', { name: '传输分享' })
   await expect(transferDialog).toBeVisible()
@@ -53,6 +54,7 @@ test('uploads an asset from the assets app after registering', async ({ context,
   await transferDialog.getByRole('button', { name: '关闭' }).click()
 
   // Delete the asset.
+  await page.getByRole('button', { name: '更多操作' }).first().click()
   await page.getByRole('button', { name: '删除' }).first().click()
   await page.getByRole('button', { name: '确认删除' }).click()
   await expect(page.getByText('sample.png')).toHaveCount(0)

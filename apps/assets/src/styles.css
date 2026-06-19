@@ -268,21 +268,6 @@ button:active:not(:disabled) {
   color: var(--text-primary);
 }
 
-.asset-type-nav small {
-  min-width: 22px;
-  border-radius: 999px;
-  background: var(--bg-tertiary);
-  color: var(--text-tertiary);
-  padding: 2px 8px;
-  font-size: 12px;
-  line-height: 1.35;
-  text-align: center;
-}
-
-.asset-type-nav small:empty {
-  display: none;
-}
-
 .view-switch {
   display: flex;
   margin-left: auto;
@@ -418,18 +403,6 @@ button:active:not(:disabled) {
   font-weight: 760;
 }
 
-.asset-kind-badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  border-radius: 5px;
-  background: rgb(0 0 0 / 0.62);
-  color: #d4d4d4;
-  padding: 4px 9px;
-  font-size: 12px;
-  line-height: 1.2;
-}
-
 .asset-play-mark {
   position: absolute;
   inset: 0;
@@ -514,54 +487,107 @@ button:active:not(:disabled) {
 }
 
 .asset-card-actions {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: auto;
-  opacity: 0;
-  transition: opacity 160ms ease;
-}
-
-.asset-card:hover .asset-card-actions,
-.asset-card:focus-within .asset-card-actions {
-  opacity: 1;
+  z-index: 3;
 }
 
 .asset-card-actions.on-media {
-  position: absolute;
   right: 10px;
   bottom: 10px;
 }
 
-.asset-card-actions button {
+.asset-action-dropdown {
+  position: relative;
+}
+
+.asset-more-button {
+  display: grid;
   width: 32px;
-  min-height: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
   border-radius: 8px;
   background: var(--bg-tertiary);
   color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    color 160ms ease;
 }
 
-.asset-card-actions.on-media button {
+.asset-card-actions.on-media .asset-more-button {
   background: rgb(0 0 0 / 0.56);
   color: #d4d4d4;
 }
 
-.asset-card-actions button:hover:not(:disabled) {
+.asset-more-button:hover,
+.asset-action-dropdown:focus-within .asset-more-button {
   background: var(--bg-hover);
   color: var(--text-primary);
 }
 
-.asset-card-actions.on-media button:hover:not(:disabled) {
+.asset-card-actions.on-media .asset-more-button:hover,
+.asset-card-actions.on-media .asset-action-dropdown:focus-within .asset-more-button {
   background: rgb(0 0 0 / 0.76);
+}
+
+.asset-action-menu {
+  position: absolute;
+  right: 0;
+  bottom: 40px;
+  display: none;
+  min-width: 144px;
+  overflow: hidden;
+  border: 1px solid var(--border-hover);
+  border-radius: 10px;
+  background: #1d1d1d;
+  padding: 5px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.42);
+}
+
+.asset-action-dropdown:hover .asset-action-menu,
+.asset-action-dropdown:focus-within .asset-action-menu {
+  display: grid;
+}
+
+.asset-action-menu button,
+.asset-action-menu a {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 9px;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 0 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 560;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.asset-action-menu button:hover:not(:disabled),
+.asset-action-menu a:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.asset-action-menu .danger {
+  color: #ffaaa3;
 }
 
 .empty-state {
   display: grid;
   min-height: 420px;
   place-items: center;
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-  background: var(--bg-secondary);
+  border: 0;
+  background: transparent;
   padding: 56px 24px;
   text-align: center;
 }
@@ -698,27 +724,33 @@ button:active:not(:disabled) {
   padding: 0 14px;
 }
 
-.skeleton {
-  min-height: 268px;
-  pointer-events: none;
+.loading-state {
+  display: flex;
+  min-height: 260px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 14px;
 }
 
-.skeleton .asset-thumb,
-.skeleton > span {
-  position: relative;
-  overflow: hidden;
-  background: var(--bg-tertiary);
-}
-
-.skeleton > span:not(.asset-thumb) {
-  display: block;
-  height: 14px;
+.loading-state span {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-hover);
+  border-top-color: var(--text-primary);
   border-radius: 999px;
-  margin: 14px;
+  animation: asset-loading-spin 720ms linear infinite;
 }
 
-.skeleton > span:last-child {
-  width: 68%;
+.loading-state p {
+  margin: 0;
+}
+
+@keyframes asset-loading-spin {
+  to {
+    transform: rotate(1turn);
+  }
 }
 
 .state-screen {

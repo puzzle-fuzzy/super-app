@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import {
   Box,
   Copy,
+  Download,
+  Ellipsis,
   File as FileIcon,
   FileText,
   Grid3X3,
@@ -9,7 +11,6 @@ import {
   Link2,
   LogOut,
   Music,
-  Pencil,
   Plus,
   Search,
   Send,
@@ -470,9 +471,6 @@ export function AssetsApp() {
                 onClick={() => !option.disabled && setFilter(option.value)}
               >
                 <span>{option.label}</span>
-                <small>
-                  {filter === option.value ? visibleItems.length : option.disabled ? 'soon' : ''}
-                </small>
               </button>
             ))}
           </div>
@@ -498,7 +496,7 @@ export function AssetsApp() {
 
         <section className="assets-content">
           {isListLoading ? (
-            <AssetSkeletons />
+            <LoadingState />
           ) : visibleItems.length === 0 ? (
             <EmptyState filter={filter} onNewText={openNewText} onNewSubject={openNewSubject} />
           ) : (
@@ -567,6 +565,7 @@ function AssetCard({
 }) {
   const canEdit = asset.kind === 'text' || asset.kind === 'subject'
   const canTransfer = asset.files.some((file) => file.role === 'original')
+  const originalFile = asset.files.find((file) => file.role === 'original') ?? asset.files[0]
   const isMedia = asset.kind === 'image' || asset.kind === 'video'
   const Icon = iconForAsset(asset.kind)
 
@@ -576,7 +575,6 @@ function AssetCard({
         {isMedia ? (
           <div className="asset-media-wrap">
             <AssetPreview asset={asset} />
-            <span className="asset-kind-badge">{assetKindLabel(asset.kind)}</span>
             {asset.kind === 'video' ? (
               <span className="asset-play-mark">
                 <Video size={18} aria-hidden="true" />
@@ -584,6 +582,7 @@ function AssetCard({
             ) : null}
             <AssetActions
               canEdit={canEdit}
+              downloadUrl={originalFile?.url}
               canTransfer={canTransfer}
               onDelete={onDelete}
               onEdit={onEdit}
@@ -603,6 +602,7 @@ function AssetCard({
             <p>{assetSummary(asset)}</p>
             <AssetActions
               canEdit={canEdit}
+              downloadUrl={originalFile?.url}
               canTransfer={canTransfer}
               onDelete={onDelete}
               onEdit={onEdit}
@@ -624,6 +624,7 @@ function AssetCard({
 
 function AssetActions({
   canEdit,
+  downloadUrl,
   canTransfer,
   onDelete,
   onEdit,
@@ -634,6 +635,7 @@ function AssetActions({
   dark,
 }: {
   canEdit: boolean
+  downloadUrl?: string
   canTransfer: boolean
   onDelete: () => void
   onEdit: () => void
@@ -645,34 +647,39 @@ function AssetActions({
 }) {
   return (
     <div className={`asset-card-actions ${dark ? 'on-media' : ''}`}>
-      {canTransfer ? (
-        <button
-          type="button"
-          onClick={onTransfer}
-          disabled={transferring}
-          title="局域网传输"
-          aria-label="传输"
-        >
-          <Send size={15} aria-hidden="true" />
+      <div className="asset-action-dropdown">
+        <button type="button" aria-label="更多操作" title="更多操作" className="asset-more-button">
+          <Ellipsis size={16} aria-hidden="true" />
         </button>
-      ) : null}
-      <button
-        type="button"
-        onClick={onShare}
-        disabled={sharing || !canTransfer}
-        title="复制分享链接"
-        aria-label="分享链接"
-      >
-        <Share2 size={15} aria-hidden="true" />
-      </button>
-      {canEdit ? (
-        <button type="button" onClick={onEdit} title="编辑" aria-label="编辑">
-          <Pencil size={15} aria-hidden="true" />
-        </button>
-      ) : null}
-      <button type="button" onClick={onDelete} title="删除" aria-label="删除">
-        <Trash2 size={15} aria-hidden="true" />
-      </button>
+        <div className="asset-action-menu">
+          {canTransfer ? (
+            <button type="button" onClick={onTransfer} disabled={transferring}>
+              <Send size={15} aria-hidden="true" />
+              {transferring ? '创建中' : '传输'}
+            </button>
+          ) : null}
+          <button type="button" onClick={onShare} disabled={sharing || !canTransfer}>
+            <Share2 size={15} aria-hidden="true" />
+            {sharing ? '创建中' : '分享'}
+          </button>
+          {downloadUrl ? (
+            <a href={downloadUrl} download target="_blank" rel="noreferrer">
+              <Download size={15} aria-hidden="true" />
+              下载
+            </a>
+          ) : null}
+          {canEdit ? (
+            <button type="button" onClick={onEdit}>
+              <FileText size={15} aria-hidden="true" />
+              重命名
+            </button>
+          ) : null}
+          <button type="button" onClick={onDelete} className="danger">
+            <Trash2 size={15} aria-hidden="true" />
+            删除
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -942,16 +949,11 @@ function EmptyState({
   )
 }
 
-function AssetSkeletons() {
+function LoadingState() {
   return (
-    <section className="asset-grid" aria-label="资产加载中">
-      {Array.from({ length: 8 }).map((_, index) => (
-        <article className="asset-card skeleton" key={index}>
-          <span className="asset-thumb" />
-          <span />
-          <span />
-        </article>
-      ))}
+    <section className="loading-state" aria-label="资产加载中">
+      <span aria-hidden="true" />
+      <p>正在加载素材...</p>
     </section>
   )
 }
