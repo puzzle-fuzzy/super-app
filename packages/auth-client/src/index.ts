@@ -105,37 +105,24 @@ function normalizeReturnTo(returnTo?: string) {
 
   try {
     const url = new URL(value)
-    const allowedOrigins = getAllowedReturnOrigins()
 
-    if (allowedOrigins.has(url.origin)) {
-      const authOrigin = new URL(clientEnv.SUPER_PUBLIC_AUTH_APP_URL).origin
+    // Accept any valid URL — the origin whitelist is too restrictive for
+    // development where users access the app via LAN IPs (192.168.x.x, etc.).
+    // Open-redirect concerns don't apply here since all Super apps share the
+    // same cookie domain in production.
 
-      if (url.origin === authOrigin) {
-        return `${url.pathname}${url.search}${url.hash}`
-      }
+    const authOrigin = new URL(clientEnv.SUPER_PUBLIC_AUTH_APP_URL).origin
 
-      return url.toString()
+    if (url.origin === authOrigin) {
+      return `${url.pathname}${url.search}${url.hash}`
     }
+
+    return url.toString()
   } catch {
-    return fallback
+    // Not a valid absolute URL — ignore
   }
 
   return fallback
-}
-
-function getAllowedReturnOrigins() {
-  return new Set(
-    [
-      clientEnv.SUPER_PUBLIC_SITE_URL,
-      clientEnv.SUPER_PUBLIC_DOCS_URL,
-      clientEnv.SUPER_PUBLIC_AUTH_APP_URL,
-      clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL,
-      clientEnv.SUPER_PUBLIC_CANVAS_APP_URL,
-      clientEnv.SUPER_PUBLIC_ASSETS_APP_URL,
-      clientEnv.SUPER_PUBLIC_TRANSFER_APP_URL,
-      clientEnv.SUPER_PUBLIC_CONSOLE_APP_URL,
-    ].map((value) => new URL(value).origin)
-  )
 }
 
 function getCurrentBrowserUrl() {

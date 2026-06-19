@@ -42,7 +42,9 @@
       "Bash(pnpm --filter @super-app/site lint)",
       "Bash(git commit -m 'feat: populate packages/utils, scaffold docs and site apps *)",
       "Bash(git commit -m 'fix\\(api\\): allow any origin in dev mode for LAN IP access *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(pnpm --filter @super-app/auth-client typecheck)",
+      "Bash(pnpm --filter @super-app/auth-client lint)"
     ],
     "additionalDirectories": [
       "/tmp",
