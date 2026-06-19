@@ -37,6 +37,8 @@ export const serverEnvSchema = publicEnvSchema.extend({
   S3_BUCKET: z.string().min(1),
   S3_FORCE_PATH_STYLE: booleanString.default('true'),
 
+  STORAGE_DIR: z.string().min(1).default('./storage'),
+
   ASSETS_MAX_UPLOAD_SIZE_MB: numberString,
   ASSETS_ALLOWED_MIME_TYPES: z.string().min(1),
 

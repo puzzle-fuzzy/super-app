@@ -14,6 +14,7 @@ const localEnv = {
   SUPER_PUBLIC_TRANSFER_APP_URL: 'http://localhost:5106/transfer/',
   SUPER_PUBLIC_CONSOLE_APP_URL: 'http://localhost:5107/api-console/',
   SUPER_PUBLIC_API_BASE_URL: 'http://localhost:5200/api',
+  SUPER_PUBLIC_STORAGE_BASE_URL: 'http://localhost:5200/storage',
   SITE_URL: 'http://localhost:5101',
   DOCS_URL: 'http://localhost:5102',
   AUTH_APP_URL: 'http://localhost:5100/auth/',

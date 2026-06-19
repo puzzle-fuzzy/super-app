@@ -8,6 +8,13 @@
       "when": 1781861305376,
       "tag": "0000_thin_satana",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781873146092,
+      "tag": "0001_assets_redesign",
+      "breakpoints": true
     }
   ]
 }

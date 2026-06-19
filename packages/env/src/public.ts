@@ -10,6 +10,7 @@ export const publicEnvSchema = z.object({
   SUPER_PUBLIC_TRANSFER_APP_URL: z.string().url(),
   SUPER_PUBLIC_CONSOLE_APP_URL: z.string().url(),
   SUPER_PUBLIC_API_BASE_URL: z.string().url(),
+  SUPER_PUBLIC_STORAGE_BASE_URL: z.string().url(),
 })
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>
