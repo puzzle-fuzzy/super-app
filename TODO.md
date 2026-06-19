@@ -19,4 +19,5 @@
 - [x] Scaffold `apps/auth`.
 - [x] Scaffold `apps/workspace`.
 - [x] Add auth app end-to-end browser flow.
-- [ ] Implement assets API module.
+- [x] Implement assets API module.
+- [ ] Polish `apps/assets` product UI.

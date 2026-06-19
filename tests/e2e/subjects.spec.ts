@@ -38,5 +38,6 @@ test('creates, edits, and deletes a subject asset in the assets app', async ({ p
 
   // Delete.
   await page.getByRole('button', { name: '删除' }).first().click()
+  await page.getByRole('button', { name: '确认删除' }).click()
   await expect(page.getByText('我的主角')).toHaveCount(0)
 })

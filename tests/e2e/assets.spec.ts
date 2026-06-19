@@ -40,6 +40,7 @@ test('uploads an asset from the assets app after registering', async ({ page }) 
 
   // Delete the asset.
   await page.getByRole('button', { name: '删除' }).first().click()
+  await page.getByRole('button', { name: '确认删除' }).click()
   await expect(page.getByText('sample.png')).toHaveCount(0)
 
   // The deletion persists after a reload (soft-deleted, excluded from list).

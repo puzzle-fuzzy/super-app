@@ -15,6 +15,8 @@
 - Added shared design tokens, Tailwind preset, and the React/Vite `apps/auth` login/register app.
 - Added the React/Vite `apps/workspace` authenticated home app.
 - Added Playwright E2E coverage for the auth-to-workspace browser flow.
+- Added the assets API, storage-backed upload flow, and `apps/assets` asset center.
+- Added text and subject asset extension flows with API, frontend editing, and E2E coverage.
 - Initialized Git repository metadata and line-ending normalization.
 
 ### Changed
@@ -24,3 +26,4 @@
 - Scoped API error handling globally so module errors return the unified JSON shape.
 - Migrated React/Vite apps from Tailwind config files to the Tailwind CSS v4 Vite plugin.
 - Aligned local app URLs with Vite base paths and normalized API CORS checks to origins.
+- Hardened asset extension endpoints and assets list query validation.
