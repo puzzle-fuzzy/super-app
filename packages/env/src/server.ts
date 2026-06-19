@@ -52,6 +52,8 @@ export const serverEnvSchema = publicEnvSchema.extend({
   OPENAI_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
   GLM_API_KEY: z.string().optional(),
+  DASHSCOPE_API_KEY: z.string().optional(),
+  DASHSCOPE_BASE_URL: z.string().url().optional(),
 
   FEATURE_SIGNUP_ENABLED: booleanString.default('true'),
   FEATURE_OAUTH_ENABLED: booleanString.default('false'),

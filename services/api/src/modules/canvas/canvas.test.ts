@@ -256,6 +256,99 @@ describe('canvas module', () => {
     expect(archiveRes.status).toBe(200)
     expect((await archiveRes.json()).data.status).toBe('archived')
   })
+
+  it('returns 503 when DashScope image generation is not configured', async () => {
+    const originalKey = process.env.DASHSCOPE_API_KEY
+    delete process.env.DASHSCOPE_API_KEY
+
+    try {
+      const res = await app.handle(
+        jsonRequest('/api/canvas/generate-image', primary.cookie, {
+          prompt: '一只坐在窗边的橘猫',
+        })
+      )
+      expect(res.status).toBe(503)
+      const body = await res.json()
+      expect(body.success).toBe(false)
+      expect(body.error.message).toContain('DASHSCOPE_API_KEY')
+    } finally {
+      if (originalKey) {
+        process.env.DASHSCOPE_API_KEY = originalKey
+      }
+    }
+  })
+
+  it('generates an image through DashScope and returns the first image URL', async () => {
+    const originalKey = process.env.DASHSCOPE_API_KEY
+    const originalBaseUrl = process.env.DASHSCOPE_BASE_URL
+    const originalFetch = globalThis.fetch
+    const calls: Array<{ url: string; authorization: string | null; body: unknown }> = []
+
+    process.env.DASHSCOPE_API_KEY = 'fake-dashscope-key'
+    process.env.DASHSCOPE_BASE_URL = 'http://fake-provider.local/api/v1'
+    globalThis.fetch = (async (input, init) => {
+      calls.push({
+        url: String(input),
+        authorization: new Headers(init?.headers).get('authorization'),
+        body: JSON.parse(String(init?.body)),
+      })
+      return new Response(
+        JSON.stringify({
+          request_id: 'req-image-1',
+          output: {
+            choices: [
+              {
+                message: {
+                  content: [{ image: 'https://dashscope-result.example/generated.png' }],
+                },
+              },
+            ],
+          },
+          usage: { image_count: 1, width: 2048, height: 2048 },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } }
+      )
+    }) as typeof fetch
+
+    try {
+      const res = await app.handle(
+        jsonRequest('/api/canvas/generate-image', primary.cookie, {
+          prompt: '赛博城市夜景，霓虹灯，电影感',
+          size: '2048*2048',
+        })
+      )
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.data.imageUrl).toBe('https://dashscope-result.example/generated.png')
+      expect(body.data.model).toBe('qwen-image-2.0-pro')
+      expect(calls[0].url).toBe(
+        'http://fake-provider.local/api/v1/services/aigc/multimodal-generation/generation'
+      )
+      expect(calls[0].authorization).toBe('Bearer fake-dashscope-key')
+      expect(calls[0].body).toEqual({
+        model: 'qwen-image-2.0-pro',
+        input: {
+          messages: [
+            {
+              role: 'user',
+              content: [{ text: '赛博城市夜景，霓虹灯，电影感' }],
+            },
+          ],
+        },
+        parameters: {
+          prompt_extend: true,
+          size: '2048*2048',
+          watermark: false,
+        },
+      })
+    } finally {
+      globalThis.fetch = originalFetch
+      if (originalKey) process.env.DASHSCOPE_API_KEY = originalKey
+      else delete process.env.DASHSCOPE_API_KEY
+      if (originalBaseUrl) process.env.DASHSCOPE_BASE_URL = originalBaseUrl
+      else delete process.env.DASHSCOPE_BASE_URL
+    }
+  })
 })
 
 async function createUser(name: string): Promise<TestUser> {

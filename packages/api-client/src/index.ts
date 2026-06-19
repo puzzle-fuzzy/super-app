@@ -28,6 +28,8 @@ import type {
   UpdateTextAssetRequest,
 } from '@super-app/contracts/text-assets'
 import type {
+  CanvasGenerateImageRequest,
+  CanvasGenerateImageResponse,
   CanvasProjectDetailDto,
   CanvasProjectListResponse,
   CreateCanvasProjectRequest,
@@ -234,6 +236,13 @@ export const templatesApi = {
 }
 
 export const canvasApi = {
+  generateImage(input: CanvasGenerateImageRequest) {
+    return apiFetch<CanvasGenerateImageResponse>('/canvas/generate-image', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
+  },
+
   create(input: CreateCanvasProjectRequest) {
     return apiFetch<CanvasProjectDetailDto>('/canvas/projects/', {
       method: 'POST',

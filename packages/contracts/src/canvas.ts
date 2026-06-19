@@ -58,6 +58,25 @@ export const UpdateCanvasProjectRequestSchema = z.object({
 
 export type UpdateCanvasProjectRequest = z.infer<typeof UpdateCanvasProjectRequestSchema>
 
+export const CanvasGenerateImageRequestSchema = z.object({
+  prompt: z.string().trim().min(1).max(4000),
+  model: z.string().min(1).default('qwen-image-2.0-pro'),
+  size: z
+    .enum(['2048*2048', '2368*1728', '1728*2368', '1536*2688', '2688*1536'])
+    .default('2048*2048'),
+})
+
+export type CanvasGenerateImageRequest = z.infer<typeof CanvasGenerateImageRequestSchema>
+
+export const CanvasGenerateImageResponseSchema = z.object({
+  prompt: z.string(),
+  model: z.string(),
+  imageUrl: z.string().url(),
+  requestId: z.string().optional(),
+})
+
+export type CanvasGenerateImageResponse = z.infer<typeof CanvasGenerateImageResponseSchema>
+
 export const SaveCanvasProjectRequestSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional(),
