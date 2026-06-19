@@ -14,4 +14,6 @@
 - [x] Add auth integration tests with a test database.
 - [x] Implement `packages/auth-client`.
 - [x] Implement `packages/api-client`.
-- [ ] Scaffold `apps/auth`.
+- [x] Add shared design tokens and Tailwind preset.
+- [x] Scaffold `apps/auth`.
+- [ ] Scaffold `apps/workspace`.

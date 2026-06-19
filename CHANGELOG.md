@@ -12,6 +12,7 @@
 - Added API DB plugin and MVP auth endpoints for register, login, logout, and current user lookup.
 - Added local Docker Compose PostgreSQL setup and auth integration tests.
 - Added `@super-app/auth-client` and `@super-app/api-client` for shared frontend auth and API access.
+- Added shared design tokens, Tailwind preset, and the React/Vite `apps/auth` login/register app.
 - Initialized Git repository metadata and line-ending normalization.
 
 ### Changed

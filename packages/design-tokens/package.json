@@ -1,0 +1,17 @@
+{
+  "name": "@super-app/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./css": "./src/tokens.css"
+  },
+  "scripts": {
+    "lint": "echo \"No JavaScript sources in design tokens\"",
+    "lint:fix": "echo \"No JavaScript sources in design tokens\"",
+    "typecheck": "echo \"No TypeScript sources in design tokens\""
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
