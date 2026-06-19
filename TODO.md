@@ -28,6 +28,6 @@
 - [ ] Connect assets transfer/share actions into workspace entry points.
 - [x] Implement Canvas API endpoints (CRUD projects, versioning, pagination).
 - [ ] Scaffold Canvas frontend app (canvas editor UI).
-- [ ] Integrate workspace with live recent-assets and recent-projects data.
+- [x] Integrate workspace with live recent-assets and recent-projects data.
 - [ ] Build API Console application for API key management.
 - [ ] Add asset tags UI (display and edit).

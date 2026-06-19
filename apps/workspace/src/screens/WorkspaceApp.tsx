@@ -9,6 +9,7 @@ import {
   UserRound,
 } from 'lucide-react'
 
+import { assetsApi, canvasApi } from '@super-app/api-client'
 import { clientEnv } from '@super-app/env/client'
 import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
@@ -70,6 +71,13 @@ const NAV_ITEMS = [
 export function WorkspaceApp() {
   const { user, isLoading, error } = useRequireAuth()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [recentAssets, setRecentAssets] = useState<
+    { id: string; title: string; updatedAt: string }[]
+  >([])
+  const [recentProjects, setRecentProjects] = useState<
+    { id: string; title: string; updatedAt: string }[]
+  >([])
+  const [dataLoaded, setDataLoaded] = useState(false)
 
   useEffect(() => {
     if (!userMenuOpen) return
@@ -91,6 +99,43 @@ export function WorkspaceApp() {
       document.removeEventListener('keydown', closeOnEscape)
     }
   }, [userMenuOpen])
+
+  // Fetch recent assets and canvas projects for the workspace overview
+  useEffect(() => {
+    if (!user || dataLoaded) return
+
+    let cancelled = false
+
+    async function loadData() {
+      try {
+        const [assetsResult, projectsResult] = await Promise.allSettled([
+          assetsApi.list({ limit: 4 }),
+          canvasApi.list({ limit: 4 }),
+        ])
+
+        if (cancelled) return
+
+        if (assetsResult.status === 'fulfilled') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setRecentAssets((assetsResult.value as any).items ?? [])
+        }
+        if (projectsResult.status === 'fulfilled') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setRecentProjects((projectsResult.value as any).items ?? [])
+        }
+      } catch {
+        // Silently ignore — sections will show empty states
+      } finally {
+        if (!cancelled) setDataLoaded(true)
+      }
+    }
+
+    loadData()
+
+    return () => {
+      cancelled = true
+    }
+  }, [user, dataLoaded])
 
   if (isLoading) {
     return <ScreenState title="正在确认登录状态" description="Super 正在连接你的云端工作区。" />
@@ -216,7 +261,7 @@ export function WorkspaceApp() {
             </h2>
           </div>
           <p className="m-0 leading-[1.75] text-[#999999]">
-            当前工作台先承载统一入口和登录态验证。下一步会接入最近资产、最近画布项目和使用额度。
+            当前工作台承载统一入口和登录态验证，下方展示你最近的资产和画布项目。
           </p>
         </section>
 
@@ -243,35 +288,99 @@ export function WorkspaceApp() {
         </section>
 
         {/* ---------------------------------------------------------------- */}
-        {/*  Empty States                                                   */}
+        {/*  Recent Content                                                  */}
         {/* ---------------------------------------------------------------- */}
         <section className="grid grid-cols-2 gap-[14px] max-[980px]:grid-cols-1">
+          {/* Recent Canvas Projects */}
           <div className="rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-6">
             <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
               最近项目
             </p>
-            <h3 className="m-0 mb-2.5 text-[22px] font-bold tracking-[-0.02em]">
-              还没有画布项目
-            </h3>
-            <p className="m-0 leading-[1.65] text-[#999999]">
-              创建第一个画布后，它会出现在这里。
-            </p>
+            {recentProjects.length > 0 ? (
+              <ul className="m-0 list-none space-y-2 p-0">
+                {recentProjects.map((project) => (
+                  <li key={project.id}>
+                    <a
+                      href={clientEnv.SUPER_PUBLIC_CANVAS_APP_URL}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[15px] font-medium text-[#e5e5e5] no-underline transition-colors hover:bg-[#242424]"
+                    >
+                      <Box size={16} className="shrink-0 text-[#666666]" />
+                      <span className="truncate">{project.title}</span>
+                      <span className="ml-auto shrink-0 text-[12px] text-[#666666]">
+                        {formatRelativeTime(project.updatedAt)}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <>
+                <h3 className="m-0 mb-2.5 text-[22px] font-bold tracking-[-0.02em]">
+                  {dataLoaded ? '还没有画布项目' : '加载中…'}
+                </h3>
+                <p className="m-0 leading-[1.65] text-[#999999]">
+                  创建第一个画布后，它会出现在这里。
+                </p>
+              </>
+            )}
           </div>
+
+          {/* Recent Assets */}
           <div className="rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-6">
             <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
               最近资产
             </p>
-            <h3 className="m-0 mb-2.5 text-[22px] font-bold tracking-[-0.02em]">
-              资产库等待接入
-            </h3>
-            <p className="m-0 leading-[1.65] text-[#999999]">
-              上传图片或文件后，工作台会展示最近使用的素材。
-            </p>
+            {recentAssets.length > 0 ? (
+              <ul className="m-0 list-none space-y-2 p-0">
+                {recentAssets.map((asset) => (
+                  <li key={asset.id}>
+                    <a
+                      href={clientEnv.SUPER_PUBLIC_ASSETS_APP_URL}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[15px] font-medium text-[#e5e5e5] no-underline transition-colors hover:bg-[#242424]"
+                    >
+                      <Image size={16} className="shrink-0 text-[#666666]" />
+                      <span className="truncate">{asset.title}</span>
+                      <span className="ml-auto shrink-0 text-[12px] text-[#666666]">
+                        {formatRelativeTime(asset.updatedAt)}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <>
+                <h3 className="m-0 mb-2.5 text-[22px] font-bold tracking-[-0.02em]">
+                  {dataLoaded ? '资产库等待接入' : '加载中…'}
+                </h3>
+                <p className="m-0 leading-[1.65] text-[#999999]">
+                  上传图片或文件后，工作台会展示最近使用的素材。
+                </p>
+              </>
+            )}
           </div>
         </section>
       </section>
     </main>
   )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function formatRelativeTime(iso: string): string {
+  const date = new Date(iso)
+  const now = Date.now()
+  const diffMs = now - date.getTime()
+  const diffMin = Math.floor(diffMs / 60_000)
+  const diffHrs = Math.floor(diffMs / 3_600_000)
+  const diffDays = Math.floor(diffMs / 86_400_000)
+
+  if (diffMin < 1) return '刚刚'
+  if (diffMin < 60) return `${diffMin} 分钟前`
+  if (diffHrs < 24) return `${diffHrs} 小时前`
+  if (diffDays < 30) return `${diffDays} 天前`
+  return date.toLocaleDateString('zh-CN')
 }
 
 /* -------------------------------------------------------------------------- */

@@ -18,7 +18,10 @@
       "Bash(pnpm --filter @super-app/api typecheck)",
       "Bash(pnpm --filter @super-app/api-client typecheck)",
       "Bash(pnpm --filter @super-app/contracts typecheck)",
-      "Bash(git commit -m 'feat\\(canvas\\): add Canvas API with CRUD, versioning, and tests *)"
+      "Bash(git commit -m 'feat\\(canvas\\): add Canvas API with CRUD, versioning, and tests *)",
+      "Bash(pnpm --filter @super-app/workspace typecheck)",
+      "Bash(pnpm --filter @super-app/workspace lint)",
+      "Bash(git commit -m 'feat\\(workspace\\): connect recent-content panels to live API data *)"
     ],
     "additionalDirectories": [
       "/tmp",

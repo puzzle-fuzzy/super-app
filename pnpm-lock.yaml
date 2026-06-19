@@ -167,6 +167,9 @@ importers:
 
   apps/workspace:
     dependencies:
+      '@super-app/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@super-app/auth-client':
         specifier: workspace:*
         version: link:../../packages/auth-client
