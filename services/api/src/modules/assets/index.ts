@@ -4,6 +4,7 @@ import path from 'node:path'
 
 import { authPlugin, requireUser } from '../../plugins/auth'
 import { storagePlugin } from '../../plugins/storage'
+import { attachmentContentDisposition } from '../../shared/content-disposition'
 import { AppError } from '../../shared/errors'
 import { ok } from '../../shared/response'
 import {
@@ -37,7 +38,7 @@ export const assetsModule = new Elysia({ name: 'assets' })
           headers: {
             'Content-Type': shared.mimeType,
             'Content-Length': String(shared.size),
-            'Content-Disposition': `attachment; filename="${downloadFileName(shared.title)}"`,
+            'Content-Disposition': attachmentContentDisposition(shared.title),
           },
         })
       })
@@ -165,8 +166,4 @@ function resolveStoragePath(storageKey: string): string {
     throw new AppError(404, 'NOT_FOUND', 'Shared asset file not found')
   }
   return resolved
-}
-
-function downloadFileName(title: string): string {
-  return title.replace(/[^\w\u4e00-\u9fa5 .-]/g, '_')
 }

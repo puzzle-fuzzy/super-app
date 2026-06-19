@@ -235,6 +235,35 @@ describe('assets module', () => {
     expect((await downloadRes.arrayBuffer()).byteLength).toBe(original.size)
   })
 
+  it('downloads shared assets with a UTF-8 encoded filename', async () => {
+    const fileName = 'ChatGPT Image 2026年5月24日 17_07_16.png'
+    const uploadRes = await app.handle(
+      new Request('http://localhost/api/assets/upload', {
+        method: 'POST',
+        headers: { cookie: primary.cookie },
+        body: multipartBody(await pngBytes(), fileName, 'image/png'),
+      })
+    )
+    const uploaded = await uploadRes.json()
+    const original = uploaded.data.files.find((f: { role: string }) => f.role === 'original')
+
+    const shareRes = await app.handle(
+      new Request(`http://localhost/api/assets/${uploaded.data.id}/share-link`, {
+        method: 'POST',
+        headers: { cookie: primary.cookie },
+      })
+    )
+    const shareBody = await shareRes.json()
+
+    const downloadRes = await app.handle(new Request(shareBody.data.url))
+
+    expect(downloadRes.status).toBe(200)
+    const disposition = downloadRes.headers.get('content-disposition')
+    expect(disposition).toContain('filename="ChatGPT Image 2026_5_24_ 17_07_16.png"')
+    expect(disposition).toContain(`filename*=UTF-8''${encodeURIComponent(fileName)}`)
+    expect((await downloadRes.arrayBuffer()).byteLength).toBe(original.size)
+  })
+
   it('creates a 30 second transfer session for an owned asset', async () => {
     const uploadRes = await app.handle(
       new Request('http://localhost/api/assets/upload', {

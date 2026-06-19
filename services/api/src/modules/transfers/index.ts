@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import { serverEnv } from '@super-app/env/server'
 
+import { attachmentContentDisposition } from '../../shared/content-disposition'
 import { AppError } from '../../shared/errors'
 import { ok } from '../../shared/response'
 import {
@@ -56,7 +57,7 @@ export const transfersModule = new Elysia({ name: 'transfers' })
           'Cache-Control': 'no-store',
           'Content-Type': room.mimeType,
           'Content-Length': String(room.size),
-          'Content-Disposition': `attachment; filename="${downloadFileName(room.title)}"`,
+          'Content-Disposition': attachmentContentDisposition(room.title),
         },
       })
     },
@@ -173,8 +174,4 @@ function resolveStoragePath(storageKey: string): string {
     throw new AppError(404, 'NOT_FOUND', 'Transfer file not found')
   }
   return resolved
-}
-
-function downloadFileName(title: string): string {
-  return title.replace(/[^\w\u4e00-\u9fa5 .-]/g, '_')
 }

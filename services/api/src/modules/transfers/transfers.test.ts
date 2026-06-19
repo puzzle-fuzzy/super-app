@@ -76,6 +76,7 @@ describe('transfers module', () => {
     const storageKey = `transfer-tests/${roomId}.txt`
     const filePath = path.resolve(serverEnv.STORAGE_DIR, storageKey)
     const bytes = new TextEncoder().encode('hello transfer')
+    const fileName = 'ChatGPT Image 2026年5月24日 17_07_16.txt'
     await mkdir(path.dirname(filePath), { recursive: true })
     await writeFile(filePath, bytes)
 
@@ -84,7 +85,7 @@ describe('transfers module', () => {
         roomId,
         expiresAt: new Date(Date.now() + 30_000),
         assetId: 'asset-download',
-        title: 'unsafe:name.txt',
+        title: fileName,
         storageKey,
         mimeType: 'text/plain',
         size: bytes.byteLength,
@@ -96,7 +97,9 @@ describe('transfers module', () => {
       expect(res.headers.get('cache-control')).toBe('no-store')
       expect(res.headers.get('content-type')).toBe('text/plain')
       expect(res.headers.get('content-length')).toBe(String(bytes.byteLength))
-      expect(res.headers.get('content-disposition')).toContain('unsafe_name.txt')
+      const disposition = res.headers.get('content-disposition')
+      expect(disposition).toContain('filename="ChatGPT Image 2026_5_24_ 17_07_16.txt"')
+      expect(disposition).toContain(`filename*=UTF-8''${encodeURIComponent(fileName)}`)
       expect(new TextDecoder().decode(await res.arrayBuffer())).toBe('hello transfer')
     } finally {
       await rm(filePath, { force: true })
