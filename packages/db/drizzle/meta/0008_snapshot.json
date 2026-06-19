@@ -1,6 +1,6 @@
 {
-  "id": "61b8c222-eae7-4cf2-85ea-bbd5a1187ab1",
-  "prevId": "d3e080ad-a7af-4ebb-94bb-ba99afe4f7e6",
+  "id": "d57d476f-94da-4e32-ae52-18c0b6126218",
+  "prevId": "61b8c222-eae7-4cf2-85ea-bbd5a1187ab1",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1218,6 +1218,123 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "assets.style_assets": {
+      "name": "style_assets",
+      "schema": "assets",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "asset_id": {
+          "name": "asset_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "style_type": {
+          "name": "style_type",
+          "type": "style_type",
+          "typeSchema": "assets",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "positive_prompt": {
+          "name": "positive_prompt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "negative_prompt": {
+          "name": "negative_prompt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "color_palette": {
+          "name": "color_palette",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "recommended_model": {
+          "name": "recommended_model",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recommended_params": {
+          "name": "recommended_params",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "style_assets_asset_id_unique": {
+          "name": "style_assets_asset_id_unique",
+          "columns": [
+            {
+              "expression": "asset_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "style_assets_asset_id_assets_id_fk": {
+          "name": "style_assets_asset_id_assets_id_fk",
+          "tableFrom": "style_assets",
+          "tableTo": "assets",
+          "schemaTo": "assets",
+          "columnsFrom": [
+            "asset_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "assets.subject_assets": {
       "name": "subject_assets",
       "schema": "assets",
@@ -1317,6 +1434,98 @@
         "subject_assets_asset_id_assets_id_fk": {
           "name": "subject_assets_asset_id_assets_id_fk",
           "tableFrom": "subject_assets",
+          "tableTo": "assets",
+          "schemaTo": "assets",
+          "columnsFrom": [
+            "asset_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "assets.template_assets": {
+      "name": "template_assets",
+      "schema": "assets",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "asset_id": {
+          "name": "asset_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "template_type": {
+          "name": "template_type",
+          "type": "template_type",
+          "typeSchema": "assets",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "template_data": {
+          "name": "template_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "template_assets_asset_id_unique": {
+          "name": "template_assets_asset_id_unique",
+          "columns": [
+            {
+              "expression": "asset_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "template_assets_asset_id_assets_id_fk": {
+          "name": "template_assets_asset_id_assets_id_fk",
+          "tableFrom": "template_assets",
           "tableTo": "assets",
           "schemaTo": "assets",
           "columnsFrom": [
@@ -1681,6 +1890,18 @@
         "deleted"
       ]
     },
+    "assets.style_type": {
+      "name": "style_type",
+      "schema": "assets",
+      "values": [
+        "visual",
+        "video",
+        "writing",
+        "audio",
+        "ui",
+        "mixed"
+      ]
+    },
     "assets.consistency_level": {
       "name": "consistency_level",
       "schema": "assets",
@@ -1701,6 +1922,19 @@
         "object",
         "scene",
         "other"
+      ]
+    },
+    "assets.template_type": {
+      "name": "template_type",
+      "schema": "assets",
+      "values": [
+        "canvas",
+        "generation",
+        "video_storyboard",
+        "prompt",
+        "page",
+        "poster",
+        "workflow"
       ]
     },
     "assets.text_type": {
