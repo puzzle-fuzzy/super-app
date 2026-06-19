@@ -88,6 +88,13 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
+      command: `${loadLocalEnv} pnpm --filter @super-app/canvas dev`,
+      env: localEnv,
+      url: 'http://localhost:5104/canvas/',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+    {
       command: `${loadLocalEnv} pnpm --filter @super-app/assets dev`,
       env: localEnv,
       url: 'http://localhost:5105/assets/',

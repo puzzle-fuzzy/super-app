@@ -725,6 +725,29 @@ function EditorViewInner({
   const nodeCount = nodes.length
   const edgeCount = edges.length
 
+  async function handleGenerateImage(prompt: string) {
+    const result = await canvasApi.generateImage({
+      prompt,
+      model: 'qwen-image-2.0-pro',
+      size: '2048*2048',
+    })
+    const position = screenToFlowPosition({
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+    })
+    const node: ImageNodeType = {
+      id: `generated-image-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      type: 'imageNode',
+      position,
+      data: {
+        src: result.imageUrl,
+        fileName: result.prompt,
+      },
+    }
+    setNodes((prev) => [...prev, node])
+    return result
+  }
+
   return (
     <main className="flex h-screen flex-col bg-[#141414] text-[#e5e5e5]">
       {/* Editor Toolbar */}
@@ -871,6 +894,7 @@ function EditorViewInner({
 
       {/* ModeToolbar 使用 fixed 定位，不受容器影响 */}
       <ModeToolbar userName={user.name ?? user.email} />
+      <ImageGenerationChat onGenerate={handleGenerateImage} />
 
       {/* 弹窗 */}
       <GroupNameModal />
@@ -880,6 +904,100 @@ function EditorViewInner({
       <LoadingIndicator />
       <EmptyHint />
     </main>
+  )
+}
+
+function ImageGenerationChat({
+  onGenerate,
+}: {
+  onGenerate: (prompt: string) => Promise<{ prompt: string; imageUrl: string }>
+}) {
+  const [prompt, setPrompt] = useState('')
+  const [messages, setMessages] = useState<
+    Array<{ role: 'user' | 'assistant'; text: string; imageUrl?: string }>
+  >([])
+  const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const trimmed = prompt.trim()
+    if (!trimmed || generating) return
+
+    setGenerating(true)
+    setError(null)
+    setMessages((prev) => [...prev, { role: 'user', text: trimmed }])
+    setPrompt('')
+
+    try {
+      const result = await onGenerate(trimmed)
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          text: '图片已生成，并放入画布。',
+          imageUrl: result.imageUrl,
+        },
+      ])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '生成失败')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  return (
+    <aside className="fixed right-20 bottom-5 z-40 flex w-[360px] max-w-[calc(100vw-40px)] flex-col overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
+      <div className="border-b border-[#2a2a2a] px-4 py-3">
+        <p className="m-0 text-[13px] font-semibold text-[#e5e5e5]">对话生成图片</p>
+        <p className="m-0 mt-1 text-xs text-[#777777]">输入描述，生成后自动添加到当前画布。</p>
+      </div>
+      <div className="flex max-h-52 flex-col gap-2 overflow-y-auto px-3 py-3">
+        {messages.length === 0 ? (
+          <p className="m-0 rounded-xl bg-[#242424] px-3 py-2 text-[13px] leading-relaxed text-[#999999]">
+            例如：一张电影感海报，雨夜街道，暖色霓虹，高反差光影。
+          </p>
+        ) : (
+          messages.map((message, index) => (
+            <div
+              key={`${message.role}-${index}`}
+              className={`max-w-[88%] rounded-xl px-3 py-2 text-[13px] leading-relaxed ${
+                message.role === 'user'
+                  ? 'ml-auto bg-[#e5e5e5] text-[#141414]'
+                  : 'mr-auto bg-[#242424] text-[#d4d4d4]'
+              }`}
+            >
+              <p className="m-0">{message.text}</p>
+              {message.imageUrl ? (
+                <img
+                  className="mt-2 aspect-square w-full rounded-lg object-cover"
+                  src={message.imageUrl}
+                  alt="生成结果预览"
+                />
+              ) : null}
+            </div>
+          ))
+        )}
+      </div>
+      {error ? <p className="m-0 px-4 pb-2 text-xs text-[#ffaaa3]">{error}</p> : null}
+      <form onSubmit={submit} className="grid gap-2 border-t border-[#2a2a2a] p-3">
+        <textarea
+          value={prompt}
+          onChange={(event) => setPrompt(event.target.value)}
+          placeholder="描述你想生成的图片..."
+          rows={3}
+          className="max-h-28 min-h-20 resize-none rounded-xl border border-[#2a2a2a] bg-[#141414] px-3 py-2.5 text-[13px] leading-relaxed text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] focus:border-[#555555]"
+        />
+        <button
+          type="submit"
+          disabled={!prompt.trim() || generating}
+          className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-[#e5e5e5] px-4 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <ImageIcon size={15} aria-hidden="true" />
+          {generating ? '生成中...' : '生成图片'}
+        </button>
+      </form>
+    </aside>
   )
 }
 
