@@ -13,7 +13,10 @@ import { errorHandler } from './middlewares/error-handler'
 
 const storageRoot = path.resolve(serverEnv.STORAGE_DIR)
 
-export const app = new Elysia()
+// The local-storage static route is dev/test-only: it serves files written by
+// LocalStorageProvider. In production the storage provider points at OSS and
+// this route is not registered (local file serving must never run in prod).
+const baseApp = new Elysia()
   .use(
     openapi({
       path: '/api/openapi',
@@ -22,28 +25,31 @@ export const app = new Elysia()
   .use(corsPlugin)
   .use(errorHandler)
   .group('/api', (api) => api.use(systemModule).use(authModule).use(assetsModule))
-  // Dev-only static serving of uploaded asset files.
-  .get('/storage/*', async ({ params, set }) => {
-    const relative = (params as { '*': string })['*']
-    const resolved = path.resolve(storageRoot, relative)
-    const normalizedRoot = path.resolve(storageRoot)
-    if (resolved !== normalizedRoot && !resolved.startsWith(normalizedRoot + path.sep)) {
-      set.status = 404
-      return 'Not found'
-    }
-    try {
-      const info = await stat(resolved)
-      if (info.isDirectory()) {
-        set.status = 404
-        return 'Not found'
-      }
-    } catch {
-      set.status = 404
-      return 'Not found'
-    }
-    set.headers['Content-Type'] = mimeTypeForExt(path.extname(resolved))
-    return createReadStream(resolved) as unknown as ReadableStream
-  })
+
+export const app =
+  serverEnv.NODE_ENV === 'production'
+    ? baseApp
+    : baseApp.get('/storage/*', async ({ params, set }) => {
+        const relative = (params as { '*': string })['*']
+        const resolved = path.resolve(storageRoot, relative)
+        const normalizedRoot = path.resolve(storageRoot)
+        if (resolved !== normalizedRoot && !resolved.startsWith(normalizedRoot + path.sep)) {
+          set.status = 404
+          return 'Not found'
+        }
+        try {
+          const info = await stat(resolved)
+          if (info.isDirectory()) {
+            set.status = 404
+            return 'Not found'
+          }
+        } catch {
+          set.status = 404
+          return 'Not found'
+        }
+        set.headers['Content-Type'] = mimeTypeForExt(path.extname(resolved))
+        return createReadStream(resolved) as unknown as ReadableStream
+      })
 
 export type App = typeof app
 

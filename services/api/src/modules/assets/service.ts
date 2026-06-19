@@ -24,16 +24,20 @@ export function inferKindFromMimeType(mimeType: string): AssetKind {
   return 'file'
 }
 
+const ALLOWED_MIME_TYPES: ReadonlySet<string> = new Set(
+  serverEnv.ASSETS_ALLOWED_MIME_TYPES.split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+)
+
+const MAX_UPLOAD_BYTES = serverEnv.ASSETS_MAX_UPLOAD_SIZE_MB * 1024 * 1024
+
 export function parseAllowedMimeTypes(): Set<string> {
-  return new Set(
-    serverEnv.ASSETS_ALLOWED_MIME_TYPES.split(',')
-      .map((value) => value.trim())
-      .filter(Boolean)
-  )
+  return new Set(ALLOWED_MIME_TYPES)
 }
 
 export function maxUploadBytes(): number {
-  return serverEnv.ASSETS_MAX_UPLOAD_SIZE_MB * 1024 * 1024
+  return MAX_UPLOAD_BYTES
 }
 
 export interface UploadAssetInput {
@@ -67,16 +71,24 @@ export async function uploadAsset(input: UploadAssetInput): Promise<AssetDto> {
   }
 
   const storageKey = `${owner.id}/${asset.id}/original/${sanitizeFileName(fileName)}`
-  const stored = await storage.put({ key: storageKey, body, mimeType })
 
-  await db.insert(assetFiles).values({
-    assetId: asset.id,
-    role: 'original',
-    storageBucket: stored.bucket,
-    storageKey: stored.key,
-    mimeType,
-    size,
-  })
+  // Persist the file and its asset_files row; if either fails, remove the asset
+  // row so no "ghost" asset (with no file) is left visible in listings.
+  try {
+    const stored = await storage.put({ key: storageKey, body, mimeType })
+
+    await db.insert(assetFiles).values({
+      assetId: asset.id,
+      role: 'original',
+      storageBucket: stored.bucket,
+      storageKey: stored.key,
+      mimeType,
+      size,
+    })
+  } catch (error) {
+    await db.delete(assets).where(eq(assets.id, asset.id))
+    throw error
+  }
 
   const withFiles = await loadAssetWithFiles(db, asset.id)
   if (!withFiles) {
@@ -142,7 +154,7 @@ export async function getAsset(input: {
   const [asset] = await db
     .select()
     .from(assets)
-    .where(and(eq(assets.id, id), eq(assets.ownerId, owner.id)))
+    .where(and(eq(assets.id, id), eq(assets.ownerId, owner.id), eq(assets.status, 'active')))
     .limit(1)
 
   if (!asset) {

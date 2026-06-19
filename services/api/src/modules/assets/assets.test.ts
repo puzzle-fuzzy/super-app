@@ -3,6 +3,7 @@ import type { CurrentUser } from '@super-app/contracts/auth'
 import { db } from '@super-app/db'
 import { assetFiles, assets, sessions, users } from '@super-app/db/schema'
 import { eq } from 'drizzle-orm'
+import { rm } from 'node:fs/promises'
 import path from 'node:path'
 
 import { serverEnv } from '@super-app/env/server'
@@ -36,6 +37,12 @@ describe('assets module', () => {
       await db.delete(assets).where(eq(assets.ownerId, user.id))
       await db.delete(sessions).where(eq(sessions.userId, user.id))
       await db.delete(users).where(eq(users.id, user.id))
+
+      // Remove any files this user's uploads wrote under STORAGE_DIR.
+      await rm(path.resolve(serverEnv.STORAGE_DIR, user.id), {
+        recursive: true,
+        force: true,
+      })
     }
   })
 
@@ -104,6 +111,41 @@ describe('assets module', () => {
     )
     const afterDelete = await listAfterDelete.json()
     expect(afterDelete.data.items.some((a: { id: string }) => a.id === assetId)).toBe(false)
+  })
+
+  it('does not return a soft-deleted asset via detail', async () => {
+    const uploadRes = await app.handle(
+      new Request('http://localhost/api/assets/upload', {
+        method: 'POST',
+        headers: { cookie: primary.cookie },
+        body: multipartBody(pngBytes(), 'ephemeral.png', 'image/png'),
+      })
+    )
+    const uploaded = await uploadRes.json()
+    const assetId = uploaded.data.id
+
+    // Detail is reachable before delete.
+    const beforeDelete = await app.handle(
+      new Request(`http://localhost/api/assets/${assetId}`, {
+        headers: { cookie: primary.cookie },
+      })
+    )
+    expect(beforeDelete.status).toBe(200)
+
+    await app.handle(
+      new Request(`http://localhost/api/assets/${assetId}`, {
+        method: 'DELETE',
+        headers: { cookie: primary.cookie },
+      })
+    )
+
+    // After soft delete, detail returns 404 (not the deleted asset with 200).
+    const afterDelete = await app.handle(
+      new Request(`http://localhost/api/assets/${assetId}`, {
+        headers: { cookie: primary.cookie },
+      })
+    )
+    expect(afterDelete.status).toBe(404)
   })
 
   it('rejects an oversized file with 413', async () => {

@@ -25,13 +25,20 @@ export const assetsModule = new Elysia({ name: 'assets' })
             const file = body.file
             const allowed = parseAllowedMimeTypes()
             const max = maxUploadBytes()
-            const bytes = await file.arrayBuffer()
 
-            if (bytes.byteLength > max) {
+            // Validate against the multipart-declared size first, before
+            // buffering the body into memory, to avoid DoS via oversized uploads.
+            if (file.size > max) {
               throw new AppError(413, 'VALIDATION_ERROR', 'File too large')
             }
             if (!allowed.has(file.type)) {
               throw new AppError(415, 'VALIDATION_ERROR', 'Unsupported file type')
+            }
+
+            const bytes = await file.arrayBuffer()
+            // Re-check the actual byte length in case the declared size was wrong/zero.
+            if (bytes.byteLength > max) {
+              throw new AppError(413, 'VALIDATION_ERROR', 'File too large')
             }
 
             const asset = await uploadAsset({
