@@ -778,7 +778,7 @@ function AssetActions({
           title="更多操作"
           aria-expanded={menuOpen}
           onClick={onToggleMenu}
-          className={`grid h-8 w-8 place-items-center rounded-sm transition-colors ${
+          className={`grid h-8 w-8 place-items-center rounded-sm transition-colors cursor-pointer ${
             dark
               ? 'bg-black/55 text-[#d4d4d4] hover:bg-black/75'
               : 'bg-[#242424] text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]'
