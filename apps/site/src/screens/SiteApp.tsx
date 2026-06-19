@@ -32,7 +32,7 @@ const FEATURES = [
 export function SiteApp() {
   return (
     <main className="min-h-screen bg-[#141414] text-[#e5e5e5]">
-      <section className="mx-auto w-full max-w-[1100px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[620px]:px-3.5">
+      <section className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5">
         {/* Header */}
         <header className="mb-12 flex items-center justify-between">
           <div className="flex items-center gap-3">
