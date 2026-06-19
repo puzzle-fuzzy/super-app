@@ -96,7 +96,7 @@ const primaryButton = `${surfaceButton} bg-white px-4 text-[#141414] hover:bg-ne
 const secondaryButton = `${surfaceButton} border border-[#2a2a2a] bg-[#1c1c1c] px-3.5 text-[#e5e5e5] hover:border-[#3a3a3a] hover:bg-[#2a2a2a]`
 const iconButton = `${surfaceButton} w-10 h-10 border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]`
 const menuItem =
-  'flex min-h-[34px] cursor-pointer items-center gap-2.5 rounded-[7px] bg-transparent px-2.5 text-[13px] font-medium leading-none text-[#999999] no-underline hover:bg-[#2a2a2a] hover:text-[#e5e5e5] disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:size-[15px] [&_svg]:shrink-0'
+  'flex h-9 w-full cursor-pointer appearance-none items-center justify-start gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left font-sans text-[13px] font-medium leading-[13px] text-[#999999] no-underline hover:bg-[#2a2a2a] hover:text-[#e5e5e5] disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:size-[15px] [&_svg]:shrink-0'
 const modalBackdrop = 'fixed inset-0 z-50 grid place-items-center bg-black/70 p-[22px]'
 const modalPanel =
   'max-h-[90vh] w-[min(680px,100%)] overflow-auto rounded-[14px] border border-[#3a3a3a] bg-[#1c1c1c] p-6'
@@ -189,6 +189,31 @@ export function AssetsApp() {
       active = false
     }
   }, [user, kind])
+
+  useEffect(() => {
+    if (!openActionAssetId) return
+
+    function closeOnOutsidePointer(event: PointerEvent) {
+      const target = event.target
+      if (target instanceof Element && target.closest('[data-asset-action-root]')) {
+        return
+      }
+      setOpenActionAssetId(null)
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpenActionAssetId(null)
+      }
+    }
+
+    document.addEventListener('pointerdown', closeOnOutsidePointer)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointer)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [openActionAssetId])
 
   if (isLoading) {
     return <StateScreen title="正在确认登录状态" description="Super 正在连接资产中心。" />
@@ -643,7 +668,7 @@ function AssetCard({
     >
       <div className="min-w-0">
         {isMedia ? (
-          <div className="relative aspect-[4/3] bg-[#242424]">
+          <div className="relative aspect-[4/3] rounded-t-xl bg-[#242424]">
             <AssetPreview asset={asset} />
             {asset.kind === 'video' ? (
               <span className="absolute inset-0 grid place-items-center text-white">
@@ -746,7 +771,7 @@ function AssetActions({
 
   return (
     <div className={`absolute z-[3] ${dark ? 'right-2.5 bottom-2.5' : 'right-3 bottom-3'}`}>
-      <div className="relative">
+      <div className="relative" data-asset-action-root>
         <button
           type="button"
           aria-label="更多操作"
@@ -762,7 +787,7 @@ function AssetActions({
           <Ellipsis size={16} aria-hidden="true" />
         </button>
         <div
-          className={`absolute bottom-10 left-0 z-50 min-w-36 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
+          className={`absolute top-10 right-0 z-50 min-w-36 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
             menuOpen ? 'grid' : 'hidden'
           }`}
         >
