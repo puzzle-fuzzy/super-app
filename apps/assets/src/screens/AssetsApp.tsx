@@ -90,6 +90,23 @@ const CONSISTENCY_OPTIONS = [
   { value: 'high', label: '高' },
 ] as const
 
+const surfaceButton =
+  'inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-colors active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45'
+const primaryButton = `${surfaceButton} bg-white px-4 text-[#141414] hover:bg-neutral-200`
+const secondaryButton = `${surfaceButton} border border-[#2a2a2a] bg-[#1c1c1c] px-3.5 text-[#e5e5e5] hover:border-[#3a3a3a] hover:bg-[#2a2a2a]`
+const iconButton = `${surfaceButton} w-10 border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]`
+const menuItem =
+  'flex min-h-[34px] items-center gap-2.5 rounded-[7px] bg-transparent px-2.5 text-[13px] font-medium text-[#999999] no-underline hover:bg-[#2a2a2a] hover:text-[#e5e5e5] disabled:cursor-not-allowed disabled:opacity-45'
+const modalBackdrop = 'fixed inset-0 z-50 grid place-items-center bg-black/70 p-[22px]'
+const modalPanel =
+  'max-h-[90vh] w-[min(680px,100%)] overflow-auto rounded-[14px] border border-[#3a3a3a] bg-[#1c1c1c] p-6'
+const panelKicker = 'm-0 text-xs font-bold text-[#666666]'
+const panelTitle = 'mt-2.5 text-2xl font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]'
+const fieldClass = 'grid gap-[7px]'
+const fieldLabel = 'text-[13px] font-semibold text-[#999999]'
+const fieldControl =
+  'w-full resize-y rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3 py-[11px] text-[#e5e5e5] outline-none focus:border-[#3a3a3a]'
+
 interface TextEditorState {
   kind: 'text'
   id?: string
@@ -134,6 +151,7 @@ export function AssetsApp() {
   const [transferNotice, setTransferNotice] = useState<TransferNotice | null>(null)
   const [sharingAssetId, setSharingAssetId] = useState<string | null>(null)
   const [transferringAssetId, setTransferringAssetId] = useState<string | null>(null)
+  const [openActionAssetId, setOpenActionAssetId] = useState<string | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   const activeTransferRef = useRef<ReturnType<typeof startAssetTransferSender> | null>(null)
 
@@ -404,18 +422,30 @@ export function AssetsApp() {
   }
 
   return (
-    <main className="assets-shell bg-background text-foreground">
-      <section className="assets-workspace" aria-label="资产中心">
-        <header className="assets-topbar">
-          <div className="topbar-copy">
+    <main className="min-h-screen bg-[#141414] text-[#e5e5e5]">
+      <section
+        className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
+        aria-label="资产中心"
+      >
+        <header className="mb-7">
+          <div className="flex items-end justify-between gap-6 max-[920px]:flex-col max-[920px]:items-stretch">
             <div>
-              <h1>素材库</h1>
-              <p>管理和浏览你的所有创意资产</p>
+              <h1 className="m-0 text-2xl font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]">
+                素材库
+              </h1>
+              <p className="mt-1.5 text-sm leading-normal text-[#999999]">
+                管理和浏览你的所有创意资产
+              </p>
             </div>
-            <div className="topbar-actions">
-              <label className="asset-search">
-                <Search size={16} aria-hidden="true" />
+            <div className="flex items-center justify-end gap-3 max-[920px]:flex-wrap max-[920px]:justify-start">
+              <label className="relative flex w-[min(100%,264px)] items-center max-[920px]:w-full">
+                <Search
+                  className="pointer-events-none absolute left-3 text-[#666666]"
+                  size={16}
+                  aria-hidden="true"
+                />
                 <input
+                  className="h-[42px] w-full rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] py-0 pr-3.5 pl-[38px] text-sm text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] focus:border-[#3a3a3a]"
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   placeholder="搜索素材..."
@@ -423,24 +453,24 @@ export function AssetsApp() {
               </label>
               <button
                 type="button"
-                className="primary-action"
+                className={primaryButton}
                 onClick={() => fileInput.current?.click()}
                 disabled={uploading}
               >
                 <Upload size={16} aria-hidden="true" />
                 {uploading ? '上传中...' : '上传素材'}
               </button>
-              <button type="button" className="secondary-action" onClick={openNewText}>
+              <button type="button" className={secondaryButton} onClick={openNewText}>
                 <FileText size={16} aria-hidden="true" />
                 新建文本
               </button>
-              <button type="button" className="secondary-action" onClick={openNewSubject}>
+              <button type="button" className={secondaryButton} onClick={openNewSubject}>
                 <UserRound size={16} aria-hidden="true" />
                 新建主体
               </button>
               <button
                 type="button"
-                className="icon-action"
+                className={iconButton}
                 onClick={handleLogout}
                 aria-label="退出登录"
               >
@@ -450,15 +480,18 @@ export function AssetsApp() {
           </div>
           <input
             ref={fileInput}
-            className="file-input"
+            className="absolute h-px w-px overflow-hidden whitespace-nowrap [clip:rect(0_0_0_0)]"
             type="file"
             onChange={handleUpload}
             disabled={uploading}
           />
         </header>
 
-        <nav className="asset-controls" aria-label="资产视图">
-          <div className="asset-type-nav" role="tablist" aria-label="资产类型">
+        <nav
+          className="mb-6 flex items-end gap-[18px] overflow-x-auto border-b border-[#2a2a2a] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-[620px]:flex-col max-[620px]:items-stretch max-[620px]:gap-0"
+          aria-label="资产视图"
+        >
+          <div className="flex min-w-max items-end" role="tablist" aria-label="资产类型">
             {FILTERS.map((option) => (
               <button
                 key={option.value}
@@ -467,40 +500,62 @@ export function AssetsApp() {
                 aria-label={option.label}
                 aria-selected={filter === option.value}
                 disabled={option.disabled}
-                className={filter === option.value ? 'active' : ''}
+                className={`inline-flex min-h-12 cursor-pointer items-center whitespace-nowrap border-b-2 bg-transparent px-5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${
+                  filter === option.value
+                    ? 'border-[#e5e5e5] text-[#e5e5e5]'
+                    : 'border-transparent text-[#999999] hover:text-[#e5e5e5]'
+                }`}
                 onClick={() => !option.disabled && setFilter(option.value)}
               >
                 <span>{option.label}</span>
               </button>
             ))}
           </div>
-          <div className="view-switch" aria-label="视图模式">
-            <button type="button" className="active">
+          <div
+            className="ml-auto flex items-center gap-1 py-2.5 max-[620px]:ml-0"
+            aria-label="视图模式"
+          >
+            <button
+              type="button"
+              className="inline-flex min-h-8 cursor-default items-center gap-1.5 rounded-md bg-[#242424] px-2.5 text-xs text-[#e5e5e5]"
+            >
               <Grid3X3 size={14} aria-hidden="true" />
               网格
             </button>
           </div>
         </nav>
 
-        <section className="collection-strip" aria-label="当前集合">
-          <div>
-            <span>正在浏览</span>
-            <strong>{isListLoading ? '同步中' : `${visibleItems.length} 个素材`}</strong>
+        <section
+          className="mb-[18px] flex items-center justify-between gap-4 text-[#666666] max-[620px]:flex-col max-[620px]:items-start"
+          aria-label="当前集合"
+        >
+          <div className="flex items-baseline gap-2.5">
+            <span className="text-[13px]">正在浏览</span>
+            <strong className="text-[15px] font-semibold text-[#e5e5e5]">
+              {isListLoading ? '同步中' : `${visibleItems.length} 个素材`}
+            </strong>
           </div>
-          <p>
+          <p className="m-0 text-[13px]">
             {activeFilter.label} · {activeFilter.helper}
           </p>
         </section>
 
-        {listError ? <p className="list-error">{listError}</p> : null}
+        {listError ? (
+          <p className="mb-[18px] rounded-[10px] border border-[rgb(255_138_128_/_0.36)] bg-[rgb(255_138_128_/_0.1)] p-3.5 text-sm leading-normal text-[#ffd8d4]">
+            {listError}
+          </p>
+        ) : null}
 
-        <section className="assets-content">
+        <section className="min-w-0">
           {isListLoading ? (
             <LoadingState />
           ) : visibleItems.length === 0 ? (
             <EmptyState filter={filter} onNewText={openNewText} onNewSubject={openNewSubject} />
           ) : (
-            <section className="asset-grid" aria-label="资产列表">
+            <section
+              className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 max-[620px]:grid-cols-1"
+              aria-label="资产列表"
+            >
               {visibleItems.map((asset) => (
                 <AssetCard
                   asset={asset}
@@ -514,6 +569,11 @@ export function AssetsApp() {
                   onTransfer={() => handleStartTransfer(asset)}
                   sharing={sharingAssetId === asset.id}
                   transferring={transferringAssetId === asset.id}
+                  menuOpen={openActionAssetId === asset.id}
+                  onToggleMenu={() =>
+                    setOpenActionAssetId((current) => (current === asset.id ? null : asset.id))
+                  }
+                  onCloseMenu={() => setOpenActionAssetId(null)}
                 />
               ))}
             </section>
@@ -554,6 +614,9 @@ function AssetCard({
   onTransfer,
   sharing,
   transferring,
+  menuOpen,
+  onToggleMenu,
+  onCloseMenu,
 }: {
   asset: AssetDto
   onDelete: () => void
@@ -562,6 +625,9 @@ function AssetCard({
   onTransfer: () => void
   sharing: boolean
   transferring: boolean
+  menuOpen: boolean
+  onToggleMenu: () => void
+  onCloseMenu: () => void
 }) {
   const canEdit = asset.kind === 'text' || asset.kind === 'subject'
   const canTransfer = asset.files.some((file) => file.role === 'original')
@@ -570,14 +636,22 @@ function AssetCard({
   const Icon = iconForAsset(asset.kind)
 
   return (
-    <article className={`asset-card ${isMedia ? 'media-card' : 'object-card'}`}>
-      <div className="asset-card-main">
+    <article
+      className={`relative rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] transition-colors hover:border-[#3a3a3a] hover:bg-[#202020] ${
+        menuOpen ? 'z-30' : 'z-0'
+      }`}
+    >
+      <div className="min-w-0">
         {isMedia ? (
-          <div className="asset-media-wrap">
+          <div className="relative aspect-[4/3] bg-[#242424]">
             <AssetPreview asset={asset} />
             {asset.kind === 'video' ? (
-              <span className="asset-play-mark">
-                <Video size={18} aria-hidden="true" />
+              <span className="absolute inset-0 grid place-items-center text-white">
+                <Video
+                  className="box-content h-5 w-5 rounded-full border border-white/20 bg-white/15 p-3.5"
+                  size={18}
+                  aria-hidden="true"
+                />
               </span>
             ) : null}
             <AssetActions
@@ -590,16 +664,23 @@ function AssetCard({
               onTransfer={onTransfer}
               sharing={sharing}
               transferring={transferring}
+              menuOpen={menuOpen}
+              onToggleMenu={onToggleMenu}
+              onCloseMenu={onCloseMenu}
               dark
             />
           </div>
         ) : (
-          <div className="asset-object-body">
-            <span className="asset-object-icon">
+          <div className="relative flex min-h-[230px] flex-col p-5">
+            <span className="mb-4 grid h-[38px] w-[38px] place-items-center rounded-[9px] border border-[#2a2a2a] bg-[#242424] text-[#999999]">
               <Icon size={18} aria-hidden="true" />
             </span>
-            <span className="asset-kind-text">{assetKindLabel(asset.kind)}</span>
-            <p>{assetSummary(asset)}</p>
+            <span className="text-xs font-bold tracking-[0.08em] text-[#666666] uppercase">
+              {assetKindLabel(asset.kind)}
+            </span>
+            <p className="mt-2.5 mb-[22px] line-clamp-4 flex-1 overflow-hidden text-[13px] leading-[1.7] text-[#666666]">
+              {assetSummary(asset)}
+            </p>
             <AssetActions
               canEdit={canEdit}
               downloadUrl={originalFile?.url}
@@ -610,12 +691,19 @@ function AssetCard({
               onTransfer={onTransfer}
               sharing={sharing}
               transferring={transferring}
+              menuOpen={menuOpen}
+              onToggleMenu={onToggleMenu}
+              onCloseMenu={onCloseMenu}
             />
           </div>
         )}
-        <span className="asset-meta">
-          <strong>{asset.title}</strong>
-          <small>{assetLabel(asset)}</small>
+        <span className="grid min-w-0 gap-1 px-3.5 py-3.5">
+          <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold leading-normal text-[#e5e5e5]">
+            {asset.title}
+          </strong>
+          <small className="overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[#666666]">
+            {assetLabel(asset)}
+          </small>
         </span>
       </div>
     </article>
@@ -632,6 +720,9 @@ function AssetActions({
   onTransfer,
   sharing,
   transferring,
+  menuOpen,
+  onToggleMenu,
+  onCloseMenu,
   dark,
 }: {
   canEdit: boolean
@@ -643,38 +734,75 @@ function AssetActions({
   onTransfer: () => void
   sharing: boolean
   transferring: boolean
+  menuOpen: boolean
+  onToggleMenu: () => void
+  onCloseMenu: () => void
   dark?: boolean
 }) {
+  function runAction(action: () => void) {
+    onCloseMenu()
+    action()
+  }
+
   return (
-    <div className={`asset-card-actions ${dark ? 'on-media' : ''}`}>
-      <div className="asset-action-dropdown">
-        <button type="button" aria-label="更多操作" title="更多操作" className="asset-more-button">
+    <div className={`absolute z-[3] ${dark ? 'right-2.5 bottom-2.5' : 'right-3 bottom-3'}`}>
+      <div className="relative">
+        <button
+          type="button"
+          aria-label="更多操作"
+          title="更多操作"
+          aria-expanded={menuOpen}
+          onClick={onToggleMenu}
+          className={`grid h-8 w-8 place-items-center rounded-sm transition-colors ${
+            dark
+              ? 'bg-black/55 text-[#d4d4d4] hover:bg-black/75'
+              : 'bg-[#242424] text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]'
+          }`}
+        >
           <Ellipsis size={16} aria-hidden="true" />
         </button>
-        <div className="asset-action-menu">
+        <div
+          className={`absolute right-0 bottom-10 z-50 min-w-36 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
+            menuOpen ? 'grid' : 'hidden'
+          }`}
+        >
           {canTransfer ? (
-            <button type="button" onClick={onTransfer} disabled={transferring}>
+            <button
+              className={menuItem}
+              type="button"
+              onClick={() => runAction(onTransfer)}
+              disabled={transferring}
+            >
               <Send size={15} aria-hidden="true" />
               {transferring ? '创建中' : '传输'}
             </button>
           ) : null}
-          <button type="button" onClick={onShare} disabled={sharing || !canTransfer}>
+          <button
+            className={menuItem}
+            type="button"
+            onClick={() => runAction(onShare)}
+            disabled={sharing || !canTransfer}
+          >
             <Share2 size={15} aria-hidden="true" />
             {sharing ? '创建中' : '分享'}
           </button>
           {downloadUrl ? (
-            <a href={downloadUrl} download target="_blank" rel="noreferrer">
+            <a className={menuItem} href={downloadUrl} download target="_blank" rel="noreferrer">
               <Download size={15} aria-hidden="true" />
               下载
             </a>
           ) : null}
           {canEdit ? (
-            <button type="button" onClick={onEdit}>
+            <button className={menuItem} type="button" onClick={() => runAction(onEdit)}>
               <FileText size={15} aria-hidden="true" />
               重命名
             </button>
           ) : null}
-          <button type="button" onClick={onDelete} className="danger">
+          <button
+            type="button"
+            onClick={() => runAction(onDelete)}
+            className={`${menuItem} text-[#ffaaa3]`}
+          >
             <Trash2 size={15} aria-hidden="true" />
             删除
           </button>
@@ -692,20 +820,28 @@ function TransferNoticeDialog({
   onClose: () => void
 }) {
   return (
-    <div className="confirm-backdrop" role="dialog" aria-label="传输分享">
-      <div className="confirm-card transfer-card">
-        <p className="panel-kicker">传输分享</p>
-        <h2>链接已准备好</h2>
-        <p>{notice.status}</p>
-        <code>{notice.pageUrl}</code>
+    <div className={modalBackdrop} role="dialog" aria-label="传输分享">
+      <div className={`${modalPanel} w-[min(440px,100%)]`}>
+        <p className={panelKicker}>传输分享</p>
+        <h2 className={panelTitle}>链接已准备好</h2>
+        <p className="text-sm leading-relaxed text-[#999999]">{notice.status}</p>
+        <code className="my-4 block [overflow-wrap:anywhere] rounded-[10px] border border-[#2a2a2a] bg-[#242424] p-3 text-[13px] leading-normal text-[#e5e5e5]">
+          {notice.pageUrl}
+        </code>
         {notice.expiresAt ? (
-          <p>有效期至 {new Date(notice.expiresAt).toLocaleTimeString()}</p>
+          <p className="text-sm leading-relaxed text-[#999999]">
+            有效期至 {new Date(notice.expiresAt).toLocaleTimeString()}
+          </p>
         ) : null}
-        <div className="editor-actions">
-          <button type="button" onClick={onClose}>
+        <div className="mt-1 flex flex-wrap justify-end gap-2">
+          <button className={secondaryButton} type="button" onClick={onClose}>
             关闭
           </button>
-          <button type="button" onClick={() => copyToClipboard(notice.pageUrl)}>
+          <button
+            className={primaryButton}
+            type="button"
+            onClick={() => copyToClipboard(notice.pageUrl)}
+          >
             <Copy size={15} aria-hidden="true" />
             复制链接
           </button>
@@ -718,15 +854,22 @@ function TransferNoticeDialog({
 function AssetPreview({ asset }: { asset: AssetDto }) {
   if (asset.thumbnailUrl || asset.kind === 'image') {
     return (
-      <span className="asset-thumb">
-        <img src={asset.thumbnailUrl ?? asset.files[0]?.url} alt={asset.title} loading="lazy" />
+      <span className="grid h-full w-full place-items-center overflow-hidden rounded-t-xl bg-[#242424]">
+        <img
+          className="h-full w-full object-cover transition-transform duration-200 hover:scale-[1.025]"
+          src={asset.thumbnailUrl ?? asset.files[0]?.url}
+          alt={asset.title}
+          loading="lazy"
+        />
       </span>
     )
   }
 
   return (
-    <span className={`asset-thumb symbolic ${asset.kind}`}>
-      <span>{assetKindLabel(asset.kind).slice(0, 2)}</span>
+    <span className="grid h-full w-full place-items-center overflow-hidden rounded-t-xl bg-[#242424]">
+      <span className="grid h-[52px] w-[52px] place-items-center rounded-xl border border-[#2a2a2a] bg-[#242424] text-[15px] font-bold text-[#999999]">
+        {assetKindLabel(asset.kind).slice(0, 2)}
+      </span>
     </span>
   )
 }
@@ -745,16 +888,19 @@ function EditorPanel({
   onSave: () => void
 }) {
   return (
-    <aside className="editor-panel" role="dialog" aria-label="资产编辑器">
-      <div className="editor-panel-inner">
+    <aside className={modalBackdrop} role="dialog" aria-label="资产编辑器">
+      <div className={`${modalPanel} grid gap-[15px]`}>
         <header>
-          <p className="panel-kicker">创作编辑</p>
-          <h2>{(editor.id ? '编辑' : '新建') + (editor.kind === 'text' ? '文本' : '主体')}</h2>
+          <p className={panelKicker}>创作编辑</p>
+          <h2 className={panelTitle}>
+            {(editor.id ? '编辑' : '新建') + (editor.kind === 'text' ? '文本' : '主体')}
+          </h2>
         </header>
 
-        <label className="editor-field">
-          <span>标题</span>
+        <label className={fieldClass}>
+          <span className={fieldLabel}>标题</span>
           <input
+            className={fieldControl}
             value={editor.title}
             onChange={(event) => setEditor({ ...editor, title: event.target.value })}
           />
@@ -766,11 +912,11 @@ function EditorPanel({
           <SubjectEditorFields editor={editor} setEditor={setEditor} />
         )}
 
-        <div className="editor-actions">
-          <button type="button" onClick={onCancel} disabled={saving}>
+        <div className="mt-1 flex flex-wrap justify-end gap-2">
+          <button className={secondaryButton} type="button" onClick={onCancel} disabled={saving}>
             取消
           </button>
-          <button type="button" onClick={onSave} disabled={saving}>
+          <button className={primaryButton} type="button" onClick={onSave} disabled={saving}>
             {saving ? '保存中...' : '保存'}
           </button>
         </div>
@@ -788,9 +934,10 @@ function TextEditorFields({
 }) {
   return (
     <>
-      <label className="editor-field">
-        <span>类型</span>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>类型</span>
         <select
+          className={fieldControl}
           value={editor.textType}
           onChange={(event) => setEditor({ ...editor, textType: event.target.value as TextType })}
         >
@@ -801,16 +948,18 @@ function TextEditorFields({
           ))}
         </select>
       </label>
-      <label className="editor-field">
-        <span>语言（可选，如 zh / en）</span>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>语言（可选，如 zh / en）</span>
         <input
+          className={fieldControl}
           value={editor.language}
           onChange={(event) => setEditor({ ...editor, language: event.target.value })}
         />
       </label>
-      <label className="editor-field">
-        <span>正文</span>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>正文</span>
         <textarea
+          className={`${fieldControl} leading-relaxed`}
           rows={12}
           value={editor.content}
           onChange={(event) => setEditor({ ...editor, content: event.target.value })}
@@ -829,9 +978,10 @@ function SubjectEditorFields({
 }) {
   return (
     <>
-      <label className="editor-field">
-        <span>主体类型</span>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>主体类型</span>
         <select
+          className={fieldControl}
           value={editor.subjectType}
           onChange={(event) =>
             setEditor({ ...editor, subjectType: event.target.value as SubjectType })
@@ -844,40 +994,45 @@ function SubjectEditorFields({
           ))}
         </select>
       </label>
-      <label className="editor-field">
-        <span>显示名称</span>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>显示名称</span>
         <input
+          className={fieldControl}
           value={editor.displayName}
           onChange={(event) => setEditor({ ...editor, displayName: event.target.value })}
         />
       </label>
-      <label className="editor-field">
-        <span>身份提示词</span>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>身份提示词</span>
         <textarea
+          className={`${fieldControl} leading-relaxed`}
           rows={3}
           value={editor.identityPrompt}
           onChange={(event) => setEditor({ ...editor, identityPrompt: event.target.value })}
         />
       </label>
-      <label className="editor-field">
-        <span>外观提示词</span>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>外观提示词</span>
         <textarea
+          className={`${fieldControl} leading-relaxed`}
           rows={3}
           value={editor.appearancePrompt}
           onChange={(event) => setEditor({ ...editor, appearancePrompt: event.target.value })}
         />
       </label>
-      <label className="editor-field">
-        <span>负面提示词</span>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>负面提示词</span>
         <textarea
+          className={`${fieldControl} leading-relaxed`}
           rows={3}
           value={editor.negativePrompt}
           onChange={(event) => setEditor({ ...editor, negativePrompt: event.target.value })}
         />
       </label>
-      <label className="editor-field">
-        <span>一致性</span>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>一致性</span>
         <select
+          className={fieldControl}
           value={editor.consistencyLevel}
           onChange={(event) =>
             setEditor({
@@ -907,16 +1062,18 @@ function DeleteConfirm({
   onConfirm: () => void
 }) {
   return (
-    <div className="confirm-backdrop" role="dialog" aria-label="删除确认">
-      <div className="confirm-card">
-        <p className="panel-kicker">确认删除</p>
-        <h2>删除「{asset.title}」？</h2>
-        <p>这个素材会从当前列表移除。之后的恢复能力会在资产回收站阶段加入。</p>
-        <div className="editor-actions">
-          <button type="button" onClick={onCancel}>
+    <div className={modalBackdrop} role="dialog" aria-label="删除确认">
+      <div className={`${modalPanel} w-[min(440px,100%)]`}>
+        <p className={panelKicker}>确认删除</p>
+        <h2 className={panelTitle}>删除「{asset.title}」？</h2>
+        <p className="text-sm leading-relaxed text-[#999999]">
+          这个素材会从当前列表移除。之后的恢复能力会在资产回收站阶段加入。
+        </p>
+        <div className="mt-1 flex flex-wrap justify-end gap-2">
+          <button className={secondaryButton} type="button" onClick={onCancel}>
             取消
           </button>
-          <button type="button" onClick={onConfirm}>
+          <button className={primaryButton} type="button" onClick={onConfirm}>
             确认删除
           </button>
         </div>
@@ -935,15 +1092,25 @@ function EmptyState({
   onNewSubject: () => void
 }) {
   return (
-    <section className="empty-state">
-      <p className="panel-kicker">空素材库</p>
-      <h2>还没有资产</h2>
-      <p>先上传一张参考图，或者写下第一段提示词，让这里变成你的创作素材库。</p>
-      <div>
-        <button type="button" onClick={filter === 'subject' ? onNewSubject : onNewText}>
-          <Plus size={16} aria-hidden="true" />
-          {filter === 'subject' ? '创建第一个主体' : '写第一段文本'}
-        </button>
+    <section className="grid min-h-[420px] place-items-center bg-transparent px-6 py-14 text-center">
+      <div className="max-w-[440px]">
+        <p className={panelKicker}>空素材库</p>
+        <h2 className="mt-2.5 text-[26px] font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]">
+          还没有资产
+        </h2>
+        <p className="text-sm leading-relaxed text-[#999999]">
+          先上传一张参考图，或者写下第一段提示词，让这里变成你的创作素材库。
+        </p>
+        <div>
+          <button
+            className={`${primaryButton} mt-[18px]`}
+            type="button"
+            onClick={filter === 'subject' ? onNewSubject : onNewText}
+          >
+            <Plus size={16} aria-hidden="true" />
+            {filter === 'subject' ? '创建第一个主体' : '写第一段文本'}
+          </button>
+        </div>
       </div>
     </section>
   )
@@ -951,20 +1118,28 @@ function EmptyState({
 
 function LoadingState() {
   return (
-    <section className="loading-state" aria-label="资产加载中">
-      <span aria-hidden="true" />
-      <p>正在加载素材...</p>
+    <section
+      className="flex min-h-[260px] items-center justify-center gap-2.5 text-sm text-[#999999]"
+      aria-label="资产加载中"
+    >
+      <span
+        className="h-4 w-4 animate-spin rounded-full border-2 border-[#3a3a3a] border-t-[#e5e5e5]"
+        aria-hidden="true"
+      />
+      <p className="m-0">正在加载素材...</p>
     </section>
   )
 }
 
 function StateScreen({ title, description }: { title: string; description: string }) {
   return (
-    <main className="state-screen">
+    <main className="grid min-h-screen place-items-center bg-[#141414] p-10 text-center">
       <div>
-        <p className="eyebrow">Super 素材库</p>
-        <h1>{title}</h1>
-        <p>{description}</p>
+        <p className={panelKicker}>Super 素材库</p>
+        <h1 className="mt-2.5 text-[28px] font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]">
+          {title}
+        </h1>
+        <p className="text-[#999999]">{description}</p>
       </div>
     </main>
   )
