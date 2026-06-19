@@ -94,9 +94,9 @@ const surfaceButton =
   'inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-colors active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45'
 const primaryButton = `${surfaceButton} bg-white px-4 text-[#141414] hover:bg-neutral-200`
 const secondaryButton = `${surfaceButton} border border-[#2a2a2a] bg-[#1c1c1c] px-3.5 text-[#e5e5e5] hover:border-[#3a3a3a] hover:bg-[#2a2a2a]`
-const iconButton = `${surfaceButton} w-10 border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]`
+const iconButton = `${surfaceButton} w-10 h-10 border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]`
 const menuItem =
-  'flex min-h-[34px] items-center gap-2.5 rounded-[7px] bg-transparent px-2.5 text-[13px] font-medium text-[#999999] no-underline hover:bg-[#2a2a2a] hover:text-[#e5e5e5] disabled:cursor-not-allowed disabled:opacity-45'
+  'flex min-h-[34px] cursor-pointer items-center gap-2.5 rounded-[7px] bg-transparent px-2.5 text-[13px] font-medium leading-none text-[#999999] no-underline hover:bg-[#2a2a2a] hover:text-[#e5e5e5] disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:size-[15px] [&_svg]:shrink-0'
 const modalBackdrop = 'fixed inset-0 z-50 grid place-items-center bg-black/70 p-[22px]'
 const modalPanel =
   'max-h-[90vh] w-[min(680px,100%)] overflow-auto rounded-[14px] border border-[#3a3a3a] bg-[#1c1c1c] p-6'
@@ -762,7 +762,7 @@ function AssetActions({
           <Ellipsis size={16} aria-hidden="true" />
         </button>
         <div
-          className={`absolute right-0 bottom-10 z-50 min-w-36 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
+          className={`absolute bottom-10 left-0 z-50 min-w-36 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
             menuOpen ? 'grid' : 'hidden'
           }`}
         >
