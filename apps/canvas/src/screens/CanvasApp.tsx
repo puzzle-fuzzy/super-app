@@ -14,7 +14,6 @@ import {
   PanelLeftClose,
   PenLine,
   Plus,
-  Save,
   StickyNote,
   Trash2,
   Type as TypeIcon,
@@ -24,18 +23,14 @@ import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams } from '
 import {
   Background,
   Controls,
-  Handle,
   MiniMap,
-  Position,
   ReactFlow,
   ReactFlowProvider,
-  useEdgesState,
-  useNodesState,
+  applyEdgeChanges,
   useReactFlow,
   type Connection,
   type Edge,
-  type Node,
-  type NodeProps,
+  type OnSelectionChangeFunc,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -44,6 +39,42 @@ import { assetsApi, canvasApi } from '@super-app/api-client'
 import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
 import { clientEnv } from '@super-app/env/client'
+
+// 新模块
+import MediaNode from '../components/MediaNode'
+import DocNode from '../components/DocNode'
+import TextNode from '../components/TextNode'
+import GroupNode from '../components/GroupNode'
+import ErrorBoundary from '../components/ErrorBoundary'
+import SelectionToolbar from '../components/SelectionToolbar'
+import GroupToolbar from '../components/GroupToolbar'
+import ModeToolbar from '../components/ModeToolbar'
+import GroupNameModal from '../components/GroupNameModal'
+import TextPreviewModal from '../components/TextPreviewModal'
+import FullscreenPreview from '../components/FullscreenPreview'
+import ErrorToast from '../components/ErrorToast'
+import LoadingIndicator from '../components/LoadingIndicator'
+import EmptyHint from '../components/EmptyHint'
+import { useCanvasStore, setPersistCallback } from '../stores/canvasStore'
+import { useUIStore } from '../stores/uiStore'
+import { useCanvasActions } from '../hooks/useCanvasActions'
+import { useInputListeners } from '../hooks/useInputListeners'
+import { useSelectionToolbar } from '../hooks/useSelectionToolbar'
+import { useGroupToolbar } from '../hooks/useGroupToolbar'
+import { useNodeActions } from '../hooks/useNodeActions'
+import type { AppNode } from '../types'
+
+/* -------------------------------------------------------------------------- */
+/*  Node Types (stable module-level identity)                                  */
+/* -------------------------------------------------------------------------- */
+
+const nodeTypes = {
+  imageNode: (() => { const W = (props: any) => <ErrorBoundary level="node"><MediaNode {...props} /></ErrorBoundary>; W.displayName = 'ImageNode'; return W })(),
+  videoNode: (() => { const W = (props: any) => <ErrorBoundary level="node"><MediaNode {...props} /></ErrorBoundary>; W.displayName = 'VideoNode'; return W })(),
+  docNode: (() => { const W = (props: any) => <ErrorBoundary level="node"><DocNode {...props} /></ErrorBoundary>; W.displayName = 'DocNode'; return W })(),
+  textNode: (() => { const W = (props: any) => <ErrorBoundary level="node"><TextNode {...props} /></ErrorBoundary>; W.displayName = 'TextNode'; return W })(),
+  groupNode: GroupNode,
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                      */
@@ -64,12 +95,12 @@ interface ProjectDetail extends ProjectSummary {
 }
 
 interface CanvasData {
-  nodes: Node[]
+  nodes: AppNode[]
   edges: Edge[]
 }
 
 /* -------------------------------------------------------------------------- */
-/*  CanvasApp  — entry point with router                                        */
+/*  CanvasApp  — entry point with router                                       */
 /* -------------------------------------------------------------------------- */
 
 export function CanvasApp() {
@@ -119,17 +150,14 @@ function ListView({
 
   useEffect(() => {
     if (!userMenuOpen) return
-
     function closeOnOutsidePointer(event: PointerEvent) {
       const target = event.target
       if (target instanceof Element && target.closest('[data-user-menu-root]')) return
       setUserMenuOpen(false)
     }
-
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === 'Escape') setUserMenuOpen(false)
     }
-
     document.addEventListener('pointerdown', closeOnOutsidePointer)
     document.addEventListener('keydown', closeOnEscape)
     return () => {
@@ -149,7 +177,6 @@ function ListView({
     try {
       setLoading(true)
       const result = await canvasApi.list({ limit: 50 })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setProjects((result as any).items ?? [])
     } catch {
       // Keep stale list on failure
@@ -171,9 +198,7 @@ function ListView({
       setNewTitle('')
       setCreateOpen(false)
       await loadProjects()
-    } catch {
-      // Silent
-    }
+    } catch { /* Silent */ }
   }
 
   async function handleRename() {
@@ -184,9 +209,7 @@ function ListView({
       setRenameId(null)
       setRenameTitle('')
       await loadProjects()
-    } catch {
-      // Silent
-    }
+    } catch { /* Silent */ }
   }
 
   async function handleDelete(id: string) {
@@ -195,9 +218,7 @@ function ListView({
       setDeleteConfirm(null)
       setMenuOpenId(null)
       await loadProjects()
-    } catch {
-      // Silent
-    }
+    } catch { /* Silent */ }
   }
 
   /* ---- Render ---------------------------------------------------------- */
@@ -211,7 +232,6 @@ function ListView({
         {/* Header */}
         <header className="mb-8 flex items-center justify-between gap-4">
           <strong className="text-base font-semibold tracking-tight">画布</strong>
-
           <div className="flex items-center gap-2">
             <a
               href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
@@ -221,13 +241,7 @@ function ListView({
             >
               <House size={16} aria-hidden="true" />
             </a>
-
-            <UserMenu
-              user={user}
-              open={userMenuOpen}
-              setOpen={setUserMenuOpen}
-              onLogout={handleLogout}
-            />
+            <UserMenu user={user} open={userMenuOpen} setOpen={setUserMenuOpen} onLogout={handleLogout} />
           </div>
         </header>
 
@@ -277,7 +291,6 @@ function ListView({
                 className="group relative flex min-h-[180px] cursor-pointer flex-col rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-5 transition-all duration-160 hover:-translate-y-[3px] hover:border-[#3a3a3a] hover:bg-[#202020]"
                 onClick={() => navigate(`/project/${project.id}`)}
               >
-                {/* Context menu trigger */}
                 <div className="absolute top-4 right-4 z-10">
                   <button
                     type="button"
@@ -329,16 +342,9 @@ function ListView({
                     </>
                   )}
                 </div>
-
-                <span className="mb-1 text-[11px] font-bold tracking-[0.14em] text-[#666666]">
-                  画布项目
-                </span>
-                <h3 className="mt-[42px] mb-2.5 text-2xl font-bold tracking-[-0.02em]">
-                  {project.title}
-                </h3>
-                <p className="m-0 mt-auto text-[12px] text-[#666666]">
-                  更新于 {formatRelativeTime(project.updatedAt)}
-                </p>
+                <span className="mb-1 text-[11px] font-bold tracking-[0.14em] text-[#666666]">画布项目</span>
+                <h3 className="mt-[42px] mb-2.5 text-2xl font-bold tracking-[-0.02em]">{project.title}</h3>
+                <p className="m-0 mt-auto text-[12px] text-[#666666]">更新于 {formatRelativeTime(project.updatedAt)}</p>
               </div>
             ))}
           </div>
@@ -423,9 +429,7 @@ function ListView({
         <DialogOverlay onClose={() => setDeleteConfirm(null)}>
           <div className="w-full max-w-[400px] rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
             <h3 className="m-0 mb-2 text-lg font-bold tracking-[-0.01em]">确认删除</h3>
-            <p className="m-0 mb-5 text-sm text-[#999999]">
-              此操作不可撤销。确定要删除这个画布项目吗？
-            </p>
+            <p className="m-0 mb-5 text-sm text-[#999999]">此操作不可撤销。确定要删除这个画布项目吗？</p>
             <div className="flex justify-end gap-3">
               <button
                 type="button"
@@ -466,7 +470,6 @@ function EditorRoute({
 
   useEffect(() => {
     if (!id) return
-
     let cancelled = false
 
     async function load() {
@@ -484,10 +487,7 @@ function EditorRoute({
     }
 
     load()
-
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [id])
 
   if (loading) {
@@ -512,7 +512,7 @@ function EditorRoute({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  EditorView  — powered by @xyflow/react                                     */
+/*  EditorView — powered by @xyflow/react + Zustand stores                     */
 /* -------------------------------------------------------------------------- */
 
 function EditorView(props: {
@@ -521,7 +521,6 @@ function EditorView(props: {
   onBack: () => void
   onLogout: () => void
 }) {
-  // ReactFlowProvider is required so useReactFlow() works inside EditorViewInner.
   return (
     <ReactFlowProvider>
       <EditorViewInner {...props} />
@@ -540,133 +539,149 @@ function EditorViewInner({
   onBack: () => void
   onLogout: () => void
 }) {
-  const [saving, setSaving] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // 初始化 stores 和 hooks
+  useInputListeners()
+  const { addNodeFromAsset } = useNodeActions()
+  const actions = useCanvasActions()
+  const toolbarPos = useSelectionToolbar()
+  const groupToolbarPos = useGroupToolbar()
   const { screenToFlowPosition } = useReactFlow()
 
-  // Load existing canvas data or start fresh
-  const initialData = useMemo<CanvasData>(() => {
+  // 从 localStorage 恢复缩放/平移
+  const savedViewport = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('viewport')
+      if (raw) {
+        const { x, y, zoom } = JSON.parse(raw)
+        if (typeof x === 'number' && typeof y === 'number' && typeof zoom === 'number') {
+          return { x, y, zoom }
+        }
+      }
+    } catch { /* ignore */ }
+    return null
+  }, [])
+
+  const nodes = useCanvasStore((s) => s.nodes)
+  const setNodes = useCanvasStore((s) => s.setNodes)
+  const onNodesChange = useCanvasStore((s) => s.onNodesChange)
+  const selectedNodeIds = useCanvasStore((s) => s.selectedNodeIds)
+  const interactionMode = useCanvasStore((s) => s.interactionMode)
+  const initialize = useCanvasStore((s) => s.setInitialized)
+
+  const [edges, setEdges] = useState<Edge[]>([])
+  const edgesRef = useRef<Edge[]>([])
+  edgesRef.current = edges
+
+  // 自动保存状态
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // 加载项目数据
+  useEffect(() => {
     const raw = project.data as Partial<CanvasData> | undefined
-    return {
-      nodes: Array.isArray(raw?.nodes) ? raw.nodes : [],
-      edges: Array.isArray(raw?.edges) ? raw.edges : [],
+    const loadedNodes = (Array.isArray(raw?.nodes) ? raw.nodes : []) as AppNode[]
+    const loadedEdges = (Array.isArray(raw?.edges) ? raw.edges : []) as Edge[]
+
+    loadedNodes.sort((a, b) => {
+      const orderA = a.type === 'groupNode' ? 0 : 10
+      const orderB = b.type === 'groupNode' ? 0 : 10
+      return orderA - orderB
+    })
+
+    setNodes(() => loadedNodes)
+    setEdges(loadedEdges)
+    initialize(true)
+  }, [project.id])
+
+  // 自动保存回调（防抖 800ms）
+  const doSave = useCallback(async () => {
+    setSaveStatus('saving')
+    try {
+      await saveProject(project.id, useCanvasStore.getState().nodes, edgesRef.current)
+      setSaveStatus('saved')
+      // 2 秒后恢复 idle
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2000)
+    } catch {
+      setSaveStatus('idle')
     }
   }, [project.id])
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialData.nodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialData.edges)
-
-  // Re-seed when switching to a different project
-  useEffect(() => {
-    setNodes(initialData.nodes)
-    setEdges(initialData.edges)
-  }, [project.id, initialData, setNodes, setEdges])
-
-  /* ---- Save ------------------------------------------------------------ */
-
-  async function handleSave() {
-    try {
-      setSaving(true)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await canvasApi.update(project.id, { data: { nodes, edges } as any })
-    } catch {
-      // Silent
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  /* ---- Node CRUD ------------------------------------------------------- */
-
-  function addNoteNode() {
-    const id = `note-${Date.now()}`
-    const newNode: Node = {
-      id,
-      type: 'default',
-      position: {
-        x: 100 + Math.random() * 300,
-        y: 100 + Math.random() * 300,
-      },
-      data: { label: '双击编辑文本' },
-      style: {
-        background: '#1c1c1c',
-        color: '#e5e5e5',
-        border: '1px solid #3a3a3a',
-        borderRadius: '12px',
-        padding: '16px 24px',
-        fontSize: '14px',
-        minWidth: 160,
-      },
-    }
-    setNodes((nds) => [...nds, newNode])
-  }
-
-  /* ---- Asset drop handling --------------------------------------------- */
-
-  function handleDrop(event: React.DragEvent) {
-    event.preventDefault()
-    const raw = event.dataTransfer.getData('application/super-asset')
-    if (!raw) return
-
-    let asset: AssetDto
-    try {
-      asset = JSON.parse(raw) as AssetDto
-    } catch {
-      return
-    }
-
-    const position = screenToFlowPosition({ x: event.clientX, y: event.clientY })
-    setNodes((nds) => [
-      ...nds,
-      {
-        id: `asset-${Date.now()}`,
-        type: 'asset',
-        position,
-        data: {
-          assetId: asset.id,
-          kind: asset.kind,
-          title: asset.title,
-          thumbnailUrl: asset.thumbnailUrl,
-          fileUrl: asset.files?.[0]?.url,
-        },
-      },
-    ])
-  }
-
-  /* ---- Connection handling --------------------------------------------- */
-
-  function onConnect(connection: Connection) {
-    setEdges((eds) => [
-      ...eds,
-      {
-        ...connection,
-        id: `edge-${Date.now()}`,
-        style: { stroke: '#666', strokeWidth: 1.5 },
-        animated: true,
-      } as Edge,
-    ])
-  }
-
-  /* ---- Keyboard shortcuts ---------------------------------------------- */
-
-  const saveRef = useRef(handleSave)
-  saveRef.current = handleSave
+  const debouncedSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const doSaveRef = useRef(doSave)
+  doSaveRef.current = doSave
 
   useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      const mod = e.metaKey || e.ctrlKey
-      if (mod && e.key === 's') {
-        e.preventDefault()
-        saveRef.current()
-      }
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
+    setPersistCallback(() => {
+      if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current)
+      debouncedSaveRef.current = setTimeout(() => doSaveRef.current(), 800)
+    })
   }, [])
 
-  /* ---- Render ---------------------------------------------------------- */
+  // 清理
+  useEffect(() => {
+    return () => {
+      if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current)
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    }
+  }, [])
 
+  // 粘贴事件
+  useEffect(() => {
+    window.addEventListener('paste', actions.handlePaste as any)
+    return () => window.removeEventListener('paste', actions.handlePaste as any)
+  }, [actions.handlePaste])
+
+  // 选择变化
+  const handleSelectionChange: OnSelectionChangeFunc = useCallback(
+    ({ nodes: sel }) => {
+      const newIds = sel.map((n) => n.id)
+      const currentIds = useCanvasStore.getState().selectedNodeIds
+      if (newIds.length === currentIds.length && newIds.every((id) => currentIds.includes(id))) return
+      useCanvasStore.getState().setSelectedNodeIds(newIds)
+    },
+    [],
+  )
+
+  // 连线（带自动保存）
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      setEdges((eds) => {
+        const next = [
+          ...eds,
+          {
+            ...connection,
+            id: `edge-${Date.now()}`,
+            style: { stroke: '#666', strokeWidth: 1.5 },
+            animated: true,
+          } as Edge,
+        ]
+        // 触发防抖保存
+        if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current)
+        debouncedSaveRef.current = setTimeout(() => doSaveRef.current(), 800)
+        return next
+      })
+    },
+    [],
+  )
+
+  // 添加便签节点
+  function addTextNode() {
+    const store = useCanvasStore.getState()
+    const id = `text-${Date.now()}`
+    const node: AppNode = {
+      id,
+      type: 'textNode',
+      position: { x: 100 + Math.random() * 300, y: 100 + Math.random() * 300 },
+      data: { description: '双击此处编辑文本' },
+    }
+    store.setNodes((nds) => [...nds, node])
+  }
+
+  // 节点数量
   const nodeCount = nodes.length
   const edgeCount = edges.length
 
@@ -693,21 +708,23 @@ function EditorViewInner({
           <button
             type="button"
             className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border-0 bg-[#3a3a3a] px-3 text-[13px] font-medium text-[#e5e5e5] transition-colors hover:bg-[#4a4a4a]"
-            onClick={addNoteNode}
+            onClick={addTextNode}
           >
             <StickyNote size={14} />
-            便签
+            文本
           </button>
 
-          <button
-            type="button"
-            className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-[#2a2a2a] bg-transparent px-4 text-[13px] font-medium text-[#e5e5e5] transition-colors hover:border-[#3a3a3a] hover:bg-[#242424]"
-            onClick={handleSave}
-            disabled={saving}
+          {/* 自动保存状态指示 */}
+          <span
+            className={`text-[12px] transition-opacity duration-300 ${
+              saveStatus === 'idle' ? 'opacity-0' : 'opacity-100'
+            }`}
+            style={{
+              color: saveStatus === 'saving' ? '#999999' : '#666666',
+            }}
           >
-            <Save size={14} />
-            {saving ? '保存中…' : '保存'}
-          </button>
+            {saveStatus === 'saving' ? '保存中…' : '已自动保存'}
+          </span>
 
           <a
             href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
@@ -729,18 +746,65 @@ function EditorViewInner({
           onToggle={() => setSidebarCollapsed((c) => !c)}
         />
 
-        {/* React Flow Canvas */}
-        <div className="flex-1">
+        <div className="flex-1" style={{ position: 'relative' }}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
             onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
-            fitView
+            onDrop={(e) => {
+              // 优先处理资产侧边栏拖拽
+              const raw = e.dataTransfer.getData('application/super-asset')
+              if (raw) {
+                let asset: AssetDto
+                try { asset = JSON.parse(raw) as AssetDto } catch { return }
+                const position = screenToFlowPosition({ x: e.clientX, y: e.clientY })
+                addNodeFromAsset(asset, position)
+                return
+              }
+              // 文件系统拖放
+              actions.handleDrop(e)
+            }}
+            onEdgesChange={(changes) => {
+              setEdges((eds) => {
+                const next = applyEdgeChanges(changes, eds)
+                if (changes.some((c) => c.type === 'remove')) {
+                  if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current)
+                  debouncedSaveRef.current = setTimeout(() => doSaveRef.current(), 800)
+                }
+                return next
+              })
+            }}
+            onConnect={onConnect}
+            onSelectionChange={handleSelectionChange}
+            onNodeDragStart={actions.handleNodeDragStart}
+            onNodeDrag={actions.handleNodeDrag}
+            onNodeDragStop={actions.handleNodeDragStop}
+            onMoveEnd={actions.handleMoveEnd}
+            onPaneClick={() => useCanvasStore.getState().setFocusedGroupId(null)}
+            onNodeClick={(_e, node) => {
+              const store = useCanvasStore.getState()
+              if (node.type === 'groupNode') {
+                store.setNodes((prev) => prev.map((n) => ({ ...n, selected: false })))
+                store.setSelectedNodeIds([])
+                store.setFocusedGroupId(node.id)
+              } else {
+                store.setFocusedGroupId(null)
+              }
+            }}
+            panOnDrag={interactionMode === 'pan'}
+            selectionKeyCode={interactionMode === 'select' ? null : 'Space'}
+            selectionOnDrag={interactionMode === 'select'}
+            deleteKeyCode="Delete"
+            multiSelectionKeyCode="Shift"
+            minZoom={0.1}
+            maxZoom={4}
+            zoomOnScroll
+            zoomOnPinch
+            zoomOnDoubleClick={false}
+            fitView={!savedViewport}
+            defaultViewport={savedViewport ?? undefined}
             proOptions={{ hideAttribution: true }}
             style={{ background: '#1a1a1a' }}
           >
@@ -752,120 +816,50 @@ function EditorViewInner({
               nodeColor="#3a3a3a"
             />
           </ReactFlow>
+
+          {/* 浮动工具栏（absolute 定位在此 relative 容器内） */}
+          {toolbarPos && (
+            <SelectionToolbar position={toolbarPos} selectedCount={selectedNodeIds.length} />
+          )}
+          {groupToolbarPos && <GroupToolbar position={groupToolbarPos} />}
         </div>
       </div>
+
+      {/* ModeToolbar 使用 fixed 定位，不受容器影响 */}
+      <ModeToolbar userName={user.name ?? user.email} />
+
+      {/* 弹窗 */}
+      <GroupNameModal />
+      <TextPreviewModal />
+      <FullscreenPreview />
+      <ErrorToast />
+      <LoadingIndicator />
+      <EmptyHint />
     </main>
   )
 }
 
+/* ---- Helpers ---- */
+
+async function saveProject(projectId: string, nodes: AppNode[], edges: Edge[]) {
+  try {
+    const serializableNodes = nodes.map(({ id, type, position, data, selectable, draggable }) => ({
+      id,
+      type,
+      position,
+      data,
+      ...(selectable !== undefined ? { selectable } : {}),
+      ...(draggable !== undefined ? { draggable } : {}),
+    }))
+    await canvasApi.update(projectId, { data: { nodes: serializableNodes, edges } as any })
+  } catch {
+    // Silent
+  }
+}
+
 /* -------------------------------------------------------------------------- */
-/*  Asset node + sidebar (Phase 4a: drag-to-canvas)                            */
+/*  Asset Sidebar                                                              */
 /* -------------------------------------------------------------------------- */
-
-interface AssetNodeData {
-  assetId: string
-  kind: AssetKind
-  title: string
-  thumbnailUrl?: string
-  fileUrl?: string
-}
-
-// Stable nodeTypes identity (module scope) to avoid React Flow re-create warnings.
-const nodeTypes = { asset: AssetNode }
-
-function AssetNode({ data }: NodeProps) {
-  const d = data as unknown as AssetNodeData
-  const cardStyle: React.CSSProperties = {
-    background: '#1c1c1c',
-    color: '#e5e5e5',
-    border: '1px solid #3a3a3a',
-    borderRadius: '12px',
-    padding: '10px',
-    minWidth: 180,
-    maxWidth: 220,
-    fontSize: '13px',
-  }
-
-  let media: React.ReactNode = null
-  if (d.kind === 'image' && (d.thumbnailUrl || d.fileUrl)) {
-    media = (
-      <img
-        src={d.thumbnailUrl ?? d.fileUrl}
-        alt={d.title}
-        style={{
-          width: '100%',
-          height: 120,
-          objectFit: 'cover',
-          borderRadius: 8,
-          display: 'block',
-        }}
-      />
-    )
-  } else {
-    const Icon =
-      d.kind === 'video'
-        ? Film
-        : d.kind === 'audio'
-          ? Music
-          : d.kind === 'file'
-            ? FileIcon
-            : d.kind === 'text'
-              ? TypeIcon
-              : d.kind === 'subject'
-                ? UserRound
-                : d.kind === 'style'
-                  ? Palette
-                  : ImageIcon
-    media = (
-      <div
-        style={{
-          height: 64,
-          display: 'grid',
-          placeItems: 'center',
-          color: '#999999',
-          background: '#242424',
-          borderRadius: 8,
-        }}
-      >
-        <Icon size={26} aria-hidden="true" />
-      </div>
-    )
-  }
-
-  return (
-    <div style={cardStyle}>
-      <Handle type="target" position={Position.Top} style={{ background: '#666' }} />
-      {media}
-      <div
-        style={{
-          marginTop: 8,
-          fontWeight: 600,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {d.title}
-      </div>
-      <div style={{ marginTop: 2, fontSize: 11, color: '#888888' }}>{assetKindLabel(d.kind)}</div>
-      <Handle type="source" position={Position.Bottom} style={{ background: '#666' }} />
-    </div>
-  )
-}
-
-function assetKindLabel(kind: AssetKind): string {
-  const map: Record<AssetKind, string> = {
-    image: '图片',
-    video: '视频',
-    audio: '音频',
-    file: '文件',
-    text: '文本',
-    subject: '主体',
-    style: '风格',
-    template: '模板',
-  }
-  return map[kind]
-}
 
 const SIDEBAR_FILTERS: { value: 'all' | AssetKind; label: string }[] = [
   { value: 'all', label: '全部' },
@@ -899,9 +893,7 @@ function AssetSidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: (
       .finally(() => {
         if (!cancelled) setLoading(false)
       })
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [kind])
 
   if (collapsed) {
@@ -1019,8 +1011,22 @@ function SidebarKindIcon({ kind }: { kind: AssetKind }) {
               ? UserRound
               : kind === 'style'
                 ? Palette
-                : ImageIcon
+              : ImageIcon
   return <Icon size={20} aria-hidden="true" className="text-[#666666]" />
+}
+
+function assetKindLabel(kind: AssetKind): string {
+  const map: Record<AssetKind, string> = {
+    image: '图片',
+    video: '视频',
+    audio: '音频',
+    file: '文件',
+    text: '文本',
+    subject: '主体',
+    style: '风格',
+    template: '模板',
+  }
+  return map[kind]
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1048,11 +1054,7 @@ function UserMenu({
         aria-haspopup="true"
       >
         {user.avatarUrl ? (
-          <img
-            className="h-7 w-7 rounded-full object-cover"
-            src={user.avatarUrl}
-            alt={user.name ?? user.email}
-          />
+          <img className="h-7 w-7 rounded-full object-cover" src={user.avatarUrl} alt={user.name ?? user.email} />
         ) : (
           <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2a2a2a] text-[#999999]">
             <UserRound size={14} aria-hidden="true" />
@@ -1061,10 +1063,7 @@ function UserMenu({
         <span className="max-w-[120px] truncate text-[13px] font-medium text-[#e5e5e5]">
           {user.name ?? user.email}
         </span>
-        <ChevronDown
-          size={14}
-          className={`text-[#666666] transition-transform ${open ? 'rotate-180' : ''}`}
-        />
+        <ChevronDown size={14} className={`text-[#666666] transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       <div
         className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
@@ -1112,12 +1111,8 @@ function ScreenState({ title, description }: { title: string; description: strin
   return (
     <main className="grid min-h-screen place-items-center bg-[#141414] p-6">
       <div className="w-full max-w-[560px] rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
-        <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
-          SUPER CANVAS
-        </p>
-        <h1 className="m-0 mb-3 text-[34px] font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]">
-          {title}
-        </h1>
+        <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">SUPER CANVAS</p>
+        <h1 className="m-0 mb-3 text-[34px] font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]">{title}</h1>
         <p className="m-0 text-[#999999]">{description}</p>
       </div>
     </main>
