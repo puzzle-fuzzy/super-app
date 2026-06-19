@@ -18,7 +18,7 @@ test('creates, edits, and deletes a subject asset in the assets app', async ({ p
   await page.getByRole('button', { name: '创建并进入' }).click()
 
   await expect(page).toHaveURL(assetsUrl)
-  await expect(page.getByRole('heading', { name: '资产中心' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '素材库' })).toBeVisible()
 
   // Switch to the subject filter and create a subject asset.
   await page.getByRole('tab', { name: '主体' }).click()
@@ -32,11 +32,13 @@ test('creates, edits, and deletes a subject asset in the assets app', async ({ p
   await expect(page.getByText('我的主角').first()).toBeVisible()
 
   // Edit the appearance prompt.
-  await page.getByRole('button', { name: '编辑' }).first().click()
+  await page.getByRole('button', { name: '更多操作' }).first().click()
+  await page.getByRole('button', { name: '重命名' }).first().click()
   await page.getByLabel('外观提示词').fill('穿着红色外套')
   await page.getByRole('button', { name: '保存' }).click()
 
   // Delete.
+  await page.getByRole('button', { name: '更多操作' }).first().click()
   await page.getByRole('button', { name: '删除' }).first().click()
   await page.getByRole('button', { name: '确认删除' }).click()
   await expect(page.getByText('我的主角')).toHaveCount(0)

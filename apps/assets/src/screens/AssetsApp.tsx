@@ -667,61 +667,49 @@ function AssetCard({
       }`}
     >
       <div className="min-w-0">
-        {isMedia ? (
-          <div className="relative aspect-[4/3] rounded-t-xl bg-[#242424]">
-            <AssetPreview asset={asset} />
-            {asset.kind === 'video' ? (
-              <span className="absolute inset-0 grid place-items-center text-white">
-                <Video
-                  className="box-content h-5 w-5 rounded-full border border-white/20 bg-white/15 p-3.5"
-                  size={18}
-                  aria-hidden="true"
-                />
+        <div className="relative aspect-[4/3] rounded-t-xl bg-[#242424]">
+          {isMedia ? (
+            <>
+              <AssetPreview asset={asset} />
+              {asset.kind === 'video' ? (
+                <span className="absolute inset-0 grid place-items-center text-white">
+                  <Video
+                    className="box-content h-5 w-5 rounded-full border border-white/20 bg-white/15 p-3.5"
+                    size={18}
+                    aria-hidden="true"
+                  />
+                </span>
+              ) : null}
+            </>
+          ) : (
+            <div className="flex h-full flex-col overflow-hidden rounded-t-xl p-5">
+              <span className="mb-4 grid h-[38px] w-[38px] place-items-center rounded-[9px] border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999]">
+                <Icon size={18} aria-hidden="true" />
               </span>
-            ) : null}
-            <AssetActions
-              canEdit={canEdit}
-              downloadUrl={originalFile?.url}
-              canTransfer={canTransfer}
-              onDelete={onDelete}
-              onEdit={onEdit}
-              onShare={onShare}
-              onTransfer={onTransfer}
-              sharing={sharing}
-              transferring={transferring}
-              menuOpen={menuOpen}
-              onToggleMenu={onToggleMenu}
-              onCloseMenu={onCloseMenu}
-              dark
-            />
-          </div>
-        ) : (
-          <div className="relative flex min-h-[230px] flex-col p-5">
-            <span className="mb-4 grid h-[38px] w-[38px] place-items-center rounded-[9px] border border-[#2a2a2a] bg-[#242424] text-[#999999]">
-              <Icon size={18} aria-hidden="true" />
-            </span>
-            <span className="text-xs font-bold tracking-[0.08em] text-[#666666] uppercase">
-              {assetKindLabel(asset.kind)}
-            </span>
-            <p className="mt-2.5 mb-[22px] line-clamp-4 flex-1 overflow-hidden text-[13px] leading-[1.7] text-[#666666]">
-              {assetSummary(asset)}
-            </p>
-            <AssetActions
-              canEdit={canEdit}
-              downloadUrl={originalFile?.url}
-              canTransfer={canTransfer}
-              onDelete={onDelete}
-              onEdit={onEdit}
-              onShare={onShare}
-              onTransfer={onTransfer}
-              sharing={sharing}
-              transferring={transferring}
-              menuOpen={menuOpen}
-              onToggleMenu={onToggleMenu}
-              onCloseMenu={onCloseMenu}
-            />
-          </div>
-        )}
+              <span className="text-xs font-bold tracking-[0.08em] text-[#666666] uppercase">
+                {assetKindLabel(asset.kind)}
+              </span>
+              <p className="mt-2.5 mb-10 line-clamp-4 flex-1 overflow-hidden text-[13px] leading-[1.7] text-[#777777]">
+                {assetSummary(asset)}
+              </p>
+            </div>
+          )}
+          <AssetActions
+            canEdit={canEdit}
+            downloadUrl={originalFile?.url}
+            canTransfer={canTransfer}
+            onDelete={onDelete}
+            onEdit={onEdit}
+            onShare={onShare}
+            onTransfer={onTransfer}
+            sharing={sharing}
+            transferring={transferring}
+            menuOpen={menuOpen}
+            onToggleMenu={onToggleMenu}
+            onCloseMenu={onCloseMenu}
+            dark={isMedia}
+          />
+        </div>
         <span className="grid min-w-0 gap-1 px-3.5 py-3.5">
           <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold leading-normal text-[#e5e5e5]">
             {asset.title}
@@ -770,7 +758,7 @@ function AssetActions({
   }
 
   return (
-    <div className={`absolute z-[3] ${dark ? 'right-2.5 bottom-2.5' : 'right-3 bottom-3'}`}>
+    <div className="absolute bottom-2.5 left-2.5 z-[3]">
       <div className="relative" data-asset-action-root>
         <button
           type="button"
@@ -787,7 +775,7 @@ function AssetActions({
           <Ellipsis size={16} aria-hidden="true" />
         </button>
         <div
-          className={`absolute top-10 right-0 z-50 min-w-36 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
+          className={`absolute bottom-10 left-0 z-50 min-w-36 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
             menuOpen ? 'grid' : 'hidden'
           }`}
         >

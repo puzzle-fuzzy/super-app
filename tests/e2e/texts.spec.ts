@@ -18,7 +18,7 @@ test('creates, edits, and deletes a text asset in the assets app', async ({ page
   await page.getByRole('button', { name: '创建并进入' }).click()
 
   await expect(page).toHaveURL(assetsUrl)
-  await expect(page.getByRole('heading', { name: '资产中心' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '素材库' })).toBeVisible()
 
   // Switch to the text filter and create a text asset.
   await page.getByRole('tab', { name: '文本' }).click()
@@ -32,11 +32,13 @@ test('creates, edits, and deletes a text asset in the assets app', async ({ page
   await expect(page.getByText('测试提示词').first()).toBeVisible()
 
   // Edit the content.
-  await page.getByRole('button', { name: '编辑' }).first().click()
+  await page.getByRole('button', { name: '更多操作' }).first().click()
+  await page.getByRole('button', { name: '重命名' }).first().click()
   await page.getByLabel('正文').fill('这是修改后的正文')
   await page.getByRole('button', { name: '保存' }).click()
 
   // Delete.
+  await page.getByRole('button', { name: '更多操作' }).first().click()
   await page.getByRole('button', { name: '删除' }).first().click()
   await page.getByRole('button', { name: '确认删除' }).click()
   await expect(page.getByText('测试提示词')).toHaveCount(0)
