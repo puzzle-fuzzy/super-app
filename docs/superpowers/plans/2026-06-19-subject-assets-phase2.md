@@ -11,6 +11,7 @@
 **Spec:** `docs/superpowers/specs/2026-06-19-subject-assets-phase2-design.md`
 
 **Verified patterns from Phase 0/1 (do NOT re-litigate):**
+
 - Guard wiring: `.guard({ beforeHandle: requireUser }, (g) => g.group('/path', ...))` — macros don't fire in Elysia 1.4.29.
 - Extension table: NO reverse relation on `assetsRelations` (causes TDZ circular-import deadlock in drizzle-kit's CJS loader). Declare `asset: one(assets, ...)` on the extension side only.
 - **Drizzle enum==column-name bug:** when an enum type name equals the column name, drizzle generates unqualified `"col" col_type` which Postgres rejects in schema-qualified CREATE TABLE. Both `subject_type` and `consistency_level` hit this. Review the generated SQL and qualify to `"assets"."subject_type"` / `"assets"."consistency_level"` if affected.
@@ -33,7 +34,7 @@
 
 **Files:** Create `packages/contracts/src/subject-assets.ts`; Modify `packages/contracts/src/index.ts`, `packages/contracts/package.json`.
 
-- [ ] **Step 1: Create `packages/contracts/src/subject-assets.ts`**
+- [x] **Step 1: Create `packages/contracts/src/subject-assets.ts`**
 
 ```ts
 import { z } from 'zod'
@@ -93,11 +94,11 @@ export const UpdateSubjectAssetRequestSchema = z.object({
 export type UpdateSubjectAssetRequest = z.infer<typeof UpdateSubjectAssetRequestSchema>
 ```
 
-- [ ] **Step 2: Re-export from `packages/contracts/src/index.ts`** — add `export * from './subject-assets'`.
+- [x] **Step 2: Re-export from `packages/contracts/src/index.ts`** — add `export * from './subject-assets'`.
 
-- [ ] **Step 3: Add export map entry to `packages/contracts/package.json`** — add `"./subject-assets": "./src/subject-assets.ts"` to the `exports` object.
+- [x] **Step 3: Add export map entry to `packages/contracts/package.json`** — add `"./subject-assets": "./src/subject-assets.ts"` to the `exports` object.
 
-- [ ] **Step 4: Verify + commit**
+- [x] **Step 4: Verify + commit**
 
 ```bash
 pnpm --filter @super-app/contracts typecheck
@@ -111,7 +112,7 @@ git commit -m "feat(contracts): add subject asset type, detail DTO, and request 
 
 **Files:** Create `packages/db/src/schema/subject-assets.ts`; Modify `packages/db/src/schema/index.ts`.
 
-- [ ] **Step 1: Create `packages/db/src/schema/subject-assets.ts`**
+- [x] **Step 1: Create `packages/db/src/schema/subject-assets.ts`**
 
 ```ts
 import { relations, sql } from 'drizzle-orm'
@@ -174,9 +175,9 @@ export type NewSubjectAssetRow = typeof subjectAssets.$inferInsert
 
 > Do NOT add a reverse relation to `assets.ts` `assetsRelations` — it caused a TDZ circular-import deadlock in Phase 1. The extension-side relation above is sufficient.
 
-- [ ] **Step 2: Export from `packages/db/src/schema/index.ts`** — add `export * from './subject-assets'`.
+- [x] **Step 2: Export from `packages/db/src/schema/index.ts`** — add `export * from './subject-assets'`.
 
-- [ ] **Step 3: Verify + commit**
+- [x] **Step 3: Verify + commit**
 
 ```bash
 pnpm --filter @super-app/db typecheck
@@ -190,19 +191,20 @@ git commit -m "feat(db): add subject_assets extension table"
 
 **Files:** Create `packages/db/drizzle/0003_*.sql` (+meta).
 
-- [ ] **Step 1: Generate** — `pnpm db:generate`. Expected: new migration detecting `subject_assets` + `subject_type` + `consistency_level` enums.
+- [x] **Step 1: Generate** — `pnpm db:generate`. Expected: new migration detecting `subject_assets` + `subject_type` + `consistency_level` enums.
 
-- [ ] **Step 2: Review the SQL** — open the new `0003_*.sql`. **Check the enum column types:** both `"subject_type" subject_type` and `"consistency_level" consistency_level` are likely UNQUALIFIED (drizzle bug when enum name == column name). If unqualified, edit to `"subject_type" "assets"."subject_type"` and `"consistency_level" "assets"."consistency_level"`. The `CREATE TYPE` lines (`"assets"."subject_type"`, `"assets"."consistency_level"`) should already be schema-qualified — only the column references inside CREATE TABLE need fixing.
+- [x] **Step 2: Review the SQL** — open the new `0003_*.sql`. **Check the enum column types:** both `"subject_type" subject_type` and `"consistency_level" consistency_level` are likely UNQUALIFIED (drizzle bug when enum name == column name). If unqualified, edit to `"subject_type" "assets"."subject_type"` and `"consistency_level" "assets"."consistency_level"`. The `CREATE TYPE` lines (`"assets"."subject_type"`, `"assets"."consistency_level"`) should already be schema-qualified — only the column references inside CREATE TABLE need fixing.
 
-- [ ] **Step 3: Apply + verify**
+- [x] **Step 3: Apply + verify**
 
 ```bash
 pnpm db:migrate
 docker compose -f infra/docker/compose.local.yml exec -T postgres psql -U postgres -d super -tAc "\d assets.subject_assets"
 ```
+
 Expected: column listing with `subject_type`, `consistency_level`, `display_name`, etc. If migrate fails with `type "subject_type" does not exist`, the SQL qualification from Step 2 wasn't applied — re-check.
 
-- [ ] **Step 4: Commit** — `git add packages/db/drizzle && git commit -m "feat(db): add subject_assets migration"`.
+- [x] **Step 4: Commit** — `git add packages/db/drizzle && git commit -m "feat(db): add subject_assets migration"`.
 
 ---
 
@@ -210,7 +212,7 @@ Expected: column listing with `subject_type`, `consistency_level`, `display_name
 
 **Files:** Create `services/api/src/modules/subjects/service.ts`.
 
-- [ ] **Step 1: Create the service** (mirrors `modules/texts/service.ts`):
+- [x] **Step 1: Create the service** (mirrors `modules/texts/service.ts`):
 
 ```ts
 import type { CurrentUser } from '@super-app/contracts/auth'
@@ -324,9 +326,11 @@ export async function updateSubjectAsset({
   if (input.subjectType !== undefined) extensionFields.subjectType = input.subjectType
   if (input.displayName !== undefined) extensionFields.displayName = input.displayName
   if (input.identityPrompt !== undefined) extensionFields.identityPrompt = input.identityPrompt
-  if (input.appearancePrompt !== undefined) extensionFields.appearancePrompt = input.appearancePrompt
+  if (input.appearancePrompt !== undefined)
+    extensionFields.appearancePrompt = input.appearancePrompt
   if (input.negativePrompt !== undefined) extensionFields.negativePrompt = input.negativePrompt
-  if (input.consistencyLevel !== undefined) extensionFields.consistencyLevel = input.consistencyLevel
+  if (input.consistencyLevel !== undefined)
+    extensionFields.consistencyLevel = input.consistencyLevel
 
   if (Object.keys(extensionFields).length > 0) {
     extensionFields.updatedAt = new Date()
@@ -415,7 +419,7 @@ export function toSubjectAssetDetailDto(
 }
 ```
 
-- [ ] **Step 2: Verify + commit**
+- [x] **Step 2: Verify + commit**
 
 ```bash
 pnpm --filter @super-app/api typecheck
@@ -429,7 +433,7 @@ git commit -m "feat(api): add subjects service layer"
 
 **Files:** Create `services/api/src/modules/subjects/index.ts`; Modify `services/api/src/app.ts`.
 
-- [ ] **Step 1: Create `services/api/src/modules/subjects/index.ts`**
+- [x] **Step 1: Create `services/api/src/modules/subjects/index.ts`**
 
 ```ts
 import {
@@ -440,7 +444,12 @@ import { Elysia } from 'elysia'
 
 import { authPlugin, requireUser } from '../../plugins/auth'
 import { ok } from '../../shared/response'
-import { createSubjectAsset, deleteSubjectAsset, getSubjectAsset, updateSubjectAsset } from './service'
+import {
+  createSubjectAsset,
+  deleteSubjectAsset,
+  getSubjectAsset,
+  updateSubjectAsset,
+} from './service'
 
 export const subjectsModule = new Elysia({ name: 'subjects' })
   .use(authPlugin)
@@ -475,9 +484,9 @@ export const subjectsModule = new Elysia({ name: 'subjects' })
   )
 ```
 
-- [ ] **Step 2: Register in `services/api/src/app.ts`** — add `import { subjectsModule } from './modules/subjects'` and append `.use(subjectsModule)` to the `/api` group line.
+- [x] **Step 2: Register in `services/api/src/app.ts`** — add `import { subjectsModule } from './modules/subjects'` and append `.use(subjectsModule)` to the `/api` group line.
 
-- [ ] **Step 3: Verify + commit**
+- [x] **Step 3: Verify + commit**
 
 ```bash
 pnpm --filter @super-app/api typecheck
@@ -491,14 +500,14 @@ git commit -m "feat(api): wire subjects create/read/update/delete routes"
 
 **Files:** Create `services/api/src/modules/subjects/subjects.test.ts` — mirror `texts.test.ts`, swapping text fields for subject fields.
 
-- [ ] **Step 1: Create the test** — copy `modules/texts/texts.test.ts` structure. Key assertions for the subject flow:
+- [x] **Step 1: Create the test** — copy `modules/texts/texts.test.ts` structure. Key assertions for the subject flow:
   - Create: `{ title: '我的主角', subjectType: 'person', identityPrompt: 'young woman...', consistencyLevel: 'high' }` → `data.kind === 'subject'`, `data.subjectType === 'person'`, `data.consistencyLevel === 'high'`.
   - Also test default consistency: create with only `{title, subjectType:'product'}` → `data.consistencyLevel === 'medium'`.
   - Read, list(`?kind=subject`), patch (update `identityPrompt` only, verify `subjectType` unchanged), delete → 404.
   - Cross-owner 404, 401, invalid subject_type 400, empty title 400.
   - Cleanup: delete `subjectAssets`, `assets`, `sessions`, `users` for test users in `afterAll`.
 
-- [ ] **Step 2: Run + commit**
+- [x] **Step 2: Run + commit**
 
 ```bash
 pnpm --filter @super-app/api test   # all tests pass (auth + assets + texts + subjects)
@@ -512,9 +521,9 @@ git commit -m "test(api): add subjects module integration tests"
 
 **Files:** Modify `packages/api-client/src/index.ts`.
 
-- [ ] **Step 1: Add imports** for `CreateSubjectAssetRequest`, `SubjectAssetDetailDto`, `UpdateSubjectAssetRequest` from `@super-app/contracts/subject-assets`.
+- [x] **Step 1: Add imports** for `CreateSubjectAssetRequest`, `SubjectAssetDetailDto`, `UpdateSubjectAssetRequest` from `@super-app/contracts/subject-assets`.
 
-- [ ] **Step 2: Add `subjectsApi`** (after `textsApi`):
+- [x] **Step 2: Add `subjectsApi`** (after `textsApi`):
 
 ```ts
 export const subjectsApi = {
@@ -539,7 +548,7 @@ export const subjectsApi = {
 }
 ```
 
-- [ ] **Step 3: Verify + commit**
+- [x] **Step 3: Verify + commit**
 
 ```bash
 pnpm --filter @super-app/api-client typecheck
@@ -553,13 +562,13 @@ git commit -m "feat(api-client): add subjectsApi"
 
 **Files:** Modify `apps/assets/src/screens/AssetsApp.tsx`.
 
-- [ ] **Step 1: Enable the `subject` filter** — change `{ value: 'subject', label: '主体', disabled: true }` to `{ value: 'subject', label: '主体' }`.
+- [x] **Step 1: Enable the `subject` filter** — change `{ value: 'subject', label: '主体', disabled: true }` to `{ value: 'subject', label: '主体' }`.
 
-- [ ] **Step 2: Add subject editor state + handlers** — mirror the text editor pattern. Add a `SUBJECT_TYPE_OPTIONS` constant (person→人物, character→角色, product→商品, pet→宠物, object→物品, scene→场景, other→其他) and `CONSISTENCY_OPTIONS` (low→低, medium→中, high→高). Add `subjectEditing` state and `openNewSubject`/`openEditSubject`/`saveSubject` handlers calling `subjectsApi`.
+- [x] **Step 2: Add subject editor state + handlers** — mirror the text editor pattern. Add a `SUBJECT_TYPE_OPTIONS` constant (person→人物, character→角色, product→商品, pet→宠物, object→物品, scene→场景, other→其他) and `CONSISTENCY_OPTIONS` (low→低, medium→中, high→高). Add `subjectEditing` state and `openNewSubject`/`openEditSubject`/`saveSubject` handlers calling `subjectsApi`.
 
-- [ ] **Step 3: Render the 「新建主体」 button + subject cards + editor modal** — when `filter === 'subject'`, show the new-subject button. Subject cards show `displayName || title` + subjectType label + edit/delete. The modal has: title, subjectType select, displayName, identityPrompt/appearancePrompt/negativePrompt textareas, consistencyLevel select, description. Reuse the `.text-editor*` CSS classes (rename usage if desired, but the styles work for both).
+- [x] **Step 3: Render the 「新建主体」 button + subject cards + editor modal** — when `filter === 'subject'`, show the new-subject button. Subject cards show `displayName || title` + subjectType label + edit/delete. The modal has: title, subjectType select, displayName, identityPrompt/appearancePrompt/negativePrompt textareas, consistencyLevel select, description. Reuse the `.text-editor*` CSS classes (rename usage if desired, but the styles work for both).
 
-- [ ] **Step 4: Verify build + commit**
+- [x] **Step 4: Verify build + commit**
 
 ```bash
 pnpm --filter @super-app/assets typecheck && pnpm --filter @super-app/assets build
@@ -573,9 +582,9 @@ git commit -m "feat(assets): enable subject filter and add subject editor"
 
 **Files:** Create `tests/e2e/subjects.spec.ts` — mirror `texts.spec.ts`: register → 「主体」 tab → 「新建主体」 → fill title + identityPrompt → save → assert card → edit → delete.
 
-- [ ] **Step 1: Create the test** (mirror `tests/e2e/texts.spec.ts`, swap selectors: `getByRole('tab', { name: '主体' })`, `getByRole('button', { name: '新建主体' })`, label `标题`, and a subject-specific field like `身份描述` or `identityPrompt`).
+- [x] **Step 1: Create the test** (mirror `tests/e2e/texts.spec.ts`, swap selectors: `getByRole('tab', { name: '主体' })`, `getByRole('button', { name: '新建主体' })`, label `标题`, and a subject-specific field like `身份描述` or `identityPrompt`).
 
-- [ ] **Step 2: Run + commit**
+- [x] **Step 2: Run + commit**
 
 ```bash
 pnpm test:e2e   # all 4 specs pass (auth + assets + texts + subjects)
@@ -587,13 +596,13 @@ git commit -m "test(e2e): add subjects create/edit/delete browser flow"
 
 ## Task 10: Final verification
 
-- [ ] **Step 1:** `pnpm typecheck` — all packages green.
-- [ ] **Step 2:** `pnpm test` — all integration tests pass.
-- [ ] **Step 3:** `pnpm test:e2e` — all 4 specs pass.
-- [ ] **Step 4:** `pnpm lint` — clean.
-- [ ] **Step 5:** `pnpm format` — only format files this phase touched (`npx prettier --write <changed-files>`); avoid reformatting pre-existing files.
-- [ ] **Step 6:** Verify acceptance criteria (spec §7) — spot-check create/list/patch/delete/404/401/400 against a running API.
-- [ ] **Step 7:** Final commit if formatting changed.
+- [x] **Step 1:** `pnpm typecheck` — all packages green.
+- [x] **Step 2:** `pnpm test` — all integration tests pass.
+- [x] **Step 3:** `pnpm test:e2e` — all 4 specs pass.
+- [x] **Step 4:** `pnpm lint` — clean.
+- [x] **Step 5:** `pnpm format` — only format files this phase touched (`npx prettier --write <changed-files>`); avoid reformatting pre-existing files.
+- [x] **Step 6:** Verify acceptance criteria (spec §7) — spot-check create/list/patch/delete/404/401/400 against a running API.
+- [x] **Step 7:** Final commit if formatting changed.
 
 ---
 

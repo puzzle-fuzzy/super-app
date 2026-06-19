@@ -21,15 +21,15 @@ Phase 2 is structurally identical to Phase 1 (text): another type extension tabl
 
 ## Decisions (locked)
 
-| # | Decision |
-|---|----------|
-| 1 | Phase 2 builds the subject asset itself only — NO `asset_relations` / reference images. Pure extension table + CRUD, same shape as Phase 1. |
-| 2 | 7 fields: `subject_type`, `display_name`, `identity_prompt`, `appearance_prompt`, `negative_prompt`, `consistency_level`, `metadata`. Dropped: `default_style_asset_id` (no style), `profile_image_asset_id` (no relations), `personality_prompt` (premature). |
-| 3 | `subject_type` enum: all 7 values up front (`person, character, product, pet, object, scene, other`). |
-| 4 | `consistency_level` enum: `low, medium, high`, default `medium`. |
-| 5 | Full CRUD (POST/GET/PATCH/DELETE), same as text. PATCH is partial. |
-| 6 | All subject fields are optional at create EXCEPT `subject_type` (required). Allows creating a stub subject and filling it in progressively. |
-| 7 | Extension data is a separate `SubjectAssetDetailDto` (extends `AssetDto`), not merged into the generic `AssetDto` — same boundary as Phase 1. |
+| #   | Decision                                                                                                                                                                                                                                                       |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Phase 2 builds the subject asset itself only — NO `asset_relations` / reference images. Pure extension table + CRUD, same shape as Phase 1.                                                                                                                    |
+| 2   | 7 fields: `subject_type`, `display_name`, `identity_prompt`, `appearance_prompt`, `negative_prompt`, `consistency_level`, `metadata`. Dropped: `default_style_asset_id` (no style), `profile_image_asset_id` (no relations), `personality_prompt` (premature). |
+| 3   | `subject_type` enum: all 7 values up front (`person, character, product, pet, object, scene, other`).                                                                                                                                                          |
+| 4   | `consistency_level` enum: `low, medium, high`, default `medium`.                                                                                                                                                                                               |
+| 5   | Full CRUD (POST/GET/PATCH/DELETE), same as text. PATCH is partial.                                                                                                                                                                                             |
+| 6   | All subject fields are optional at create EXCEPT `subject_type` (required). Allows creating a stub subject and filling it in progressively.                                                                                                                    |
+| 7   | Extension data is a separate `SubjectAssetDetailDto` (extends `AssetDto`), not merged into the generic `AssetDto` — same boundary as Phase 1.                                                                                                                  |
 
 ## 1. Data Layer
 
@@ -39,28 +39,45 @@ New file `packages/db/src/schema/subject-assets.ts`, using the existing `assetsS
 
 ```ts
 export const subjectTypeEnum = assetsSchema.enum('subject_type', [
-  'person', 'character', 'product', 'pet', 'object', 'scene', 'other',
+  'person',
+  'character',
+  'product',
+  'pet',
+  'object',
+  'scene',
+  'other',
 ])
 
 export const consistencyLevelEnum = assetsSchema.enum('consistency_level', [
-  'low', 'medium', 'high',
+  'low',
+  'medium',
+  'high',
 ])
 
-export const subjectAssets = assetsSchema.table('subject_assets', {
-  id: idColumn(),
-  assetId: uuid('asset_id').notNull().references(() => assets.id, { onDelete: 'cascade' }),
-  subjectType: subjectTypeEnum('subject_type').notNull(),
-  displayName: varchar('display_name', { length: 240 }),
-  identityPrompt: text('identity_prompt'),
-  appearancePrompt: text('appearance_prompt'),
-  negativePrompt: text('negative_prompt'),
-  consistencyLevel: consistencyLevelEnum('consistency_level').notNull().default('medium'),
-  metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
-  createdAt: createdAtColumn(),
-  updatedAt: updatedAtColumn(),
-}, (table) => ({
-  assetIdUnique: uniqueIndex('subject_assets_asset_id_unique').on(table.assetId),
-}))
+export const subjectAssets = assetsSchema.table(
+  'subject_assets',
+  {
+    id: idColumn(),
+    assetId: uuid('asset_id')
+      .notNull()
+      .references(() => assets.id, { onDelete: 'cascade' }),
+    subjectType: subjectTypeEnum('subject_type').notNull(),
+    displayName: varchar('display_name', { length: 240 }),
+    identityPrompt: text('identity_prompt'),
+    appearancePrompt: text('appearance_prompt'),
+    negativePrompt: text('negative_prompt'),
+    consistencyLevel: consistencyLevelEnum('consistency_level').notNull().default('medium'),
+    metadata: jsonb('metadata')
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
+  },
+  (table) => ({
+    assetIdUnique: uniqueIndex('subject_assets_asset_id_unique').on(table.assetId),
+  })
+)
 ```
 
 - 1:1 with `assets.assets`, `uniqueIndex` on `assetId`, `onDelete: cascade`.
@@ -88,7 +105,13 @@ New file `packages/contracts/src/subject-assets.ts`, re-exported from `packages/
 
 ```ts
 export const SubjectTypeSchema = z.enum([
-  'person', 'character', 'product', 'pet', 'object', 'scene', 'other',
+  'person',
+  'character',
+  'product',
+  'pet',
+  'object',
+  'scene',
+  'other',
 ])
 export type SubjectType = z.infer<typeof SubjectTypeSchema>
 
@@ -135,14 +158,15 @@ export const UpdateSubjectAssetRequestSchema = z.object({
 
 All routes under `/api/assets/subjects`, all guarded by `requireUser`.
 
-| Method | Path | Body | Response |
-|---|---|---|---|
-| POST | `/api/assets/subjects` | `CreateSubjectAssetRequestSchema` | `SubjectAssetDetailDto` |
-| GET | `/api/assets/subjects/:id` | — | `SubjectAssetDetailDto` |
-| PATCH | `/api/assets/subjects/:id` | `UpdateSubjectAssetRequestSchema` | `SubjectAssetDetailDto` |
-| DELETE | `/api/assets/subjects/:id` | — | `{ deleted: true }` |
+| Method | Path                       | Body                              | Response                |
+| ------ | -------------------------- | --------------------------------- | ----------------------- |
+| POST   | `/api/assets/subjects`     | `CreateSubjectAssetRequestSchema` | `SubjectAssetDetailDto` |
+| GET    | `/api/assets/subjects/:id` | —                                 | `SubjectAssetDetailDto` |
+| PATCH  | `/api/assets/subjects/:id` | `UpdateSubjectAssetRequestSchema` | `SubjectAssetDetailDto` |
+| DELETE | `/api/assets/subjects/:id` | —                                 | `{ deleted: true }`     |
 
 Behavior mirrors Phase 1's text module exactly:
+
 - Create: insert main row (`kind: 'subject'`, `source: 'manual'`) + extension; compensating delete on extension-insert failure.
 - Read/Update/Delete: owner-scoped load (`ownerId AND status='active'` → 404 otherwise); PATCH writes main fields (`title`/`description`) to `assets`, subject fields to `subject_assets`; soft-delete on the main row.
 - List via generic `GET /api/assets?kind=subject` (no dedicated list endpoint).
@@ -155,6 +179,7 @@ New `services/api/src/modules/subjects/{service.ts,index.ts,subjects.test.ts}`, 
 ## 5. Frontend — `apps/assets`
 
 Enable the `subject` filter (was disabled/"即将上线"):
+
 - 「新建主体」 button when `filter === 'subject'`.
 - Subject editor modal: `subjectType` select (7 Chinese labels) + `displayName` + `identityPrompt`/`appearancePrompt`/`negativePrompt` textareas + `consistencyLevel` select (低/中/高). Reuse the Phase 1 text-editor modal CSS/structure.
 - Subject cards show `displayName` (or title) + `subjectType` label + edit/delete buttons.
@@ -162,11 +187,11 @@ Enable the `subject` filter (was disabled/"即将上线"):
 
 ## 6. Testing
 
-| Layer | Test | Coverage |
-|---|---|---|
+| Layer           | Test                                                  | Coverage                                                                                                                                                   |
+| --------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | API integration | `subjects/subjects.test.ts` (mirrors `texts.test.ts`) | create → get → list(`?kind=subject`) → patch → get(verify) → delete → 404; cross-owner 404; 401; invalid subject_type 400; empty title 400. Self-cleaning. |
-| Regression | existing auth/assets/texts tests green | Confirms the new table didn't break prior flows. |
-| E2E | `tests/e2e/subjects.spec.ts` | Register → create subject → assert under 「主体」 → edit → delete. |
+| Regression      | existing auth/assets/texts tests green                | Confirms the new table didn't break prior flows.                                                                                                           |
+| E2E             | `tests/e2e/subjects.spec.ts`                          | Register → create subject → assert under 「主体」 → edit → delete.                                                                                         |
 
 ## 7. Acceptance Criteria
 

@@ -711,10 +711,7 @@ packages/api-client
 import { clientEnv } from '@super-app/env/client'
 import { redirectToLogin } from '@super-app/auth-client'
 
-export async function apiFetch<T>(
-  path: string,
-  options?: RequestInit
-): Promise<T> {
+export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${clientEnv.SUPER_PUBLIC_API_BASE_URL}${path}`, {
     ...options,
     credentials: 'include',
@@ -845,10 +842,7 @@ application/x-super-asset
 资产应用写入：
 
 ```ts
-event.dataTransfer.setData(
-  'application/x-super-asset',
-  JSON.stringify(payload)
-)
+event.dataTransfer.setData('application/x-super-asset', JSON.stringify(payload))
 ```
 
 画布应用读取：
@@ -1827,9 +1821,9 @@ INTERNAL_ERROR
 
 ```yaml
 packages:
-  - "apps/*"
-  - "services/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'services/*'
+  - 'packages/*'
 ```
 
 ---
@@ -2188,9 +2182,9 @@ services:
     env_file:
       - ./.env
     ports:
-      - "127.0.0.1:5200:5200"
+      - '127.0.0.1:5200:5200'
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
     volumes:
       - ./logs/api:/app/logs
 ```
@@ -2206,9 +2200,9 @@ services:
     env_file:
       - ./.env
     ports:
-      - "127.0.0.1:5200:5200"
+      - '127.0.0.1:5200:5200'
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
     volumes:
       - ./logs/api:/app/logs
 
@@ -2219,7 +2213,7 @@ services:
     env_file:
       - ./.env
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
     volumes:
       - ./logs/worker:/app/logs
 
@@ -2230,9 +2224,9 @@ services:
     env_file:
       - ./.env
     ports:
-      - "127.0.0.1:5201:5201"
+      - '127.0.0.1:5201:5201'
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
     volumes:
       - ./logs/signaling:/app/logs
 
@@ -2241,7 +2235,7 @@ services:
     container_name: super-redis
     restart: always
     ports:
-      - "127.0.0.1:6379:6379"
+      - '127.0.0.1:6379:6379'
     volumes:
       - ./data/redis:/data
 ```

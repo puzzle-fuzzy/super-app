@@ -373,9 +373,7 @@ export function AssetsApp() {
       {editor ? (
         <div className="text-editor-overlay" role="dialog" aria-label="资产编辑器">
           <div className="text-editor">
-            <h2>
-              {(editor.id ? '编辑' : '新建') + (editor.kind === 'text' ? '文本' : '主体')}
-            </h2>
+            <h2>{(editor.id ? '编辑' : '新建') + (editor.kind === 'text' ? '文本' : '主体')}</h2>
             <label className="editor-field">
               <span>标题</span>
               <input
@@ -390,9 +388,7 @@ export function AssetsApp() {
                   <span>类型</span>
                   <select
                     value={editor.textType}
-                    onChange={(e) =>
-                      setEditor({ ...editor, textType: e.target.value as TextType })
-                    }
+                    onChange={(e) => setEditor({ ...editor, textType: e.target.value as TextType })}
                   >
                     {TEXT_TYPE_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>

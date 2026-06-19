@@ -110,9 +110,11 @@ export async function updateSubjectAsset({
   if (input.subjectType !== undefined) extensionFields.subjectType = input.subjectType
   if (input.displayName !== undefined) extensionFields.displayName = input.displayName
   if (input.identityPrompt !== undefined) extensionFields.identityPrompt = input.identityPrompt
-  if (input.appearancePrompt !== undefined) extensionFields.appearancePrompt = input.appearancePrompt
+  if (input.appearancePrompt !== undefined)
+    extensionFields.appearancePrompt = input.appearancePrompt
   if (input.negativePrompt !== undefined) extensionFields.negativePrompt = input.negativePrompt
-  if (input.consistencyLevel !== undefined) extensionFields.consistencyLevel = input.consistencyLevel
+  if (input.consistencyLevel !== undefined)
+    extensionFields.consistencyLevel = input.consistencyLevel
 
   if (Object.keys(extensionFields).length > 0) {
     extensionFields.updatedAt = new Date()
