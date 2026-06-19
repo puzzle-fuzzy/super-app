@@ -15,6 +15,7 @@
     "@super-app/contracts": "workspace:*",
     "@super-app/db": "workspace:*",
     "@super-app/env": "workspace:*",
+    "@super-app/storage": "workspace:*",
     "@elysia/cors": "^1.4.2",
     "@elysia/openapi": "^1.4.15",
     "drizzle-orm": "^0.44.2",

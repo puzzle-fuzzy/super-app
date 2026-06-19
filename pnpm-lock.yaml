@@ -232,6 +232,9 @@ importers:
       '@super-app/env':
         specifier: workspace:*
         version: link:../../packages/env
+      '@super-app/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       drizzle-orm:
         specifier: ^0.44.2
         version: 0.44.7(bun-types@1.3.14)(postgres@3.4.9)
