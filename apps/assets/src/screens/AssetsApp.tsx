@@ -15,6 +15,7 @@ import {
   Link2,
   LogOut,
   Music,
+  Palette,
   Plus,
   Save,
   Search,
@@ -37,12 +38,18 @@ import type {
   UpdateSubjectAssetRequest,
 } from '@super-app/contracts/subject-assets'
 import type {
+  CreateStyleAssetRequest,
+  StyleAssetDetailDto,
+  StyleType,
+  UpdateStyleAssetRequest,
+} from '@super-app/contracts/style-assets'
+import type {
   CreateTextAssetRequest,
   TextAssetDetailDto,
   TextType,
   UpdateTextAssetRequest,
 } from '@super-app/contracts/text-assets'
-import { assetsApi, subjectsApi, textsApi } from '@super-app/api-client'
+import { assetsApi, stylesApi, subjectsApi, textsApi } from '@super-app/api-client'
 import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
 import { clientEnv } from '@super-app/env/client'
@@ -87,6 +94,15 @@ const SUBJECT_TYPE_OPTIONS: { value: SubjectType; label: string }[] = [
   { value: 'object', label: '物品' },
   { value: 'scene', label: '场景' },
   { value: 'other', label: '其他' },
+]
+
+const STYLE_TYPE_OPTIONS: { value: StyleType; label: string }[] = [
+  { value: 'visual', label: '视觉' },
+  { value: 'video', label: '视频' },
+  { value: 'writing', label: '写作' },
+  { value: 'audio', label: '音频' },
+  { value: 'ui', label: '界面' },
+  { value: 'mixed', label: '混合' },
 ]
 
 const CONSISTENCY_OPTIONS = [
@@ -143,7 +159,20 @@ interface SubjectEditorState {
   consistencyLevel: 'low' | 'medium' | 'high'
 }
 
-type EditorState = TextEditorState | SubjectEditorState | null
+interface StyleEditorState {
+  kind: 'style'
+  id?: string
+  title: string
+  styleType: StyleType
+  positivePrompt: string
+  negativePrompt: string
+  recommendedModel: string
+  // JSON fields edited as text; parsed on save.
+  colorPalette: string
+  recommendedParams: string
+}
+
+type EditorState = TextEditorState | SubjectEditorState | StyleEditorState | null
 
 interface TransferNotice {
   assetId: string
@@ -281,6 +310,19 @@ export function AssetsApp() {
     })
   }
 
+  function openNewStyle() {
+    setEditor({
+      kind: 'style',
+      title: '',
+      styleType: 'visual',
+      positivePrompt: '',
+      negativePrompt: '',
+      recommendedModel: '',
+      colorPalette: '',
+      recommendedParams: '',
+    })
+  }
+
   async function handleUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (!file) return
@@ -412,6 +454,26 @@ export function AssetsApp() {
       .catch((err) => setListError(err instanceof Error ? err.message : '加载主体失败'))
   }
 
+  function openEditStyle(asset: AssetDto) {
+    setListError(null)
+    stylesApi
+      .get(asset.id)
+      .then((detail: StyleAssetDetailDto) => {
+        setEditor({
+          kind: 'style',
+          id: detail.id,
+          title: detail.title,
+          styleType: detail.styleType,
+          positivePrompt: detail.positivePrompt ?? '',
+          negativePrompt: detail.negativePrompt ?? '',
+          recommendedModel: detail.recommendedModel ?? '',
+          colorPalette: detail.colorPalette ? JSON.stringify(detail.colorPalette) : '',
+          recommendedParams: detail.recommendedParams ? JSON.stringify(detail.recommendedParams) : '',
+        })
+      })
+      .catch((err) => setListError(err instanceof Error ? err.message : '加载风格失败'))
+  }
+
   async function saveEditor() {
     if (!editor) return
 
@@ -443,7 +505,7 @@ export function AssetsApp() {
             setItems((prev) => [created, ...prev])
           }
         }
-      } else {
+      } else if (editor.kind === 'subject') {
         if (!editor.title.trim()) {
           throw new Error('标题不能为空')
         }
@@ -469,6 +531,48 @@ export function AssetsApp() {
             negativePrompt: editor.negativePrompt || undefined,
             consistencyLevel: editor.consistencyLevel,
           } as CreateSubjectAssetRequest)
+          if (!kind || created.kind === kind) {
+            setItems((prev) => [created, ...prev])
+          }
+        }
+      } else {
+        // style
+        if (!editor.title.trim()) {
+          throw new Error('标题不能为空')
+        }
+
+        const parseJson = (text: string): Record<string, unknown> => {
+          const trimmed = text.trim()
+          if (!trimmed) return {}
+          try {
+            const parsed = JSON.parse(trimmed)
+            if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+              throw new Error('JSON 必须是对象')
+            }
+            return parsed as Record<string, unknown>
+          } catch (e) {
+            throw new Error('调色板/参数 JSON 格式错误：' + (e as Error).message)
+          }
+        }
+
+        const colorPalette = parseJson(editor.colorPalette)
+        const recommendedParams = parseJson(editor.recommendedParams)
+
+        const payload = {
+          title: editor.title,
+          styleType: editor.styleType,
+          positivePrompt: editor.positivePrompt || undefined,
+          negativePrompt: editor.negativePrompt || undefined,
+          recommendedModel: editor.recommendedModel || undefined,
+          colorPalette,
+          recommendedParams,
+        }
+
+        if (editor.id) {
+          const updated = await stylesApi.update(editor.id, payload as UpdateStyleAssetRequest)
+          setItems((prev) => prev.map((it) => (it.id === updated.id ? updated : it)))
+        } else {
+          const created = await stylesApi.create(payload as CreateStyleAssetRequest)
           if (!kind || created.kind === kind) {
             setItems((prev) => [created, ...prev])
           }
@@ -533,6 +637,10 @@ export function AssetsApp() {
               <button type="button" className={secondaryButton} onClick={openNewSubject}>
                 <UserRound size={16} aria-hidden="true" />
                 新建主体
+              </button>
+              <button type="button" className={secondaryButton} onClick={openNewStyle}>
+                <Palette size={16} aria-hidden="true" />
+                新建风格
               </button>
               <a
                 href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
@@ -676,6 +784,7 @@ export function AssetsApp() {
                   onEdit={() => {
                     if (asset.kind === 'text') openEditText(asset)
                     if (asset.kind === 'subject') openEditSubject(asset)
+                    if (asset.kind === 'style') openEditStyle(asset)
                   }}
                   onShare={() => handleCreateShareLink(asset)}
                   onTransfer={() => handleStartTransfer(asset)}
@@ -741,7 +850,7 @@ function AssetCard({
   onToggleMenu: () => void
   onCloseMenu: () => void
 }) {
-  const canEdit = asset.kind === 'text' || asset.kind === 'subject'
+  const canEdit = asset.kind === 'text' || asset.kind === 'subject' || asset.kind === 'style'
   const canTransfer = asset.files.some((file) => file.role === 'original')
   const originalFile = asset.files.find((file) => file.role === 'original') ?? asset.files[0]
   const isMedia = asset.kind === 'image' || asset.kind === 'video'
@@ -1009,7 +1118,7 @@ function EditorPanel({
     <Modal open onClose={onCancel}>
       <Modal.Header
         kicker="创作编辑"
-        title={(editor.id ? '编辑' : '新建') + (editor.kind === 'text' ? '文本' : '主体')}
+        title={(editor.id ? '编辑' : '新建') + (editor.kind === 'text' ? '文本' : editor.kind === 'subject' ? '主体' : '风格')}
       />
       <Modal.Body>
         <div className="grid gap-[15px]">
@@ -1024,8 +1133,10 @@ function EditorPanel({
 
           {editor.kind === 'text' ? (
             <TextEditorFields editor={editor} setEditor={setEditor} />
-          ) : (
+          ) : editor.kind === 'subject' ? (
             <SubjectEditorFields editor={editor} setEditor={setEditor} />
+          ) : (
+            <StyleEditorFields editor={editor} setEditor={setEditor} />
           )}
         </div>
       </Modal.Body>
@@ -1145,6 +1256,71 @@ function SubjectEditorFields({
           }
         />
       </div>
+    </>
+  )
+}
+
+function StyleEditorFields({
+  editor,
+  setEditor,
+}: {
+  editor: StyleEditorState
+  setEditor: (editor: StyleEditorState) => void
+}) {
+  return (
+    <>
+      <div className={fieldClass}>
+        <span className={fieldLabel}>风格类型</span>
+        <Select
+          options={STYLE_TYPE_OPTIONS}
+          value={editor.styleType}
+          onChange={(value) => setEditor({ ...editor, styleType: value as StyleType })}
+        />
+      </div>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>正向提示词</span>
+        <textarea
+          className={`${fieldControl} leading-relaxed`}
+          rows={3}
+          value={editor.positivePrompt}
+          onChange={(event) => setEditor({ ...editor, positivePrompt: event.target.value })}
+        />
+      </label>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>负面提示词</span>
+        <textarea
+          className={`${fieldControl} leading-relaxed`}
+          rows={3}
+          value={editor.negativePrompt}
+          onChange={(event) => setEditor({ ...editor, negativePrompt: event.target.value })}
+        />
+      </label>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>推荐模型（可选）</span>
+        <input
+          className={fieldControl}
+          value={editor.recommendedModel}
+          onChange={(event) => setEditor({ ...editor, recommendedModel: event.target.value })}
+        />
+      </label>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>调色板 JSON（可选，如 {`{"warm":["#d4a574"]}`})</span>
+        <textarea
+          className={`${fieldControl} font-mono text-[13px] leading-relaxed`}
+          rows={3}
+          value={editor.colorPalette}
+          onChange={(event) => setEditor({ ...editor, colorPalette: event.target.value })}
+        />
+      </label>
+      <label className={fieldClass}>
+        <span className={fieldLabel}>推荐参数 JSON（可选，如 {`{"steps":30}`})</span>
+        <textarea
+          className={`${fieldControl} font-mono text-[13px] leading-relaxed`}
+          rows={3}
+          value={editor.recommendedParams}
+          onChange={(event) => setEditor({ ...editor, recommendedParams: event.target.value })}
+        />
+      </label>
     </>
   )
 }
