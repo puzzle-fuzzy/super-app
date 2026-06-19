@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   ChevronDown,
@@ -8,9 +8,22 @@ import {
   PenLine,
   Plus,
   Save,
+  StickyNote,
   Trash2,
   UserRound,
 } from 'lucide-react'
+import {
+  Background,
+  Controls,
+  MiniMap,
+  ReactFlow,
+  useEdgesState,
+  useNodesState,
+  type Connection,
+  type Edge,
+  type Node,
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
 
 import { canvasApi } from '@super-app/api-client'
 import { logout } from '@super-app/auth-client'
@@ -33,6 +46,11 @@ interface ProjectSummary {
 interface ProjectDetail extends ProjectSummary {
   data: Record<string, unknown>
   version: number
+}
+
+interface CanvasData {
+  nodes: Node[]
+  edges: Edge[]
 }
 
 /* -------------------------------------------------------------------------- */
@@ -71,8 +89,6 @@ function CanvasAppContent({ user }: { user: { id: string; name?: string; email: 
   const [renameId, setRenameId] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
-
-  const canvasRef = useRef<HTMLDivElement>(null)
 
   /* ---- Auth / user menu ------------------------------------------------ */
 
@@ -177,19 +193,6 @@ function CanvasAppContent({ user }: { user: { id: string; name?: string; email: 
     }
   }
 
-  async function handleSave() {
-    if (!activeProject) return
-    try {
-      setSaving(true)
-      // Save the current canvas state — for MVP this is the existing data
-      await canvasApi.update(activeProject.id, { data: activeProject.data })
-    } catch {
-      // Silent
-    } finally {
-      setSaving(false)
-    }
-  }
-
   /* ---- Render: list view ----------------------------------------------- */
 
   if (view === 'editor' && activeProject) {
@@ -198,16 +201,15 @@ function CanvasAppContent({ user }: { user: { id: string; name?: string; email: 
         user={user}
         project={activeProject}
         saving={saving}
+        setSaving={setSaving}
         userMenuOpen={userMenuOpen}
         setUserMenuOpen={setUserMenuOpen}
-        onSave={handleSave}
         onBack={() => {
           setView('list')
           setActiveProject(null)
           loadProjects()
         }}
         onLogout={handleLogout}
-        canvasRef={canvasRef}
       />
     )
   }
@@ -506,30 +508,124 @@ function CanvasAppContent({ user }: { user: { id: string; name?: string; email: 
 }
 
 /* -------------------------------------------------------------------------- */
-/*  EditorView                                                                 */
+/*  EditorView  — powered by @xyflow/react                                     */
 /* -------------------------------------------------------------------------- */
 
 function EditorView({
   user,
   project,
   saving,
+  setSaving,
   userMenuOpen,
   setUserMenuOpen,
-  onSave,
   onBack,
   onLogout,
-  canvasRef,
 }: {
   user: { id: string; name?: string; email: string; avatarUrl?: string }
   project: ProjectDetail
   saving: boolean
+  setSaving: (v: boolean) => void
   userMenuOpen: boolean
   setUserMenuOpen: React.Dispatch<React.SetStateAction<boolean>>
-  onSave: () => void
   onBack: () => void
   onLogout: () => void
-  canvasRef: React.RefObject<HTMLDivElement | null>
 }) {
+  // Load existing canvas data or start fresh
+  const initialData = useMemo<CanvasData>(() => {
+    const raw = project.data as Partial<CanvasData> | undefined
+    return {
+      nodes: Array.isArray(raw?.nodes) ? raw.nodes : [],
+      edges: Array.isArray(raw?.edges) ? raw.edges : [],
+    }
+    // Only seed from project on mount — live state is managed by hooks below
+  }, [project.id])
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialData.nodes)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialData.edges)
+
+  // Re-seed when switching to a different project
+  useEffect(() => {
+    setNodes(initialData.nodes)
+    setEdges(initialData.edges)
+  }, [project.id, initialData, setNodes, setEdges])
+
+  /* ---- Save ------------------------------------------------------------ */
+
+  async function handleSave() {
+    try {
+      setSaving(true)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await canvasApi.update(project.id, { data: { nodes, edges } as any })
+    } catch {
+      // Silent
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  /* ---- Node CRUD ------------------------------------------------------- */
+
+  function addNoteNode() {
+    const id = `note-${Date.now()}`
+    const newNode: Node = {
+      id,
+      type: 'default',
+      position: {
+        x: 100 + Math.random() * 300,
+        y: 100 + Math.random() * 300,
+      },
+      data: {
+        label: '双击编辑文本',
+      },
+      style: {
+        background: '#1c1c1c',
+        color: '#e5e5e5',
+        border: '1px solid #3a3a3a',
+        borderRadius: '12px',
+        padding: '16px 24px',
+        fontSize: '14px',
+        minWidth: 160,
+      },
+    }
+    setNodes((nds) => [...nds, newNode])
+  }
+
+  /* ---- Connection handling --------------------------------------------- */
+
+  function onConnect(connection: Connection) {
+    setEdges((eds) => [
+      ...eds,
+      {
+        ...connection,
+        id: `edge-${Date.now()}`,
+        style: { stroke: '#666', strokeWidth: 1.5 },
+        animated: true,
+      } as Edge,
+    ])
+  }
+
+  /* ---- Keyboard shortcuts ---------------------------------------------- */
+
+  const saveRef = useRef(handleSave)
+  saveRef.current = handleSave
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const mod = e.metaKey || e.ctrlKey
+      if (mod && e.key === 's') {
+        e.preventDefault()
+        saveRef.current()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  /* ---- Render ---------------------------------------------------------- */
+
+  const nodeCount = nodes.length
+  const edgeCount = edges.length
+
   return (
     <main className="flex h-screen flex-col bg-[#141414] text-[#e5e5e5]">
       {/* Editor Toolbar */}
@@ -544,14 +640,25 @@ function EditorView({
             <ArrowLeft size={18} />
           </button>
           <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">{project.title}</h2>
-          <span className="text-[11px] text-[#666666]">v{project.version}</span>
+          <span className="text-[11px] text-[#666666]">
+            v{project.version} · {nodeCount} 节点 · {edgeCount} 连线
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             type="button"
+            className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border-0 bg-[#3a3a3a] px-3 text-[13px] font-medium text-[#e5e5e5] transition-colors hover:bg-[#4a4a4a]"
+            onClick={addNoteNode}
+          >
+            <StickyNote size={14} />
+            便签
+          </button>
+
+          <button
+            type="button"
             className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-[#2a2a2a] bg-transparent px-4 text-[13px] font-medium text-[#e5e5e5] transition-colors hover:border-[#3a3a3a] hover:bg-[#242424]"
-            onClick={onSave}
+            onClick={handleSave}
             disabled={saving}
           >
             <Save size={14} />
@@ -613,24 +720,32 @@ function EditorView({
         </div>
       </header>
 
-      {/* Canvas Area */}
-      <div
-        ref={canvasRef}
-        className="relative flex flex-1 items-center justify-center bg-[#1a1a1a]"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle, #2a2a2a 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }}
-      >
-        <div className="pointer-events-none text-center">
-          <p className="m-0 mb-2 text-[42px] font-bold tracking-[-0.02em] text-[#2a2a2a]">
-            画布区域
-          </p>
-          <p className="m-0 text-sm text-[#666666]">
-            拖入资产或开始编辑，构建你的项目。
-          </p>
-        </div>
+      {/* React Flow Canvas */}
+      <div className="flex-1">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          fitView
+          proOptions={{ hideAttribution: true }}
+          style={{ background: '#1a1a1a' }}
+        >
+          <Background
+            color="#2a2a2a"
+            gap={24}
+            size={1}
+          />
+          <Controls
+            className="[&>button]:!bg-[#1c1c1c] [&>button]:!border-[#2a2a2a] [&>button]:!text-[#e5e5e5] [&>button]:!fill-[#e5e5e5]"
+          />
+          <MiniMap
+            style={{ background: '#1c1c1c', border: '1px solid #2a2a2a' }}
+            maskColor="rgba(0,0,0,0.6)"
+            nodeColor="#3a3a3a"
+          />
+        </ReactFlow>
       </div>
     </main>
   )

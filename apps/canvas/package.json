@@ -17,6 +17,7 @@
     "@super-app/design-tokens": "workspace:*",
     "@super-app/env": "workspace:*",
     "@super-app/ui-react": "workspace:*",
+    "@xyflow/react": "^12.11.0",
     "lucide-react": "^1.21.0",
     "overlayscrollbars": "^2.16.0",
     "overlayscrollbars-react": "^0.5.6",
