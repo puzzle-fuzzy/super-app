@@ -10,6 +10,7 @@ import {
   File as FileIcon,
   FileText,
   Grid3X3,
+  House,
   ImageIcon,
   Link2,
   LogOut,
@@ -533,6 +534,14 @@ export function AssetsApp() {
                 <UserRound size={16} aria-hidden="true" />
                 新建主体
               </button>
+              <a
+                href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
+                className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
+                aria-label="首页"
+                title="首页"
+              >
+                <House size={16} aria-hidden="true" />
+              </a>
               <div className="relative" data-user-menu-root>
                 <button
                   type="button"
