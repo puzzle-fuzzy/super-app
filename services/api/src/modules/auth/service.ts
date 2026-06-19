@@ -1,12 +1,17 @@
+import type { LoginRequest, RegisterRequest } from '@super-app/contracts/auth'
 import type { Db } from '@super-app/db'
 import { sessions, users } from '@super-app/db/schema'
-import type { CurrentUser, LoginRequest, RegisterRequest } from '@super-app/contracts/auth'
-import { and, eq, gt } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { Buffer } from 'node:buffer'
 
 import { serverEnv } from '@super-app/env/server'
 
 import { AppError } from '../../shared/errors'
+import {
+  getCurrentUser,
+  getSessionTokenFromCookie,
+  hashSessionToken,
+} from '../../shared/session'
 
 const sessionCookiePath = '/'
 
@@ -45,21 +50,8 @@ export function createExpiredSessionCookie() {
   })
 }
 
-export function getSessionTokenFromCookie(cookieHeader: string | undefined) {
-  if (!cookieHeader) {
-    return null
-  }
-
-  const cookies = cookieHeader.split(';').map((item) => item.trim())
-  const prefix = `${serverEnv.SESSION_COOKIE_NAME}=`
-  const sessionCookie = cookies.find((item) => item.startsWith(prefix))
-
-  if (!sessionCookie) {
-    return null
-  }
-
-  return decodeURIComponent(sessionCookie.slice(prefix.length))
-}
+// Re-exported so existing imports from the auth service still resolve.
+export { getCurrentUser, getSessionTokenFromCookie }
 
 export async function registerUser(db: Db, input: RegisterRequest) {
   const email = normalizeEmail(input.email)
@@ -113,38 +105,6 @@ export async function logoutUser(db: Db, token: string | null) {
   await db.delete(sessions).where(eq(sessions.tokenHash, tokenHash))
 }
 
-export async function getCurrentUser(db: Db, token: string | null): Promise<CurrentUser | null> {
-  if (!token) {
-    return null
-  }
-
-  const tokenHash = await hashSessionToken(token)
-  const [session] = await db
-    .select({
-      userId: users.id,
-      email: users.email,
-      name: users.name,
-      avatarUrl: users.avatarUrl,
-      status: users.status,
-    })
-    .from(sessions)
-    .innerJoin(users, eq(sessions.userId, users.id))
-    .where(and(eq(sessions.tokenHash, tokenHash), gt(sessions.expiresAt, new Date())))
-    .limit(1)
-
-  if (!session || session.status !== 'active') {
-    return null
-  }
-
-  return {
-    id: session.userId,
-    email: session.email,
-    name: session.name ?? undefined,
-    avatarUrl: session.avatarUrl ?? undefined,
-    roles: ['user'],
-  }
-}
-
 async function createSessionForUser(db: Db, userId: string) {
   const token = createSessionToken()
   const tokenHash = await hashSessionToken(token)
@@ -172,12 +132,6 @@ async function createSessionForUser(db: Db, userId: string) {
 function createSessionToken() {
   const randomBytes = crypto.getRandomValues(new Uint8Array(32))
   return Buffer.from(randomBytes).toString('base64url')
-}
-
-async function hashSessionToken(token: string) {
-  const data = new TextEncoder().encode(`${token}.${serverEnv.SESSION_SECRET}`)
-  const digest = await crypto.subtle.digest('SHA-256', data)
-  return Buffer.from(digest).toString('hex')
 }
 
 function normalizeEmail(email: string) {
