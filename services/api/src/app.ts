@@ -8,6 +8,7 @@ import path from 'node:path'
 import { authModule } from './modules/auth'
 import { assetsModule } from './modules/assets'
 import { systemModule } from './modules/system'
+import { textsModule } from './modules/texts'
 import { corsPlugin } from './plugins/cors'
 import { errorHandler } from './middlewares/error-handler'
 
@@ -24,7 +25,7 @@ const baseApp = new Elysia()
   )
   .use(corsPlugin)
   .use(errorHandler)
-  .group('/api', (api) => api.use(systemModule).use(authModule).use(assetsModule))
+  .group('/api', (api) => api.use(systemModule).use(authModule).use(assetsModule).use(textsModule))
 
 export const app =
   serverEnv.NODE_ENV === 'production'
