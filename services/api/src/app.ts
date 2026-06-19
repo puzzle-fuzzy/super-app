@@ -11,6 +11,7 @@ import { assetsModule } from './modules/assets'
 import { canvasModule } from './modules/canvas'
 import { stylesModule } from './modules/styles'
 import { subjectsModule } from './modules/subjects'
+import { templatesModule } from './modules/templates'
 import { systemModule } from './modules/system'
 import { textsModule } from './modules/texts'
 import { transfersModule } from './modules/transfers'
@@ -54,6 +55,7 @@ const baseApp = new Elysia()
           { name: 'texts', description: '文本资产（CRUD）' },
           { name: 'subjects', description: '主体资产（AI 角色/物品）' },
           { name: 'styles', description: '风格资产（可复用生成风格）' },
+          { name: 'templates', description: '模板资产（可复用结构）' },
           { name: 'canvas', description: '画布项目（CRUD）' },
           { name: 'api-keys', description: 'API 密钥管理' },
           { name: 'transfers', description: 'P2P 文件传输' },
@@ -71,6 +73,7 @@ const baseApp = new Elysia()
       .use(textsModule)
       .use(subjectsModule)
       .use(stylesModule)
+      .use(templatesModule)
       .use(canvasModule)
       .use(apiKeysModule)
       .use(transfersModule)
