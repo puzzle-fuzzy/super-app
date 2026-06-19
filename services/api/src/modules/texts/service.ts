@@ -68,7 +68,11 @@ export interface GetTextAssetInput {
   id: string
 }
 
-export async function getTextAsset({ db, owner, id }: GetTextAssetInput): Promise<TextAssetDetailDto> {
+export async function getTextAsset({
+  db,
+  owner,
+  id,
+}: GetTextAssetInput): Promise<TextAssetDetailDto> {
   const { asset, extension } = await loadTextAsset(db, owner.id, id)
   return toTextAssetDetailDto(asset, extension)
 }

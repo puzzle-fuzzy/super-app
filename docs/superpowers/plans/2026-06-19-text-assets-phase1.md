@@ -11,12 +11,14 @@
 **Spec:** `docs/superpowers/specs/2026-06-19-text-assets-phase1-design.md`
 
 **Reference patterns (read before starting):**
+
 - Extension table shape: `packages/db/src/schema/assets.ts` (the `assetFiles` table + `assetsRelations`).
 - API module shape: `services/api/src/modules/assets/{index.ts,service.ts,assets.test.ts}`.
 - Guard wiring (VERIFIED for Elysia 1.4.29): `.guard({ beforeHandle: requireUser }, (g) => g.group('/path', ...))` — do NOT use macros.
 - Existing mapper: `services/api/src/modules/assets/service.ts` exports `toAssetDto(asset, files)`.
 
 **Conventions:**
+
 - `bun test` reads `.env` via `--env-file=../../.env` (see `services/api/package.json`).
 - All API responses use the unified `{ success, data|error }` shape via `ok`/`fail`.
 - Generate migrations via `pnpm db:generate` (loads `.env` via the `bun --env-file=../../.env` wrapper added in Phase 0). If the column-conflict TTY prompt appears, run under a PTY that auto-accepts (Phase 0 used `python3 pty.fork` + Enter).
@@ -27,6 +29,7 @@
 ## File Structure
 
 **New:**
+
 - `packages/contracts/src/text-assets.ts` — text type enum + DTOs + create/update request schemas.
 - `packages/db/src/schema/text-assets.ts` — `text_assets` table + `textTypeEnum` + relations.
 - `packages/db/drizzle/0002_text_assets.sql` (+ meta snapshot/journal) — generated migration.
@@ -34,6 +37,7 @@
 - `tests/e2e/texts.spec.ts` — browser E2E.
 
 **Modified:**
+
 - `packages/contracts/src/index.ts` — re-export text-assets.
 - `packages/db/src/schema/index.ts` — export `textAssets`, `textTypeEnum`.
 - `packages/db/src/schema/assets.ts` — add `textExtension: one(textAssets)` to `assetsRelations`.
@@ -46,6 +50,7 @@
 ## Task 1: Add the text-assets contracts
 
 **Files:**
+
 - Create: `packages/contracts/src/text-assets.ts`
 - Modify: `packages/contracts/src/index.ts`
 
@@ -123,6 +128,7 @@ git commit -m "feat(contracts): add text asset type, detail DTO, and request sch
 ## Task 2: Add the text_assets DB schema
 
 **Files:**
+
 - Create: `packages/db/src/schema/text-assets.ts`
 - Modify: `packages/db/src/schema/index.ts`
 - Modify: `packages/db/src/schema/assets.ts`
@@ -221,6 +227,7 @@ git commit -m "feat(db): add text_assets extension table and relation"
 ## Task 3: Generate and apply the text_assets migration
 
 **Files:**
+
 - Create: `packages/db/drizzle/0002_text_assets.sql` (+ meta snapshot/journal, generated)
 
 - [ ] **Step 1: Generate the migration**
@@ -262,6 +269,7 @@ print(buf.decode(errors='replace'))
 - [ ] **Step 2: Review the generated SQL**
 
 Open the new `packages/db/drizzle/0002_text_assets.sql` and confirm it:
+
 1. Creates the `assets.text_type` enum with the 8 values.
 2. Creates the `assets.text_assets` table with `id, asset_id, text_type, content, language, metadata, created_at, updated_at`.
 3. Adds the `text_assets_asset_id_unique` unique index on `asset_id`.
@@ -276,9 +284,11 @@ Expected: migration applies cleanly (purely additive — no destructive changes 
 - [ ] **Step 4: Verify the table exists**
 
 Run:
+
 ```bash
 docker compose -f infra/docker/compose.local.yml exec -T postgres psql -U postgres -d super -tAc "\d assets.text_assets"
 ```
+
 Expected: column listing including `asset_id`, `text_type`, `content`, `language`, `metadata`.
 
 - [ ] **Step 5: Commit**
@@ -293,6 +303,7 @@ git commit -m "feat(db): add text_assets migration"
 ## Task 4: Implement the texts service layer
 
 **Files:**
+
 - Create: `services/api/src/modules/texts/service.ts`
 
 **Why first:** Pure functions with no Elysia dependency; the routes (Task 5) and tests (Task 6) import these.
@@ -321,7 +332,11 @@ export interface CreateTextAssetInput {
   input: CreateTextAssetRequest
 }
 
-export async function createTextAsset({ db, owner, input }: CreateTextAssetInput): Promise<TextAssetDetailDto> {
+export async function createTextAsset({
+  db,
+  owner,
+  input,
+}: CreateTextAssetInput): Promise<TextAssetDetailDto> {
   const [asset] = await db
     .insert(assets)
     .values({
@@ -368,7 +383,11 @@ export interface GetTextAssetInput {
   id: string
 }
 
-export async function getTextAsset({ db, owner, id }: GetTextAssetInput): Promise<TextAssetDetailDto> {
+export async function getTextAsset({
+  db,
+  owner,
+  id,
+}: GetTextAssetInput): Promise<TextAssetDetailDto> {
   const { asset, extension } = await loadTextAsset(db, owner.id, id)
   return toTextAssetDetailDto(asset, extension)
 }
@@ -380,7 +399,12 @@ export interface UpdateTextAssetInput {
   input: UpdateTextAssetRequest
 }
 
-export async function updateTextAsset({ db, owner, id, input }: UpdateTextAssetInput): Promise<TextAssetDetailDto> {
+export async function updateTextAsset({
+  db,
+  owner,
+  id,
+  input,
+}: UpdateTextAssetInput): Promise<TextAssetDetailDto> {
   const { asset, extension } = await loadTextAsset(db, owner.id, id)
 
   // Apply partial updates to the correct table.
@@ -500,6 +524,7 @@ git commit -m "feat(api): add texts service layer"
 ## Task 5: Wire the texts API routes
 
 **Files:**
+
 - Create: `services/api/src/modules/texts/index.ts`
 - Modify: `services/api/src/app.ts`
 
@@ -582,6 +607,7 @@ git commit -m "feat(api): wire texts create/read/update/delete routes"
 ## Task 6: Write the texts API integration tests
 
 **Files:**
+
 - Create: `services/api/src/modules/texts/texts.test.ts`
 
 - [ ] **Step 1: Create `services/api/src/modules/texts/texts.test.ts`**
@@ -611,7 +637,10 @@ describe('texts module', () => {
 
   afterAll(async () => {
     for (const user of testUsers) {
-      const owned = await db.select({ id: assets.id }).from(assets).where(eq(assets.ownerId, user.id))
+      const owned = await db
+        .select({ id: assets.id })
+        .from(assets)
+        .where(eq(assets.ownerId, user.id))
       for (const asset of owned) {
         await db.delete(textAssets).where(eq(textAssets.assetId, asset.id))
       }
@@ -643,7 +672,9 @@ describe('texts module', () => {
 
     // Read (detail includes content)
     const getRes = await app.handle(
-      new Request(`http://localhost/api/assets/texts/${id}`, { headers: { cookie: primary.cookie } })
+      new Request(`http://localhost/api/assets/texts/${id}`, {
+        headers: { cookie: primary.cookie },
+      })
     )
     expect(getRes.status).toBe(200)
     const got = await getRes.json()
@@ -682,7 +713,9 @@ describe('texts module', () => {
 
     // Detail now 404
     const afterDelete = await app.handle(
-      new Request(`http://localhost/api/assets/texts/${id}`, { headers: { cookie: primary.cookie } })
+      new Request(`http://localhost/api/assets/texts/${id}`, {
+        headers: { cookie: primary.cookie },
+      })
     )
     expect(afterDelete.status).toBe(404)
 
@@ -795,6 +828,7 @@ git commit -m "test(api): add texts module integration tests"
 ## Task 7: Add textsApi to the api-client
 
 **Files:**
+
 - Modify: `packages/api-client/src/index.ts`
 
 - [ ] **Step 1: Add imports**
@@ -854,6 +888,7 @@ git commit -m "feat(api-client): add textsApi"
 ## Task 8: Enable the text filter and add the text editor in the frontend
 
 **Files:**
+
 - Modify: `apps/assets/src/screens/AssetsApp.tsx`
 
 - [ ] **Step 1: Enable the `text` filter option**
@@ -920,15 +955,18 @@ function openNewText() {
 
 function openEditText(asset: AssetDto) {
   // Fetch the full detail (with content) before editing.
-  textsApi.get(asset.id).then((detail: TextAssetDetailDto) => {
-    setEditing({
-      id: detail.id,
-      title: detail.title,
-      textType: detail.textType,
-      content: detail.content,
-      language: detail.language ?? '',
+  textsApi
+    .get(asset.id)
+    .then((detail: TextAssetDetailDto) => {
+      setEditing({
+        id: detail.id,
+        title: detail.title,
+        textType: detail.textType,
+        content: detail.content,
+        language: detail.language ?? '',
+      })
     })
-  }).catch((err) => setListError(err instanceof Error ? err.message : '加载文本失败'))
+    .catch((err) => setListError(err instanceof Error ? err.message : '加载文本失败'))
 }
 
 async function saveText() {
@@ -975,91 +1013,110 @@ In the JSX, replace the upload-row + grid section with a version that branches o
 a) Add a 「新建文本」 button visible when `filter === 'text'`:
 
 ```tsx
-{filter === 'text' ? (
-  <section className="upload-row">
-    <button type="button" onClick={openNewText}>新建文本</button>
-    <span>创建提示词、备注、脚本等文本资产</span>
-  </section>
-) : (
-  <section className="upload-row">
-    <input ref={fileInput} type="file" onChange={handleUpload} disabled={uploading} />
-    <span>{uploading ? '上传中...' : '选择文件上传到资产中心'}</span>
-  </section>
-)}
+{
+  filter === 'text' ? (
+    <section className="upload-row">
+      <button type="button" onClick={openNewText}>
+        新建文本
+      </button>
+      <span>创建提示词、备注、脚本等文本资产</span>
+    </section>
+  ) : (
+    <section className="upload-row">
+      <input ref={fileInput} type="file" onChange={handleUpload} disabled={uploading} />
+      <span>{uploading ? '上传中...' : '选择文件上传到资产中心'}</span>
+    </section>
+  )
+}
 ```
 
 b) In the asset card rendering, branch text assets (show a content preview + an 编辑 button) vs upload-class assets (existing thumbnail card). Replace the `items.map(...)` card body:
 
 ```tsx
-{items.map((asset) => (
-  <article className="asset-card" key={asset.id}>
-    <div className="asset-thumb">
-      {asset.thumbnailUrl || asset.kind === 'image' ? (
-        <img src={asset.thumbnailUrl ?? asset.files[0]?.url} alt={asset.title} loading="lazy" />
-      ) : asset.kind === 'text' ? (
-        <span className="asset-kind-badge">文本</span>
-      ) : (
-        <span className="asset-kind-badge">{asset.kind}</span>
-      )}
-    </div>
-    <div className="asset-meta">
-      <h3>{asset.title}</h3>
-      <p>{asset.kind}</p>
-    </div>
-    {asset.kind === 'text' ? (
-      <button type="button" onClick={() => openEditText(asset)}>编辑</button>
-    ) : null}
-    <button type="button" onClick={() => handleDelete(asset.id)}>删除</button>
-  </article>
-))}
+{
+  items.map((asset) => (
+    <article className="asset-card" key={asset.id}>
+      <div className="asset-thumb">
+        {asset.thumbnailUrl || asset.kind === 'image' ? (
+          <img src={asset.thumbnailUrl ?? asset.files[0]?.url} alt={asset.title} loading="lazy" />
+        ) : asset.kind === 'text' ? (
+          <span className="asset-kind-badge">文本</span>
+        ) : (
+          <span className="asset-kind-badge">{asset.kind}</span>
+        )}
+      </div>
+      <div className="asset-meta">
+        <h3>{asset.title}</h3>
+        <p>{asset.kind}</p>
+      </div>
+      {asset.kind === 'text' ? (
+        <button type="button" onClick={() => openEditText(asset)}>
+          编辑
+        </button>
+      ) : null}
+      <button type="button" onClick={() => handleDelete(asset.id)}>
+        删除
+      </button>
+    </article>
+  ))
+}
 ```
 
 c) Add the editor modal at the end of the `<main>` (before its closing tag), rendered only when `editing` is non-null:
 
 ```tsx
-{editing ? (
-  <div className="text-editor-overlay" role="dialog" aria-label="文本编辑器">
-    <div className="text-editor">
-      <h2>{editing.id ? '编辑文本' : '新建文本'}</h2>
-      <label className="editor-field">
-        <span>标题</span>
-        <input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
-      </label>
-      <label className="editor-field">
-        <span>类型</span>
-        <select
-          value={editing.textType}
-          onChange={(e) => setEditing({ ...editing, textType: e.target.value as TextType })}
-        >
-          {TEXT_TYPE_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-      </label>
-      <label className="editor-field">
-        <span>语言（可选，如 zh / en）</span>
-        <input
-          value={editing.language}
-          onChange={(e) => setEditing({ ...editing, language: e.target.value })}
-        />
-      </label>
-      <label className="editor-field">
-        <span>正文</span>
-        <textarea
-          rows={10}
-          value={editing.content}
-          onChange={(e) => setEditing({ ...editing, content: e.target.value })}
-        />
-      </label>
-      <div className="editor-actions">
-        <button type="button" onClick={() => setEditing(null)} disabled={saving}>取消</button>
-        <button type="button" onClick={saveText} disabled={saving}>
-          {saving ? '保存中...' : '保存'}
-        </button>
+{
+  editing ? (
+    <div className="text-editor-overlay" role="dialog" aria-label="文本编辑器">
+      <div className="text-editor">
+        <h2>{editing.id ? '编辑文本' : '新建文本'}</h2>
+        <label className="editor-field">
+          <span>标题</span>
+          <input
+            value={editing.title}
+            onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+          />
+        </label>
+        <label className="editor-field">
+          <span>类型</span>
+          <select
+            value={editing.textType}
+            onChange={(e) => setEditing({ ...editing, textType: e.target.value as TextType })}
+          >
+            {TEXT_TYPE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="editor-field">
+          <span>语言（可选，如 zh / en）</span>
+          <input
+            value={editing.language}
+            onChange={(e) => setEditing({ ...editing, language: e.target.value })}
+          />
+        </label>
+        <label className="editor-field">
+          <span>正文</span>
+          <textarea
+            rows={10}
+            value={editing.content}
+            onChange={(e) => setEditing({ ...editing, content: e.target.value })}
+          />
+        </label>
+        <div className="editor-actions">
+          <button type="button" onClick={() => setEditing(null)} disabled={saving}>
+            取消
+          </button>
+          <button type="button" onClick={saveText} disabled={saving}>
+            {saving ? '保存中...' : '保存'}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-) : null}
+  ) : null
+}
 ```
 
 - [ ] **Step 6: Add the editor CSS to `apps/assets/src/styles.css`**
@@ -1160,6 +1217,7 @@ git commit -m "feat(assets): enable text filter and add text editor"
 ## Task 9: Add the texts browser E2E test
 
 **Files:**
+
 - Create: `tests/e2e/texts.spec.ts`
 
 - [ ] **Step 1: Create `tests/e2e/texts.spec.ts`**
@@ -1252,6 +1310,7 @@ Expected: clean. Run `pnpm lint:fix` and `npx prettier --write <changed-files>` 
 - [ ] **Step 5: Verify acceptance criteria from spec §7**
 
 Walk through the 11 criteria in `docs/superpowers/specs/2026-06-19-text-assets-phase1-design.md` against the running system. Specifically spot-check via `pnpm --filter @super-app/api dev`:
+
 1. `POST /api/assets/texts` with `{title, textType:'note', content:'x'}` returns a `TextAssetDetailDto` with `kind:'text'`.
 2. `GET /api/assets?kind=text` lists it.
 3. `PATCH /api/assets/texts/:id` with `{content:'y'}` updates only content.

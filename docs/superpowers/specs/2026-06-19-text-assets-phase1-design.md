@@ -21,15 +21,15 @@ Text assets hold structured text content — prompts, novel fragments, dialogue,
 
 ## Decisions (locked)
 
-| # | Decision |
-|---|----------|
-| 1 | Text body stored directly in Postgres — `text_assets.content` (a `text` column). No object-storage detour. Postgres `text` practical limit is ~1GB; more than enough. |
-| 2 | `text_type` enum defined with all 8 values up front: `prompt, novel, script, subtitle, note, dialogue, setting, other`. Schema never needs a breaking enum change later. |
-| 3 | Full CRUD: create (POST), read (GET), partial update (PATCH), soft-delete (DELETE). Editing in place is a core creation-asset need. |
-| 4 | `word_count` / `char_count` are NOT stored — computed from `content` on demand (DTO/client-side). Avoids the "content changed but count didn't" drift bug. |
-| 5 | Text assets reuse the generic list endpoint `GET /api/assets?kind=text` (from Phase 0). No dedicated list endpoint. List items exclude `content` (too heavy); the body is fetched via the detail endpoint. |
-| 6 | PATCH is a partial update — only provided fields are written. |
-| 7 | The extension data is a separate `TextAssetDetailDto`, not merged into the generic `AssetDto`, so the common DTO stays clean and the upload-class assets don't carry text fields. |
+| #   | Decision                                                                                                                                                                                                   |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Text body stored directly in Postgres — `text_assets.content` (a `text` column). No object-storage detour. Postgres `text` practical limit is ~1GB; more than enough.                                      |
+| 2   | `text_type` enum defined with all 8 values up front: `prompt, novel, script, subtitle, note, dialogue, setting, other`. Schema never needs a breaking enum change later.                                   |
+| 3   | Full CRUD: create (POST), read (GET), partial update (PATCH), soft-delete (DELETE). Editing in place is a core creation-asset need.                                                                        |
+| 4   | `word_count` / `char_count` are NOT stored — computed from `content` on demand (DTO/client-side). Avoids the "content changed but count didn't" drift bug.                                                 |
+| 5   | Text assets reuse the generic list endpoint `GET /api/assets?kind=text` (from Phase 0). No dedicated list endpoint. List items exclude `content` (too heavy); the body is fetched via the detail endpoint. |
+| 6   | PATCH is a partial update — only provided fields are written.                                                                                                                                              |
+| 7   | The extension data is a separate `TextAssetDetailDto`, not merged into the generic `AssetDto`, so the common DTO stays clean and the upload-class assets don't carry text fields.                          |
 
 ## 1. Data Layer
 
@@ -49,24 +49,28 @@ export const textTypeEnum = assetsSchema.enum('text_type', [
   'other',
 ])
 
-export const textAssets = assetsSchema.table('text_assets', {
-  id: idColumn(),
-  assetId: uuid('asset_id')
-    .notNull()
-    .references(() => assets.id, { onDelete: 'cascade' }),
-  textType: textTypeEnum('text_type').notNull(),
-  content: text('content').notNull(),
-  language: varchar('language', { length: 16 }),
-  metadata: jsonb('metadata')
-    .$type<Record<string, unknown>>()
-    .notNull()
-    .default(sql`'{}'::jsonb`),
-  createdAt: createdAtColumn(),
-  updatedAt: updatedAtColumn(),
-}, (table) => ({
-  // One text-asset row per asset.
-  assetIdUnique: uniqueIndex('text_assets_asset_id_unique').on(table.assetId),
-}))
+export const textAssets = assetsSchema.table(
+  'text_assets',
+  {
+    id: idColumn(),
+    assetId: uuid('asset_id')
+      .notNull()
+      .references(() => assets.id, { onDelete: 'cascade' }),
+    textType: textTypeEnum('text_type').notNull(),
+    content: text('content').notNull(),
+    language: varchar('language', { length: 16 }),
+    metadata: jsonb('metadata')
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
+  },
+  (table) => ({
+    // One text-asset row per asset.
+    assetIdUnique: uniqueIndex('text_assets_asset_id_unique').on(table.assetId),
+  })
+)
 ```
 
 - `assetId` is a 1:1 FK to `assets.assets` with `onDelete: cascade` — deleting the main row removes the extension automatically.
@@ -97,7 +101,14 @@ New file `packages/contracts/src/text-assets.ts`, re-exported from `packages/con
 
 ```ts
 export const TextTypeSchema = z.enum([
-  'prompt', 'novel', 'script', 'subtitle', 'note', 'dialogue', 'setting', 'other',
+  'prompt',
+  'novel',
+  'script',
+  'subtitle',
+  'note',
+  'dialogue',
+  'setting',
+  'other',
 ])
 export type TextType = z.infer<typeof TextTypeSchema>
 
@@ -137,12 +148,12 @@ export type UpdateTextAssetRequest = z.infer<typeof UpdateTextAssetRequestSchema
 
 All routes under `/api/assets/texts`, all guarded by the existing `requireUser` guard (same `.guard({ beforeHandle: requireUser }, ...)` pattern as the upload routes).
 
-| Method | Path | Body / Query | Response |
-|---|---|---|---|
-| POST | `/api/assets/texts` | `CreateTextAssetRequestSchema` | `TextAssetDetailDto` |
-| GET | `/api/assets/texts/:id` | — | `TextAssetDetailDto` |
-| PATCH | `/api/assets/texts/:id` | `UpdateTextAssetRequestSchema` | `TextAssetDetailDto` |
-| DELETE | `/api/assets/texts/:id` | — | `{ deleted: true }` |
+| Method | Path                    | Body / Query                   | Response             |
+| ------ | ----------------------- | ------------------------------ | -------------------- |
+| POST   | `/api/assets/texts`     | `CreateTextAssetRequestSchema` | `TextAssetDetailDto` |
+| GET    | `/api/assets/texts/:id` | —                              | `TextAssetDetailDto` |
+| PATCH  | `/api/assets/texts/:id` | `UpdateTextAssetRequestSchema` | `TextAssetDetailDto` |
+| DELETE | `/api/assets/texts/:id` | —                              | `{ deleted: true }`  |
 
 ### 3.1 Create — `POST /api/assets/texts`
 
@@ -177,6 +188,7 @@ All errors go through the existing global `errorHandler` (maps `AppError` → un
 ## 4. Service Layer
 
 New `services/api/src/modules/texts/`:
+
 - `service.ts` — pure functions: `createTextAsset`, `getTextAsset`, `updateTextAsset`, `deleteTextAsset`, and a `toTextAssetDetailDto` mapper (merges an `assets` row + its `text_assets` row into `TextAssetDetailDto`).
 - `index.ts` — Elysia module wiring the four routes under `/texts`, using `authPlugin` + `requireUser` guard + `dbPlugin`.
 - `texts.test.ts` — bun:test integration tests.
@@ -196,6 +208,7 @@ In `AssetsApp.tsx`, the `text` filter option changes from `{ value: 'text', labe
 ### 5.2 Text-specific UI
 
 When the `text` filter is active (or a text asset is shown in the grid), the UI differs from upload-class cards:
+
 - A **「新建文本」** button (visible when `filter === 'text'` or `'all'`).
 - A **text editor modal/screen**: `title` input + `textType` `<select>` (8 options, Chinese labels) + `content` `<textarea>` + optional `language` input + Save/Cancel.
 - Text cards show: title, `textType` label, a content preview (first ~80 chars), and a computed char count. Edit + Delete buttons.
@@ -206,13 +219,19 @@ When the `text` filter is active (or a text asset is shown in the grid), the UI 
 ```ts
 export const textsApi = {
   create(input: CreateTextAssetRequest) {
-    return apiFetch<TextAssetDetailDto>('/assets/texts', { method: 'POST', body: JSON.stringify(input) })
+    return apiFetch<TextAssetDetailDto>('/assets/texts', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
   },
   get(id: string) {
     return apiFetch<TextAssetDetailDto>(`/assets/texts/${id}`)
   },
   update(id: string, input: UpdateTextAssetRequest) {
-    return apiFetch<TextAssetDetailDto>(`/assets/texts/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+    return apiFetch<TextAssetDetailDto>(`/assets/texts/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    })
   },
   remove(id: string) {
     return apiFetch<{ deleted: true }>(`/assets/texts/${id}`, { method: 'DELETE' })
@@ -222,11 +241,11 @@ export const textsApi = {
 
 ## 6. Testing
 
-| Layer | Test | Coverage |
-|---|---|---|
+| Layer           | Test                                                                                | Coverage                                                                                                                                                                                      |
+| --------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | API integration | `services/api/src/modules/texts/texts.test.ts` (bun:test, mirrors `assets.test.ts`) | create → get → list(`?kind=text`) → patch → get(verify) → delete → 404; cross-owner 404; unauthenticated 401; invalid text_type 400; empty-title/empty-content 400. Self-cleaning `afterAll`. |
-| Regression | existing `assets.test.ts` still green | Confirms the new `text_assets` table + relations didn't break upload-class flows. |
-| E2E | extend `tests/e2e/assets.spec.ts` OR add `tests/e2e/texts.spec.ts` | Register → open assets app → create a text asset → assert it appears under 「文本」 → edit content → assert update → delete → assert gone. |
+| Regression      | existing `assets.test.ts` still green                                               | Confirms the new `text_assets` table + relations didn't break upload-class flows.                                                                                                             |
+| E2E             | extend `tests/e2e/assets.spec.ts` OR add `tests/e2e/texts.spec.ts`                  | Register → open assets app → create a text asset → assert it appears under 「文本」 → edit content → assert update → delete → assert gone.                                                    |
 
 The integration test registers a fresh test user (via `/api/auth/register`, like `assets.test.ts`), creates text assets owned by it, and cleans up in `afterAll` (delete `text_assets`, `assets`, `sessions`, `users` rows for created test users).
 
@@ -247,6 +266,7 @@ The integration test registers a fresh test user (via `/api/auth/register`, like
 ## 8. File Change Summary
 
 **New:**
+
 - `packages/contracts/src/text-assets.ts`
 - `packages/db/src/schema/text-assets.ts`
 - `packages/db/drizzle/0002_text_assets.sql` (+ meta snapshot/journal updates)
@@ -254,6 +274,7 @@ The integration test registers a fresh test user (via `/api/auth/register`, like
 - (E2E) `tests/e2e/texts.spec.ts` or extension of `assets.spec.ts`
 
 **Modified:**
+
 - `packages/contracts/src/index.ts` (re-export text-assets)
 - `packages/db/src/schema/index.ts` (export `textAssets`, `textTypeEnum`)
 - `packages/db/src/schema/assets.ts` (add `textExtension` to `assetsRelations`)
@@ -264,6 +285,7 @@ The integration test registers a fresh test user (via `/api/auth/register`, like
 ## 9. Phase Context
 
 Phase 1 is a pure, additive layer on the Phase 0 foundation:
+
 - Reuses `requireUser` guard, `ok`/`fail`, `AppError`, soft-delete, owner isolation.
 - Introduces the **first type extension table**, proving the pattern (`assets.assets` main + `assets.<kind>_assets` extension) that Phase 2 (subject), Phase 3 (style), and Phase 4 (template) will replicate.
 - Does not touch any Phase 0 code paths (upload-class assets are unaffected).
