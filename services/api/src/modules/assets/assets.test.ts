@@ -212,6 +212,24 @@ describe('assets module', () => {
     )
     expect(res.status).toBe(401)
   })
+
+  it('rejects invalid list query values with 400', async () => {
+    const invalidKind = await app.handle(
+      new Request('http://localhost/api/assets/?kind=unknown', {
+        headers: { cookie: primary.cookie },
+      })
+    )
+    expect(invalidKind.status).toBe(400)
+    expect((await invalidKind.json()).error.code).toBe('VALIDATION_ERROR')
+
+    const invalidLimit = await app.handle(
+      new Request('http://localhost/api/assets/?limit=999', {
+        headers: { cookie: primary.cookie },
+      })
+    )
+    expect(invalidLimit.status).toBe(400)
+    expect((await invalidLimit.json()).error.code).toBe('VALIDATION_ERROR')
+  })
 })
 
 async function createUser(name: string): Promise<TestUser> {

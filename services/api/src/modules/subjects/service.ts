@@ -93,7 +93,7 @@ export async function updateSubjectAsset({
   id,
   input,
 }: UpdateSubjectAssetInput): Promise<SubjectAssetDetailDto> {
-  const { asset, extension } = await loadSubjectAsset(db, owner.id, id)
+  await loadSubjectAsset(db, owner.id, id)
 
   if (input.title !== undefined || input.description !== undefined) {
     await db
@@ -127,11 +127,10 @@ export async function updateSubjectAsset({
     if (!updated) {
       throw new AppError(404, 'NOT_FOUND', 'Asset not found')
     }
-    return toSubjectAssetDetailDto(asset, updated)
   }
 
-  const [refreshedAsset] = await db.select().from(assets).where(eq(assets.id, id)).limit(1)
-  return toSubjectAssetDetailDto(refreshedAsset ?? asset, extension)
+  const refreshed = await loadSubjectAsset(db, owner.id, id)
+  return toSubjectAssetDetailDto(refreshed.asset, refreshed.extension)
 }
 
 export interface DeleteSubjectAssetInput {
@@ -145,6 +144,8 @@ export async function deleteSubjectAsset({
   owner,
   id,
 }: DeleteSubjectAssetInput): Promise<void> {
+  await loadSubjectAsset(db, owner.id, id)
+
   const [updated] = await db
     .update(assets)
     .set({ status: 'deleted', deletedAt: new Date() })

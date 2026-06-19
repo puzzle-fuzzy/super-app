@@ -88,6 +88,19 @@ describe('texts module', () => {
     expect(patched.data.content).toBe('Updated content only')
     expect(patched.data.title).toBe('My Prompt') // unchanged
 
+    // Main-row and extension updates in the same request should both be reflected.
+    const patchBothRes = await app.handle(
+      new Request(`http://localhost/api/assets/texts/${id}`, {
+        method: 'PATCH',
+        headers: { cookie: primary.cookie, 'content-type': 'application/json' },
+        body: JSON.stringify({ title: 'Renamed Prompt', content: 'Updated title and content' }),
+      })
+    )
+    expect(patchBothRes.status).toBe(200)
+    const patchedBoth = await patchBothRes.json()
+    expect(patchedBoth.data.title).toBe('Renamed Prompt')
+    expect(patchedBoth.data.content).toBe('Updated title and content')
+
     // Delete (soft)
     const deleteRes = await app.handle(
       new Request(`http://localhost/api/assets/texts/${id}`, {
@@ -134,6 +147,36 @@ describe('texts module', () => {
       })
     )
     expect(res.status).toBe(404)
+  })
+
+  it('does not delete a non-text asset through the text endpoint', async () => {
+    const [asset] = await db
+      .insert(assets)
+      .values({
+        ownerId: primary.id,
+        kind: 'file',
+        title: 'Not a text asset',
+        source: 'manual',
+      })
+      .returning()
+
+    expect(asset).toBeTruthy()
+
+    const deleteRes = await app.handle(
+      new Request(`http://localhost/api/assets/texts/${asset.id}`, {
+        method: 'DELETE',
+        headers: { cookie: primary.cookie },
+      })
+    )
+    expect(deleteRes.status).toBe(404)
+
+    const detailRes = await app.handle(
+      new Request(`http://localhost/api/assets/${asset.id}`, {
+        headers: { cookie: primary.cookie },
+      })
+    )
+    expect(detailRes.status).toBe(200)
+    expect((await detailRes.json()).data.id).toBe(asset.id)
   })
 
   it('returns 401 for unauthenticated create', async () => {

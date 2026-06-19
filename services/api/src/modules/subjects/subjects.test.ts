@@ -87,6 +87,22 @@ describe('subjects module', () => {
     expect(patched.data.appearancePrompt).toBe('wearing a red jacket')
     expect(patched.data.subjectType).toBe('person') // unchanged
 
+    // Main-row and extension updates in the same request should both be reflected.
+    const patchBothRes = await app.handle(
+      new Request(`http://localhost/api/assets/subjects/${id}`, {
+        method: 'PATCH',
+        headers: { cookie: primary.cookie, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          title: '改名后的主角',
+          identityPrompt: 'a renamed protagonist',
+        }),
+      })
+    )
+    expect(patchBothRes.status).toBe(200)
+    const patchedBoth = await patchBothRes.json()
+    expect(patchedBoth.data.title).toBe('改名后的主角')
+    expect(patchedBoth.data.identityPrompt).toBe('a renamed protagonist')
+
     // Delete (soft)
     const deleteRes = await app.handle(
       new Request(`http://localhost/api/assets/subjects/${id}`, {
@@ -135,6 +151,36 @@ describe('subjects module', () => {
       })
     )
     expect(res.status).toBe(404)
+  })
+
+  it('does not delete a non-subject asset through the subject endpoint', async () => {
+    const [asset] = await db
+      .insert(assets)
+      .values({
+        ownerId: primary.id,
+        kind: 'file',
+        title: 'Not a subject asset',
+        source: 'manual',
+      })
+      .returning()
+
+    expect(asset).toBeTruthy()
+
+    const deleteRes = await app.handle(
+      new Request(`http://localhost/api/assets/subjects/${asset.id}`, {
+        method: 'DELETE',
+        headers: { cookie: primary.cookie },
+      })
+    )
+    expect(deleteRes.status).toBe(404)
+
+    const detailRes = await app.handle(
+      new Request(`http://localhost/api/assets/${asset.id}`, {
+        headers: { cookie: primary.cookie },
+      })
+    )
+    expect(detailRes.status).toBe(200)
+    expect((await detailRes.json()).data.id).toBe(asset.id)
   })
 
   it('returns 401 for unauthenticated create', async () => {

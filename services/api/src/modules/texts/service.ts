@@ -90,7 +90,7 @@ export async function updateTextAsset({
   id,
   input,
 }: UpdateTextAssetInput): Promise<TextAssetDetailDto> {
-  const { asset, extension } = await loadTextAsset(db, owner.id, id)
+  await loadTextAsset(db, owner.id, id)
 
   // Apply partial updates to the correct table.
   if (input.title !== undefined || input.description !== undefined) {
@@ -119,12 +119,10 @@ export async function updateTextAsset({
     if (!updated) {
       throw new AppError(404, 'NOT_FOUND', 'Asset not found')
     }
-    return toTextAssetDetailDto(asset, updated)
   }
 
-  // No extension fields changed — re-read the main row in case title/description changed.
-  const [refreshedAsset] = await db.select().from(assets).where(eq(assets.id, id)).limit(1)
-  return toTextAssetDetailDto(refreshedAsset ?? asset, extension)
+  const refreshed = await loadTextAsset(db, owner.id, id)
+  return toTextAssetDetailDto(refreshed.asset, refreshed.extension)
 }
 
 export interface DeleteTextAssetInput {
@@ -134,6 +132,8 @@ export interface DeleteTextAssetInput {
 }
 
 export async function deleteTextAsset({ db, owner, id }: DeleteTextAssetInput): Promise<void> {
+  await loadTextAsset(db, owner.id, id)
+
   const [updated] = await db
     .update(assets)
     .set({ status: 'deleted', deletedAt: new Date() })

@@ -1,3 +1,4 @@
+import type { AssetKind } from '@super-app/contracts/assets'
 import { Elysia, t } from 'elysia'
 
 import { authPlugin, requireUser } from '../../plugins/auth'
@@ -59,37 +60,17 @@ export const assetsModule = new Elysia({ name: 'assets' })
             }),
           }
         )
-        .get(
-          '/',
-          async ({ user, db, query }) => {
-            const result = await listAssets({
-              db,
-              owner: user!,
-              kind: query.kind,
-              limit: query.limit,
-              cursor: query.cursor,
-            })
-            return ok(result)
-          },
-          {
-            query: t.Object({
-              kind: t.Optional(
-                t.Enum({
-                  subject: 'subject',
-                  image: 'image',
-                  video: 'video',
-                  audio: 'audio',
-                  text: 'text',
-                  file: 'file',
-                  style: 'style',
-                  template: 'template',
-                })
-              ),
-              limit: t.Optional(t.Number({ minimum: 1, maximum: 50 })),
-              cursor: t.Optional(t.String()),
-            }),
-          }
-        )
+        .get('/', async ({ user, db, query }) => {
+          const parsedQuery = parseAssetListQuery(query)
+          const result = await listAssets({
+            db,
+            owner: user!,
+            kind: parsedQuery.kind,
+            limit: parsedQuery.limit,
+            cursor: parsedQuery.cursor,
+          })
+          return ok(result)
+        })
         .get('/:id', async ({ user, db, params }) => {
           const asset = await getAsset({ db, owner: user!, id: params.id })
           return ok(asset)
@@ -100,3 +81,48 @@ export const assetsModule = new Elysia({ name: 'assets' })
         })
     )
   )
+
+const assetKinds = new Set<AssetKind>([
+  'subject',
+  'image',
+  'video',
+  'audio',
+  'text',
+  'file',
+  'style',
+  'template',
+])
+
+function parseAssetListQuery(query: Record<string, string | undefined>) {
+  const kind = parseKind(query.kind)
+  const limit = parseLimit(query.limit)
+  const cursor = query.cursor || undefined
+
+  return { kind, limit, cursor }
+}
+
+function parseKind(value: string | undefined): AssetKind | undefined {
+  if (!value) {
+    return undefined
+  }
+
+  if (!assetKinds.has(value as AssetKind)) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Invalid asset kind')
+  }
+
+  return value as AssetKind
+}
+
+function parseLimit(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined
+  }
+
+  const limit = Number(value)
+
+  if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Invalid asset limit')
+  }
+
+  return limit
+}

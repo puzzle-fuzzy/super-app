@@ -12,18 +12,18 @@
     "test": "bun test --env-file=../../.env src"
   },
   "dependencies": {
+    "@elysia/cors": "^1.4.2",
+    "@elysia/openapi": "^1.4.15",
     "@super-app/contracts": "workspace:*",
     "@super-app/db": "workspace:*",
     "@super-app/env": "workspace:*",
     "@super-app/storage": "workspace:*",
-    "@elysia/cors": "^1.4.2",
-    "@elysia/openapi": "^1.4.15",
     "drizzle-orm": "^0.44.2",
     "elysia": "latest",
     "sharp": "^0.34.2"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "typescript": "^5.8.3"
   }
 }
