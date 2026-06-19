@@ -15,6 +15,13 @@
       "when": 1781873146092,
       "tag": "0001_assets_redesign",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781877836803,
+      "tag": "0002_skinny_vivisector",
+      "breakpoints": true
     }
   ]
 }

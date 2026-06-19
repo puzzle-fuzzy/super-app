@@ -14,7 +14,6 @@ import {
 
 import { createdAtColumn, deletedAtColumn, idColumn, updatedAtColumn } from './common'
 import { users } from './identity'
-import { textAssets } from './text-assets'
 
 export const assetsSchema = pgSchema('assets')
 
@@ -148,7 +147,6 @@ export const assetsRelations = relations(assets, ({ one, many }) => ({
   }),
   tags: many(assetTags),
   files: many(assetFiles),
-  textExtension: one(textAssets),
 }))
 
 export const assetTagsRelations = relations(assetTags, ({ one }) => ({
