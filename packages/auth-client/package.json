@@ -1,0 +1,27 @@
+{
+  "name": "@super-app/auth-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@super-app/contracts": "workspace:*",
+    "@super-app/env": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.8",
+    "react": "^19.1.0",
+    "typescript": "^5.8.3"
+  }
+}

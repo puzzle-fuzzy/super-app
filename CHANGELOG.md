@@ -11,6 +11,7 @@
 - Added modular `@super-app/api` Elysia service skeleton with `GET /api/health`.
 - Added API DB plugin and MVP auth endpoints for register, login, logout, and current user lookup.
 - Added local Docker Compose PostgreSQL setup and auth integration tests.
+- Added `@super-app/auth-client` and `@super-app/api-client` for shared frontend auth and API access.
 - Initialized Git repository metadata and line-ending normalization.
 
 ### Changed

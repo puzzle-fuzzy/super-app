@@ -12,4 +12,6 @@
 - [x] Add local Docker PostgreSQL.
 - [x] Apply database migrations locally.
 - [x] Add auth integration tests with a test database.
-- [ ] Implement `packages/api-client`.
+- [x] Implement `packages/auth-client`.
+- [x] Implement `packages/api-client`.
+- [ ] Scaffold `apps/auth`.
