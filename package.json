@@ -1,0 +1,31 @@
+{
+  "name": "super",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.12.1",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "build:frontends": "turbo build --filter=./apps/*",
+    "collect:frontends": "bun scripts/collect-frontends.ts",
+    "build:web": "pnpm build:frontends && pnpm collect:frontends",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "format": "prettier . --check",
+    "format:fix": "prettier . --write",
+    "db:generate": "pnpm --filter @super-app/db db:generate",
+    "db:migrate": "pnpm --filter @super-app/db db:migrate",
+    "db:studio": "pnpm --filter @super-app/db db:studio"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "eslint": "^9.29.0",
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.34.1"
+  }
+}

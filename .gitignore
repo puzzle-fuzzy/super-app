@@ -1,0 +1,15 @@
+.DS_Store
+node_modules/
+dist/
+.turbo/
+.vscode/
+coverage/
+*.log
+
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+!.env.example

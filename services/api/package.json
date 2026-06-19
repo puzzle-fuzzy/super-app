@@ -1,0 +1,25 @@
+{
+  "name": "@super-app/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --target=bun --outdir=dist",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@super-app/contracts": "workspace:*",
+    "@super-app/env": "workspace:*",
+    "@elysia/cors": "^1.4.2",
+    "@elysia/openapi": "^1.4.15",
+    "elysia": "latest"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "bun-types": "latest"
+  }
+}
