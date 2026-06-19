@@ -24,7 +24,13 @@
       "Bash(git commit -m 'feat\\(workspace\\): connect recent-content panels to live API data *)",
       "Bash(pnpm --filter @super-app/canvas typecheck)",
       "Bash(pnpm --filter @super-app/canvas lint)",
-      "Bash(git commit -m 'feat\\(canvas\\): scaffold Canvas frontend application *)"
+      "Bash(git commit -m 'feat\\(canvas\\): scaffold Canvas frontend application *)",
+      "Bash(pnpm db:generate)",
+      "Bash(pnpm db:migrate)",
+      "Bash(pnpm --filter @super-app/api test -- --testPathPattern \"transfer|rooms\")",
+      "Bash(pnpm --filter @super-app/api lint)",
+      "Bash(pnpm --filter @super-app/api test)",
+      "Bash(git commit -m 'feat\\(transfers\\): persist transfer rooms to database with expiry cleanup *)"
     ],
     "additionalDirectories": [
       "/tmp",

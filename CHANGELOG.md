@@ -21,6 +21,7 @@
 - Added Canvas API module with CRUD endpoints for projects, document versioning, and pagination.
 - Integrated workspace recent-content panels with live API data for assets and canvas projects.
 - Scaffolded the Canvas frontend app with project list, editor view, and CRUD dialogs.
+- Persisted transfer rooms to database with automatic expiry cleanup and foreign-key integrity.
 - Initialized Git repository metadata and line-ending normalization.
 
 ### Changed

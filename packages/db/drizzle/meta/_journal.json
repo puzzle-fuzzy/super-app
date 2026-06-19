@@ -36,6 +36,13 @@
       "when": 1781882280589,
       "tag": "0004_rainy_black_cat",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781890525742,
+      "tag": "0005_abandoned_stranger",
+      "breakpoints": true
     }
   ]
 }

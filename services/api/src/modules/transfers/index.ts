@@ -25,8 +25,8 @@ const socketPeers = new WeakMap<object, string>()
 export const transfersModule = new Elysia({ name: 'transfers' })
   .get(
     '/transfers/:roomId/file-info',
-    ({ params }) => {
-      const room = requireActiveTransferRoom(params.roomId)
+    async ({ params }) => {
+      const room = await requireActiveTransferRoom(params.roomId)
       return ok({
         roomId: room.roomId,
         fileName: room.title,
@@ -45,7 +45,7 @@ export const transfersModule = new Elysia({ name: 'transfers' })
   .get(
     '/transfers/:roomId/file',
     async ({ params }) => {
-      const room = requireActiveTransferRoom(params.roomId)
+      const room = await requireActiveTransferRoom(params.roomId)
       const filePath = resolveStoragePath(room.storageKey)
       const file = Bun.file(filePath)
       if (!(await file.exists())) {
@@ -71,15 +71,15 @@ export const transfersModule = new Elysia({ name: 'transfers' })
     params: t.Object({
       roomId: t.String(),
     }),
-    open(ws) {
+    async open(ws) {
       const roomId = ws.data.params.roomId
-      const room = getTransferRoom(roomId)
+      const room = await getTransferRoom(roomId)
       if (!room) {
         ws.close(1008, 'Transfer room expired')
         return
       }
 
-      const peer = addTransferPeer(roomId, (message) => ws.raw.send(message))
+      const peer = await addTransferPeer(roomId, (message) => ws.raw.send(message))
       if (!peer) {
         ws.close(1008, 'Transfer room expired')
         return
@@ -159,8 +159,8 @@ function parseMessage(rawMessage: string): SignalingMessage | null {
   }
 }
 
-export function requireActiveTransferRoom(roomId: string) {
-  const room = getTransferRoom(roomId)
+export async function requireActiveTransferRoom(roomId: string) {
+  const room = await getTransferRoom(roomId)
   if (!room) {
     throw new AppError(404, 'NOT_FOUND', 'Transfer room not found')
   }

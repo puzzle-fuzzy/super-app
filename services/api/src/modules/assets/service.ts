@@ -306,6 +306,7 @@ export async function createAssetTransferSession(input: {
     roomId,
     expiresAt,
     assetId: asset.id,
+    ownerId: owner.id,
     title: asset.title,
     storageKey: original.storageKey,
     mimeType: original.mimeType ?? 'application/octet-stream',

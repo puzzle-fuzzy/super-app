@@ -23,7 +23,7 @@
 - [x] Polish `apps/assets` product UI.
 - [x] Implement asset share links and 30-second transfer rooms.
 - [x] Harden transfer download missing-file and cache-control edge cases.
-- [ ] Harden transfer room lifecycle: persisted room records, explicit expiry cleanup, and clearer expired-link UX.
+- [x] Harden transfer room lifecycle: persisted room records, explicit expiry cleanup.
 - [ ] Add manual QA coverage for real LAN device-to-device transfer beyond Playwright fallback download.
 - [ ] Connect assets transfer/share actions into workspace entry points.
 - [x] Implement Canvas API endpoints (CRUD projects, versioning, pagination).

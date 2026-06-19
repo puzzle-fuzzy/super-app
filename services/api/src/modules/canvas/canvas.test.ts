@@ -2,7 +2,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import type { CurrentUser } from '@super-app/contracts/auth'
 import { db } from '@super-app/db'
 import {
-  assets,
   canvasDocuments,
   canvasProjects,
   canvasVersions,

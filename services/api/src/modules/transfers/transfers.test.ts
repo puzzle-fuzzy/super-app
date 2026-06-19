@@ -1,19 +1,59 @@
-import { describe, expect, it } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { mkdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
+import type { CurrentUser } from '@super-app/contracts/auth'
+import { db } from '@super-app/db'
+import { assets, sessions, users } from '@super-app/db/schema'
+import { eq } from 'drizzle-orm'
 import { serverEnv } from '@super-app/env/server'
 
 import { app } from '../../app'
 import { registerTransferRoom } from './rooms'
 
+let testAssetId: string
+let testOwnerId: string
+
 describe('transfers module', () => {
+  beforeAll(async () => {
+    // Create a test user via API
+    const email = `transfer-test-${Date.now()}@example.test`
+    const res = await app.handle(
+      new Request('http://localhost/api/auth/register', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password: 'correct-horse-battery', name: 'Transfer Tester' }),
+      })
+    )
+    const body = (await res.json()) as { data: CurrentUser }
+    testOwnerId = body.data.id
+
+    // Create a test asset via direct DB insert (avoids needing file upload in test)
+    const [asset] = await db
+      .insert(assets)
+      .values({
+        ownerId: testOwnerId,
+        kind: 'file',
+        title: 'Test transfer asset',
+        source: 'manual',
+      })
+      .returning({ id: assets.id })
+    testAssetId = asset!.id
+  })
+
+  afterAll(async () => {
+    await db.delete(assets).where(eq(assets.id, testAssetId))
+    await db.delete(sessions).where(eq(sessions.userId, testOwnerId))
+    await db.delete(users).where(eq(users.id, testOwnerId))
+  })
+
   it('returns file info for an active transfer room', async () => {
     const roomId = `room-info-${crypto.randomUUID()}`
-    registerTransferRoom({
+    await registerTransferRoom({
       roomId,
       expiresAt: new Date(Date.now() + 30_000),
-      assetId: 'asset-info',
+      assetId: testAssetId,
+      ownerId: testOwnerId,
       title: 'transfer.png',
       storageKey: `missing/${roomId}.png`,
       mimeType: 'image/png',
@@ -33,10 +73,11 @@ describe('transfers module', () => {
 
   it('returns 404 for expired transfer rooms', async () => {
     const roomId = `room-expired-${crypto.randomUUID()}`
-    registerTransferRoom({
+    await registerTransferRoom({
       roomId,
       expiresAt: new Date(Date.now() - 1),
-      assetId: 'asset-expired',
+      assetId: testAssetId,
+      ownerId: testOwnerId,
       title: 'expired.png',
       storageKey: `missing/${roomId}.png`,
       mimeType: 'image/png',
@@ -53,10 +94,11 @@ describe('transfers module', () => {
 
   it('returns 404 when the active transfer file is missing from storage', async () => {
     const roomId = `room-missing-file-${crypto.randomUUID()}`
-    registerTransferRoom({
+    await registerTransferRoom({
       roomId,
       expiresAt: new Date(Date.now() + 30_000),
-      assetId: 'asset-missing-file',
+      assetId: testAssetId,
+      ownerId: testOwnerId,
       title: 'missing.png',
       storageKey: `missing/${roomId}.png`,
       mimeType: 'image/png',
@@ -81,10 +123,11 @@ describe('transfers module', () => {
     await writeFile(filePath, bytes)
 
     try {
-      registerTransferRoom({
+      await registerTransferRoom({
         roomId,
         expiresAt: new Date(Date.now() + 30_000),
-        assetId: 'asset-download',
+        assetId: testAssetId,
+        ownerId: testOwnerId,
         title: fileName,
         storageKey,
         mimeType: 'text/plain',

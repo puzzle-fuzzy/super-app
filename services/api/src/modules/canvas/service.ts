@@ -154,7 +154,7 @@ export async function updateCanvasProject({
   id,
   input,
 }: UpdateCanvasProjectInput): Promise<CanvasProjectDetailDto> {
-  const { project } = await loadCanvasProject(db, owner.id, id)
+  await loadCanvasProject(db, owner.id, id)
 
   // Update project metadata
   const projectFields: Record<string, unknown> = {}
