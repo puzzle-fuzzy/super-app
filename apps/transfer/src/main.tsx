@@ -229,10 +229,10 @@ function TransferApp() {
   const isDone = !!completed
 
   return (
-    <main className="min-h-screen bg-[#141414] text-[#e5e5e5]">
-      <section className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5">
-        {/* Header */}
-        <header className="mb-8 flex items-center justify-between">
+    <main className="flex min-h-screen flex-col bg-[#141414] text-[#e5e5e5]">
+      {/* Header */}
+      <div className="mx-auto w-full max-w-[1800px] px-8 pt-8 max-[920px]:px-[18px] max-[620px]:px-3.5">
+        <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-[12px] border border-[#3a3a3a] text-sm font-bold text-[#999999]">
               S
@@ -248,9 +248,11 @@ function TransferApp() {
             <House size={16} aria-hidden="true" />
           </a>
         </header>
+      </div>
 
-        {/* Card */}
-        <div className="mx-auto w-full max-w-[560px] rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+      {/* Card — vertically centered */}
+      <div className="flex flex-1 items-center justify-center px-8 pb-8 max-[920px]:px-[18px] max-[620px]:px-3.5">
+        <div className="w-full max-w-[560px] rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
           {/* Kicker + Title */}
           <p className="mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
             P2P FILE TRANSFER
@@ -348,7 +350,7 @@ function TransferApp() {
             </a>
           )}
         </div>
-      </section>
+      </div>
     </main>
   )
 }
