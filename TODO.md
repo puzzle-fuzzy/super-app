@@ -34,5 +34,6 @@
 - [x] Populate packages/utils with format utilities.
 - [x] Scaffold apps/docs Astro documentation site.
 - [x] Scaffold apps/site public marketing landing page.
-- [ ] Persist Canvas-generated DashScope images into the asset library instead of relying on 24-hour provider URLs.
+- [x] Persist Canvas-generated DashScope images into the asset library instead of relying on 24-hour provider URLs.
 - [ ] Add Canvas generation history, retry, and explicit failure states for longer-running image workflows.
+- [ ] Add a first-class generated-image history panel backed by persisted assets.

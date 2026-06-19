@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { AssetDtoSchema } from './assets'
+
 export const CanvasProjectStatusSchema = z.enum(['active', 'archived'])
 
 export type CanvasProjectStatus = z.infer<typeof CanvasProjectStatusSchema>
@@ -72,6 +74,8 @@ export const CanvasGenerateImageResponseSchema = z.object({
   prompt: z.string(),
   model: z.string(),
   imageUrl: z.string().url(),
+  providerImageUrl: z.string().url().optional(),
+  asset: AssetDtoSchema.optional(),
   requestId: z.string().optional(),
 })
 

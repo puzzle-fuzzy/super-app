@@ -5,6 +5,7 @@ import type {
   AssetKind,
   AssetListResponse,
   AssetShareLinkDto,
+  AssetSource,
   AssetTransferSessionDto,
 } from '@super-app/contracts/assets'
 import type { Db } from '@super-app/db'
@@ -49,13 +50,16 @@ export interface UploadAssetInput {
   storage: StorageProvider
   owner: CurrentUser
   fileName: string
+  title?: string
+  source?: AssetSource
+  metadata?: Record<string, unknown>
   mimeType: string
   size: number
   body: Buffer
 }
 
 export async function uploadAsset(input: UploadAssetInput): Promise<AssetDto> {
-  const { db, storage, owner, fileName, mimeType, size, body } = input
+  const { db, storage, owner, fileName, title, source, metadata, mimeType, size, body } = input
   const kind = inferKindFromMimeType(mimeType)
 
   const [asset] = await db
@@ -63,10 +67,11 @@ export async function uploadAsset(input: UploadAssetInput): Promise<AssetDto> {
     .values({
       ownerId: owner.id,
       kind,
-      title: fileName,
-      source: 'upload',
+      title: title ?? fileName,
+      source: source ?? 'upload',
       status: 'active',
       visibility: 'private',
+      metadata: metadata ?? {},
     })
     .returning()
 

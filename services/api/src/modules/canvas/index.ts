@@ -6,6 +6,7 @@ import {
 import { Elysia } from 'elysia'
 
 import { authPlugin, requireUser } from '../../plugins/auth'
+import { storagePlugin } from '../../plugins/storage'
 import { ok } from '../../shared/response'
 import { generateCanvasImage } from './generate-image'
 import {
@@ -18,12 +19,18 @@ import {
 
 export const canvasModule = new Elysia({ name: 'canvas' })
   .use(authPlugin)
+  .use(storagePlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded
       .post(
         '/canvas/generate-image',
-        async ({ body }) => {
-          const result = await generateCanvasImage(body)
+        async ({ user, db, storage, body }) => {
+          const result = await generateCanvasImage({
+            db,
+            storage,
+            owner: user!,
+            input: body,
+          })
           return ok(result)
         },
         { body: CanvasGenerateImageRequestSchema }

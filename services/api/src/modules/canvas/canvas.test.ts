@@ -282,11 +282,23 @@ describe('canvas module', () => {
     const originalKey = process.env.DASHSCOPE_API_KEY
     const originalBaseUrl = process.env.DASHSCOPE_BASE_URL
     const originalFetch = globalThis.fetch
+    const providerImageUrl = 'https://dashscope-result.example/generated.png'
+    const pngBytes = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFhQJ/WxK8WQAAAABJRU5ErkJggg==',
+      'base64'
+    )
     const calls: Array<{ url: string; authorization: string | null; body: unknown }> = []
 
     process.env.DASHSCOPE_API_KEY = 'fake-dashscope-key'
     process.env.DASHSCOPE_BASE_URL = 'http://fake-provider.local/api/v1'
     globalThis.fetch = (async (input, init) => {
+      if (String(input) === providerImageUrl) {
+        return new Response(pngBytes, {
+          status: 200,
+          headers: { 'content-type': 'image/png' },
+        })
+      }
+
       calls.push({
         url: String(input),
         authorization: new Headers(init?.headers).get('authorization'),
@@ -299,7 +311,7 @@ describe('canvas module', () => {
             choices: [
               {
                 message: {
-                  content: [{ image: 'https://dashscope-result.example/generated.png' }],
+                  content: [{ image: providerImageUrl }],
                 },
               },
             ],
@@ -319,7 +331,8 @@ describe('canvas module', () => {
       )
       expect(res.status).toBe(200)
       const body = await res.json()
-      expect(body.data.imageUrl).toBe('https://dashscope-result.example/generated.png')
+      expect(body.data.providerImageUrl).toBe(providerImageUrl)
+      expect(body.data.imageUrl).toBe(body.data.asset.files[0].url)
       expect(body.data.model).toBe('qwen-image-2.0-pro')
       expect(calls[0].url).toBe(
         'http://fake-provider.local/api/v1/services/aigc/multimodal-generation/generation'
@@ -341,6 +354,68 @@ describe('canvas module', () => {
           watermark: false,
         },
       })
+    } finally {
+      globalThis.fetch = originalFetch
+      if (originalKey) process.env.DASHSCOPE_API_KEY = originalKey
+      else delete process.env.DASHSCOPE_API_KEY
+      if (originalBaseUrl) process.env.DASHSCOPE_BASE_URL = originalBaseUrl
+      else delete process.env.DASHSCOPE_BASE_URL
+    }
+  })
+
+  it('persists generated DashScope images into the asset library', async () => {
+    const originalKey = process.env.DASHSCOPE_API_KEY
+    const originalBaseUrl = process.env.DASHSCOPE_BASE_URL
+    const originalFetch = globalThis.fetch
+    const providerImageUrl = 'https://dashscope-result.example/generated-stored.png'
+    const pngBytes = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFhQJ/WxK8WQAAAABJRU5ErkJggg==',
+      'base64'
+    )
+
+    process.env.DASHSCOPE_API_KEY = 'fake-dashscope-key'
+    process.env.DASHSCOPE_BASE_URL = 'http://fake-provider.local/api/v1'
+    globalThis.fetch = (async (input, init) => {
+      const url = String(input)
+      if (url === providerImageUrl) {
+        return new Response(pngBytes, {
+          status: 200,
+          headers: { 'content-type': 'image/png' },
+        })
+      }
+
+      expect(url).toBe(
+        'http://fake-provider.local/api/v1/services/aigc/multimodal-generation/generation'
+      )
+      expect(new Headers(init?.headers).get('authorization')).toBe('Bearer fake-dashscope-key')
+      return new Response(
+        JSON.stringify({
+          request_id: 'req-image-stored',
+          output: {
+            choices: [{ message: { content: [{ image: providerImageUrl }] } }],
+          },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } }
+      )
+    }) as typeof fetch
+
+    try {
+      const res = await app.handle(
+        jsonRequest('/api/canvas/generate-image', primary.cookie, {
+          prompt: '一张可长期保存的生成图',
+          size: '2048*2048',
+        })
+      )
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.data.providerImageUrl).toBe(providerImageUrl)
+      expect(body.data.asset.kind).toBe('image')
+      expect(body.data.asset.source).toBe('ai_generation')
+      expect(body.data.asset.title).toContain('一张可长期保存的生成图')
+      expect(body.data.asset.files[0].mimeType).toBe('image/png')
+      expect(body.data.asset.files[0].size).toBe(pngBytes.byteLength)
+      expect(body.data.imageUrl).toBe(body.data.asset.files[0].url)
+      expect(body.data.imageUrl).not.toBe(providerImageUrl)
     } finally {
       globalThis.fetch = originalFetch
       if (originalKey) process.env.DASHSCOPE_API_KEY = originalKey
