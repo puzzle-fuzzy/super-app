@@ -28,11 +28,7 @@ export const assetKindEnum = assetsSchema.enum('asset_kind', [
   'template',
 ])
 
-export const assetStatusEnum = assetsSchema.enum('asset_status', [
-  'active',
-  'archived',
-  'deleted',
-])
+export const assetStatusEnum = assetsSchema.enum('asset_status', ['active', 'archived', 'deleted'])
 
 export const assetVisibilityEnum = assetsSchema.enum('asset_visibility', [
   'private',

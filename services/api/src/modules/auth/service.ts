@@ -7,11 +7,7 @@ import { Buffer } from 'node:buffer'
 import { serverEnv } from '@super-app/env/server'
 
 import { AppError } from '../../shared/errors'
-import {
-  getCurrentUser,
-  getSessionTokenFromCookie,
-  hashSessionToken,
-} from '../../shared/session'
+import { getCurrentUser, getSessionTokenFromCookie, hashSessionToken } from '../../shared/session'
 
 const sessionCookiePath = '/'
 

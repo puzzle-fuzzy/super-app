@@ -11,6 +11,7 @@
 **Spec:** `docs/superpowers/specs/2026-06-19-assets-phase0-design.md`
 
 **Reference patterns (read these before starting):**
+
 - Module shape: `services/api/src/modules/auth/{index.ts,service.ts,auth.test.ts}`
 - Response helpers: `services/api/src/shared/response.ts` → `ok`/`fail` from `@super-app/contracts/api`
 - Errors: `services/api/src/shared/errors.ts` → `AppError(status, code, message, details?)`
@@ -19,6 +20,7 @@
 - App layout: `apps/auth/{package.json,vite.config.ts,src/main.tsx,src/screens/AuthApp.tsx}`
 
 **Conventions:**
+
 - `bun test` reads `.env` via `--env-file=../../.env` (see `services/api/package.json`).
 - Env vars are validated: server vars in `packages/env/src/server.ts`, public/browser vars in `packages/env/src/public.ts`, both must be added together, plus `.env.example` + `.env` + `playwright.config.ts` `localEnv`.
 - All API responses use the unified `{ success, data|error }` shape via `ok`/`fail`.
@@ -29,6 +31,7 @@
 ## File Structure
 
 **New packages/apps/modules:**
+
 - `packages/storage/` — `StorageProvider` interface + `LocalStorageProvider` (new package `@super-app/storage`)
 - `apps/assets/` — Vite frontend app (new app `@super-app/assets`)
 - `services/api/src/shared/session.ts` — extracted session helpers
@@ -39,6 +42,7 @@
 - `tests/e2e/assets.spec.ts` + `tests/e2e/fixtures/sample.png` — E2E
 
 **Modified files:**
+
 - `packages/contracts/src/assets.ts` — new enums + DTOs
 - `packages/db/src/schema/assets.ts` — rewritten main table + `asset_files`
 - `packages/db/src/index.ts` — export `assetFiles`
@@ -54,6 +58,7 @@
 ## Task 1: Extend contracts with new asset enums and DTOs
 
 **Files:**
+
 - Modify: `packages/contracts/src/assets.ts`
 
 **Why first:** Everything downstream (db schema, api, client, frontend) imports these types. Define the contract once.
@@ -185,6 +190,7 @@ git commit -m "feat(contracts): redefine AssetKind to 8 creation kinds with file
 ## Task 2: Rewrite the assets DB schema
 
 **Files:**
+
 - Modify: `packages/db/src/schema/assets.ts`
 - Modify: `packages/db/src/index.ts`
 
@@ -222,11 +228,7 @@ export const assetKindEnum = assetsSchema.enum('asset_kind', [
   'template',
 ])
 
-export const assetStatusEnum = assetsSchema.enum('asset_status', [
-  'active',
-  'archived',
-  'deleted',
-])
+export const assetStatusEnum = assetsSchema.enum('asset_status', ['active', 'archived', 'deleted'])
 
 export const assetVisibilityEnum = assetsSchema.enum('asset_visibility', [
   'private',
@@ -400,6 +402,7 @@ git commit -m "feat(db): redesign assets table and add asset_files"
 ## Task 3: Generate and apply the assets redesign migration
 
 **Files:**
+
 - Create: `packages/db/drizzle/0001_assets_redesign.sql` (generated)
 - Modify: `.env`, `.env.example`, `playwright.config.ts` (add storage env — needed before migrate runs cleanly, do it here)
 
@@ -448,7 +451,7 @@ Modify `packages/env/src/server.ts` — inside `serverEnvSchema` (which extends 
 Modify `turbo.json` — in the `globalEnv` array, after `"SUPER_PUBLIC_API_BASE_URL"` add:
 
 ```json
-    "SUPER_PUBLIC_STORAGE_BASE_URL"
+"SUPER_PUBLIC_STORAGE_BASE_URL"
 ```
 
 - [ ] **Step 6: Verify env packages typecheck**
@@ -465,6 +468,7 @@ Expected: docker compose starts postgres.
 
 Run: `pnpm db:generate`
 Expected: Drizzle Kit detects the assets schema changes and writes a new migration file under `packages/db/drizzle/` (named like `0001_*.sql`). **Review the generated SQL** — open the new file and confirm it:
+
 1. Drops the old flat columns from `assets.assets` (`mime_type`, `size`, `storage_bucket`, `storage_key`, `width`, `height`, `duration`) and the old `assets_storage_unique` index.
 2. Recreates the `asset_kind` enum with the 8 new values.
 3. Adds `asset_status`, `asset_visibility`, `asset_source`, `asset_file_role` enums.
@@ -490,6 +494,7 @@ git commit -m "feat(db): add assets redesign migration and storage env vars"
 ## Task 4: Create the @super-app/storage package
 
 **Files:**
+
 - Create: `packages/storage/package.json`
 - Create: `packages/storage/tsconfig.json`
 - Create: `packages/storage/src/index.ts`
@@ -641,11 +646,7 @@ export function createStorage(): StorageProvider {
 ```ts
 export { createStorage } from './client'
 export { LocalStorageProvider } from './local'
-export type {
-  StorageProvider,
-  StoragePutInput,
-  StoragePutResult,
-} from './types'
+export type { StorageProvider, StoragePutInput, StoragePutResult } from './types'
 ```
 
 - [ ] **Step 7: Install dependencies and verify typecheck**
@@ -669,6 +670,7 @@ git commit -m "feat(storage): add @super-app/storage with local-disk provider"
 ## Task 5: Extract shared session helpers
 
 **Files:**
+
 - Create: `services/api/src/shared/session.ts`
 - Modify: `services/api/src/modules/auth/service.ts`
 
@@ -777,11 +779,7 @@ import { eq } from 'drizzle-orm'
 import { serverEnv } from '@super-app/env/server'
 
 import { AppError } from '../../shared/errors'
-import {
-  getCurrentUser,
-  getSessionTokenFromCookie,
-  hashSessionToken,
-} from '../../shared/session'
+import { getCurrentUser, getSessionTokenFromCookie, hashSessionToken } from '../../shared/session'
 
 export type { CurrentUser } from '@super-app/contracts/auth'
 
@@ -936,6 +934,7 @@ git commit -m "refactor(api): extract session helpers to shared module"
 ## Task 6: Create the shared auth plugin
 
 **Files:**
+
 - Create: `services/api/src/plugins/auth.ts`
 - Modify: `services/api/src/modules/auth/index.ts`
 - Modify: `services/api/src/app.ts`
@@ -957,14 +956,13 @@ export interface AuthContext {
 }
 
 // Derives `user` (null when unauthenticated) into every handler under this plugin's scope.
-export const authPlugin = new Elysia({ name: 'auth' }).use(dbPlugin).derive(
-  { as: 'scoped' },
-  async ({ db, headers }): Promise<AuthContext> => {
+export const authPlugin = new Elysia({ name: 'auth' })
+  .use(dbPlugin)
+  .derive({ as: 'scoped' }, async ({ db, headers }): Promise<AuthContext> => {
     const token = getSessionTokenFromCookie(headers.cookie)
     const user = await getCurrentUser(db, token)
     return { user }
-  }
-)
+  })
 
 // Guard that rejects unauthenticated requests with 401 + unified error shape.
 // Apply by wrapping a group: `.guard({ beforeHandle: requireUser }, (g) => g.group('/assets', ...))`
@@ -1065,6 +1063,7 @@ git commit -m "feat(api): add shared auth plugin and adopt it in auth module"
 ## Task 7: Create the storage plugin and assets API service
 
 **Files:**
+
 - Create: `services/api/src/plugins/storage.ts`
 - Create: `services/api/src/modules/assets/service.ts`
 
@@ -1180,10 +1179,7 @@ export async function listAssets(input: ListAssetsInput): Promise<AssetListRespo
   const effectiveLimit = Math.min(Math.max(limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT)
   const cursorTuple = decodeCursor(cursor)
 
-  const conditions = [
-    eq(assets.ownerId, owner.id),
-    eq(assets.status, 'active'),
-  ]
+  const conditions = [eq(assets.ownerId, owner.id), eq(assets.status, 'active')]
   if (kind) {
     conditions.push(eq(assets.kind, kind))
   }
@@ -1207,9 +1203,7 @@ export async function listAssets(input: ListAssetsInput): Promise<AssetListRespo
   const hasMore = rows.length > effectiveLimit
   const page = hasMore ? rows.slice(0, effectiveLimit) : rows
 
-  const fileResults = await Promise.all(
-    page.map((row) => loadFilesForAsset(db, row.id))
-  )
+  const fileResults = await Promise.all(page.map((row) => loadFilesForAsset(db, row.id)))
   const items: AssetDto[] = page.map((row, index) => toAssetDto(row, fileResults[index]))
 
   const nextCursor =
@@ -1358,6 +1352,7 @@ git commit -m "feat(api): add storage plugin and assets service"
 ## Task 8: Wire the assets API routes
 
 **Files:**
+
 - Create: `services/api/src/modules/assets/index.ts`
 - Modify: `services/api/src/app.ts`
 
@@ -1493,30 +1488,27 @@ export const app = new Elysia()
   .use(errorHandler)
   .group('/api', (api) => api.use(systemModule).use(authModule).use(assetsModule))
   // Dev-only static serving of uploaded asset files.
-  .get(
-    '/storage/*',
-    async ({ params, set }) => {
-      const relative = (params as { '*': string })['*']
-      const resolved = path.resolve(storageRoot, relative)
-      const normalizedRoot = path.resolve(storageRoot)
-      if (resolved !== normalizedRoot && !resolved.startsWith(normalizedRoot + path.sep)) {
-        set.status = 404
-        return 'Not found'
-      }
-      try {
-        const info = await stat(resolved)
-        if (info.isDirectory()) {
-          set.status = 404
-          return 'Not found'
-        }
-      } catch {
-        set.status = 404
-        return 'Not found'
-      }
-      set.headers['Content-Type'] = mimeTypeForExt(path.extname(resolved))
-      return createReadStream(resolved) as unknown as ReadableStream
+  .get('/storage/*', async ({ params, set }) => {
+    const relative = (params as { '*': string })['*']
+    const resolved = path.resolve(storageRoot, relative)
+    const normalizedRoot = path.resolve(storageRoot)
+    if (resolved !== normalizedRoot && !resolved.startsWith(normalizedRoot + path.sep)) {
+      set.status = 404
+      return 'Not found'
     }
-  )
+    try {
+      const info = await stat(resolved)
+      if (info.isDirectory()) {
+        set.status = 404
+        return 'Not found'
+      }
+    } catch {
+      set.status = 404
+      return 'Not found'
+    }
+    set.headers['Content-Type'] = mimeTypeForExt(path.extname(resolved))
+    return createReadStream(resolved) as unknown as ReadableStream
+  })
 
 export type App = typeof app
 
@@ -1554,6 +1546,7 @@ git commit -m "feat(api): wire assets upload/list/detail/delete routes"
 ## Task 9: Write the assets API integration tests
 
 **Files:**
+
 - Create: `services/api/src/modules/assets/assets.test.ts`
 
 - [ ] **Step 1: Write `services/api/src/modules/assets/assets.test.ts`**
@@ -1593,14 +1586,15 @@ describe('assets module', () => {
 
   afterAll(async () => {
     for (const id of createdUserIds) {
-      await db.delete(assetFiles).where(
-        eq(
-          assetFiles.assetId,
-          (
-            await db.select({ id: assets.id }).from(assets).where(eq(assets.ownerId, id))
-          )[0]?.id ?? ''
+      await db
+        .delete(assetFiles)
+        .where(
+          eq(
+            assetFiles.assetId,
+            (await db.select({ id: assets.id }).from(assets).where(eq(assets.ownerId, id)))[0]
+              ?.id ?? ''
+          )
         )
-      )
       await db.delete(sessions).where(eq(sessions.userId, id))
       await db.delete(assets).where(eq(assets.ownerId, id))
       await db.delete(users).where(eq(users.id, id))
@@ -1789,6 +1783,7 @@ git commit -m "test(api): add assets module integration tests"
 ## Task 10: Extend the api-client with assetsApi
 
 **Files:**
+
 - Modify: `packages/api-client/src/index.ts`
 
 - [ ] **Step 1: Add imports and `assetsApi` to `packages/api-client/src/index.ts`**
@@ -1796,11 +1791,7 @@ git commit -m "test(api): add assets module integration tests"
 At the top of the file, add to the existing imports:
 
 ```ts
-import type {
-  AssetDto,
-  AssetKind,
-  AssetListResponse,
-} from '@super-app/contracts/assets'
+import type { AssetDto, AssetKind, AssetListResponse } from '@super-app/contracts/assets'
 ```
 
 At the bottom of the file (after the `authApi` object), add:
@@ -1837,7 +1828,10 @@ export const assetsApi = {
 Replace the `mergeHeaders` function with:
 
 ```ts
-function mergeHeaders(headers: HeadersInit | undefined, body?: BodyInit | null): Record<string, string> {
+function mergeHeaders(
+  headers: HeadersInit | undefined,
+  body?: BodyInit | null
+): Record<string, string> {
   const base: Record<string, string> = {}
   // Do not force JSON content-type for FormData; the browser sets the multipart boundary.
   if (!(body instanceof FormData)) {
@@ -1853,11 +1847,11 @@ function mergeHeaders(headers: HeadersInit | undefined, body?: BodyInit | null):
 And update the call site in `apiFetch` to pass `body`:
 
 ```ts
-  const response = await fetch(`${clientEnv.SUPER_PUBLIC_API_BASE_URL}${path}`, {
-    ...requestOptions,
-    credentials: 'include',
-    headers: mergeHeaders(requestOptions.headers, requestOptions.body),
-  })
+const response = await fetch(`${clientEnv.SUPER_PUBLIC_API_BASE_URL}${path}`, {
+  ...requestOptions,
+  credentials: 'include',
+  headers: mergeHeaders(requestOptions.headers, requestOptions.body),
+})
 ```
 
 - [ ] **Step 2: Verify typecheck**
@@ -1877,6 +1871,7 @@ git commit -m "feat(api-client): add assetsApi and fix FormData content-type han
 ## Task 11: Scaffold the apps/assets frontend
 
 **Files:**
+
 - Create: `apps/assets/package.json`
 - Create: `apps/assets/tsconfig.json`
 - Create: `apps/assets/vite.config.ts`
@@ -2022,6 +2017,7 @@ git commit -m "feat(assets): scaffold assets frontend app"
 ## Task 12: Implement the AssetsApp component
 
 **Files:**
+
 - Create: `apps/assets/src/screens/AssetsApp.tsx`
 
 - [ ] **Step 1: Create `apps/assets/src/screens/AssetsApp.tsx`**
@@ -2216,6 +2212,7 @@ git commit -m "feat(assets): implement AssetsApp upload/list/delete UI"
 ## Task 13: Write the assets E2E test
 
 **Files:**
+
 - Create: `tests/e2e/fixtures/sample.png`
 - Create: `tests/e2e/assets.spec.ts`
 - Modify: `playwright.config.ts`
@@ -2339,6 +2336,7 @@ Expected: clean. Run `pnpm lint:fix && pnpm format:fix` if there are issues, the
 - [ ] **Step 5: Verify acceptance criteria from spec §8**
 
 Walk through the 11 acceptance criteria in `docs/superpowers/specs/2026-06-19-assets-phase0-design.md` and confirm each is met by the running system. Specifically test these against a running API (`pnpm --filter @super-app/api dev`):
+
 1. Upload a valid image via `curl -F file=@tests/e2e/fixtures/sample.png http://localhost:5200/api/assets/upload -H 'Cookie: <session>'` returns an AssetDto.
 2. The file exists under `./storage/<ownerId>/<assetId>/original/sample.png`.
 3. `GET /api/assets/?kind=image` filters correctly.

@@ -1,9 +1,5 @@
 import type { ApiError as ApiErrorPayload, ApiResponse } from '@super-app/contracts/api'
-import type {
-  AssetDto,
-  AssetKind,
-  AssetListResponse,
-} from '@super-app/contracts/assets'
+import type { AssetDto, AssetKind, AssetListResponse } from '@super-app/contracts/assets'
 import type { CurrentUser, LoginRequest, RegisterRequest } from '@super-app/contracts/auth'
 import { redirectToLogin } from '@super-app/auth-client'
 import { clientEnv } from '@super-app/env/client'

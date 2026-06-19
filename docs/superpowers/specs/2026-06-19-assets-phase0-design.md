@@ -27,16 +27,16 @@ The following are part of the long-term asset-platform vision but are **explicit
 
 ## Decisions (locked)
 
-| # | Decision |
-|---|----------|
-| 1 | Storage = API direct multipart upload in Phase 0, with a `Storage` abstraction so Aliyun OSS swaps in later as a single implementation change. |
-| 2 | E2E = build the `apps/assets` frontend app + Playwright browser E2E. |
-| 3 | Operation set = upload / list / detail / delete (no update, no tags, no relations in Phase 0). |
-| 4 | Auth = new shared `auth` plugin extracting session resolution from the auth module; all modules reuse it. |
-| 5 | `AssetKind` enum replaced with 8 creation-oriented kinds (`subject, image, video, audio, text, file, style, template`). |
-| 6 | Migration = a new migration `0001_assets_redesign.sql` that rebuilds the assets tables against the new structure (dev DB has effectively no data). |
-| 7 | `workspace_id` is **not** added in Phase 0. |
-| 8 | Type extension / relation / collection tables are **not** built in Phase 0; type-specific fields live in the main table's `metadata` jsonb until a dedicated phase extracts them. |
+| #   | Decision                                                                                                                                                                          |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Storage = API direct multipart upload in Phase 0, with a `Storage` abstraction so Aliyun OSS swaps in later as a single implementation change.                                    |
+| 2   | E2E = build the `apps/assets` frontend app + Playwright browser E2E.                                                                                                              |
+| 3   | Operation set = upload / list / detail / delete (no update, no tags, no relations in Phase 0).                                                                                    |
+| 4   | Auth = new shared `auth` plugin extracting session resolution from the auth module; all modules reuse it.                                                                         |
+| 5   | `AssetKind` enum replaced with 8 creation-oriented kinds (`subject, image, video, audio, text, file, style, template`).                                                           |
+| 6   | Migration = a new migration `0001_assets_redesign.sql` that rebuilds the assets tables against the new structure (dev DB has effectively no data).                                |
+| 7   | `workspace_id` is **not** added in Phase 0.                                                                                                                                       |
+| 8   | Type extension / relation / collection tables are **not** built in Phase 0; type-specific fields live in the main table's `metadata` jsonb until a dedicated phase extracts them. |
 
 ## 1. Data Layer
 
@@ -151,61 +151,94 @@ The existing `CreateAssetRequestSchema` is **kept unchanged** in the file (it re
 export const assetsSchema = pgSchema('assets')
 
 export const assetKindEnum = assetsSchema.enum('asset_kind', [
-  'subject', 'image', 'video', 'audio', 'text', 'file', 'style', 'template',
+  'subject',
+  'image',
+  'video',
+  'audio',
+  'text',
+  'file',
+  'style',
+  'template',
 ])
 
-export const assetStatusEnum = assetsSchema.enum('asset_status', [
-  'active', 'archived', 'deleted',
-])
+export const assetStatusEnum = assetsSchema.enum('asset_status', ['active', 'archived', 'deleted'])
 
 export const assetVisibilityEnum = assetsSchema.enum('asset_visibility', [
-  'private', 'shared', 'public',
+  'private',
+  'shared',
+  'public',
 ])
 
 export const assetSourceEnum = assetsSchema.enum('asset_source', [
-  'upload', 'ai_generation', 'canvas_export', 'transfer', 'manual', 'import',
+  'upload',
+  'ai_generation',
+  'canvas_export',
+  'transfer',
+  'manual',
+  'import',
 ])
 
-export const assets = assetsSchema.table('assets', {
-  id: idColumn(),
-  ownerId: uuid('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  kind: assetKindEnum('kind').notNull(),
-  title: varchar('title', { length: 240 }).notNull(),
-  description: text('description'),
-  status: assetStatusEnum('status').notNull().default('active'),
-  visibility: assetVisibilityEnum('visibility').notNull().default('private'),
-  source: assetSourceEnum('source').notNull().default('manual'),
-  coverAssetId: uuid('cover_asset_id').references(() => assets.id, { onDelete: 'set null' }),
-  thumbnailKey: text('thumbnail_key'),
-  previewKey: text('preview_key'),
-  metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
-  createdAt: createdAtColumn(),
-  updatedAt: updatedAtColumn(),
-  deletedAt: deletedAtColumn(),
-}, (table) => ({
-  ownerIdIndex: index('assets_owner_id_idx').on(table.ownerId),
-  ownerKindIndex: index('assets_owner_kind_idx').on(table.ownerId, table.kind),
-  ownerStatusCreatedIndex: index('assets_owner_status_created_idx')
-    .on(table.ownerId, table.status, table.createdAt),
-}))
+export const assets = assetsSchema.table(
+  'assets',
+  {
+    id: idColumn(),
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    kind: assetKindEnum('kind').notNull(),
+    title: varchar('title', { length: 240 }).notNull(),
+    description: text('description'),
+    status: assetStatusEnum('status').notNull().default('active'),
+    visibility: assetVisibilityEnum('visibility').notNull().default('private'),
+    source: assetSourceEnum('source').notNull().default('manual'),
+    coverAssetId: uuid('cover_asset_id').references(() => assets.id, { onDelete: 'set null' }),
+    thumbnailKey: text('thumbnail_key'),
+    previewKey: text('preview_key'),
+    metadata: jsonb('metadata')
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
+    deletedAt: deletedAtColumn(),
+  },
+  (table) => ({
+    ownerIdIndex: index('assets_owner_id_idx').on(table.ownerId),
+    ownerKindIndex: index('assets_owner_kind_idx').on(table.ownerId, table.kind),
+    ownerStatusCreatedIndex: index('assets_owner_status_created_idx').on(
+      table.ownerId,
+      table.status,
+      table.createdAt
+    ),
+  })
+)
 
-export const assetFiles = assetsSchema.table('asset_files', {
-  id: idColumn(),
-  assetId: uuid('asset_id').notNull().references(() => assets.id, { onDelete: 'cascade' }),
-  role: assetFileRoleEnum('role').notNull(),
-  storageBucket: varchar('storage_bucket', { length: 120 }).notNull(),
-  storageKey: text('storage_key').notNull(),
-  mimeType: varchar('mime_type', { length: 255 }),
-  size: bigint('size', { mode: 'number' }),
-  width: integer('width'),
-  height: integer('height'),
-  duration: integer('duration'),
-  checksum: text('checksum'),
-  createdAt: createdAtColumn(),
-}, (table) => ({
-  assetIdIndex: index('asset_files_asset_id_idx').on(table.assetId),
-  storageUnique: uniqueIndex('asset_files_storage_unique').on(table.storageBucket, table.storageKey),
-}))
+export const assetFiles = assetsSchema.table(
+  'asset_files',
+  {
+    id: idColumn(),
+    assetId: uuid('asset_id')
+      .notNull()
+      .references(() => assets.id, { onDelete: 'cascade' }),
+    role: assetFileRoleEnum('role').notNull(),
+    storageBucket: varchar('storage_bucket', { length: 120 }).notNull(),
+    storageKey: text('storage_key').notNull(),
+    mimeType: varchar('mime_type', { length: 255 }),
+    size: bigint('size', { mode: 'number' }),
+    width: integer('width'),
+    height: integer('height'),
+    duration: integer('duration'),
+    checksum: text('checksum'),
+    createdAt: createdAtColumn(),
+  },
+  (table) => ({
+    assetIdIndex: index('asset_files_asset_id_idx').on(table.assetId),
+    storageUnique: uniqueIndex('asset_files_storage_unique').on(
+      table.storageBucket,
+      table.storageKey
+    ),
+  })
+)
 ```
 
 `assetFileRoleEnum` = `assetsSchema.enum('asset_file_role', ['original','thumbnail','preview','cover','subtitle','waveform','attachment'])`.
@@ -335,8 +368,7 @@ The package depends on `@super-app/env` for `serverEnv`.
 ### 3.3 Storage plugin — `services/api/src/plugins/storage.ts`
 
 ```ts
-export const storagePlugin = new Elysia({ name: 'storage' })
-  .decorate('storage', createStorage())
+export const storagePlugin = new Elysia({ name: 'storage' }).decorate('storage', createStorage())
 ```
 
 `authPlugin` (which assets use) sits on top of `dbPlugin`; `storagePlugin` is composed into the assets module group so handlers receive `storage: StorageProvider`.
@@ -359,12 +391,12 @@ All routes under `/api/assets`, all guarded by `{ auth: 'requireUser' }`.
 
 ### 4.1 Endpoints
 
-| Method | Path | Body / Query | Response |
-|---|---|---|---|
-| POST | `/api/assets/upload` | multipart `file: File` | `AssetDto` |
-| GET | `/api/assets` | `?kind=&limit=&cursor=` | `AssetListResponse` |
-| GET | `/api/assets/:id` | — | `AssetDto` |
-| DELETE | `/api/assets/:id` | — | `{ deleted: true }` |
+| Method | Path                 | Body / Query            | Response            |
+| ------ | -------------------- | ----------------------- | ------------------- |
+| POST   | `/api/assets/upload` | multipart `file: File`  | `AssetDto`          |
+| GET    | `/api/assets`        | `?kind=&limit=&cursor=` | `AssetListResponse` |
+| GET    | `/api/assets/:id`    | —                       | `AssetDto`          |
+| DELETE | `/api/assets/:id`    | —                       | `{ deleted: true }` |
 
 ### 4.2 Upload — `POST /api/assets/upload`
 
@@ -497,11 +529,11 @@ Add a third `webServer` entry for the assets app:
 
 ## 7. Testing Strategy
 
-| Layer | Test | What it covers |
-|---|---|---|
+| Layer                | Test                                                                                | What it covers                                                                                                                                                                                                                                       |
+| -------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | API unit/integration | `services/api/src/modules/assets/assets.test.ts` (bun:test, mirrors `auth.test.ts`) | Upload → list → detail → delete happy path against the real Postgres + local storage; size-limit (413) and MIME-reject (415) error paths; ownership (another user's asset → 404); pagination cursor. Cleans up created assets + files in `afterAll`. |
-| Auth regression | existing `auth.test.ts` still passes | Confirms the session-helper extraction + auth-plugin refactor didn't break auth. |
-| E2E | `tests/e2e/assets.spec.ts` (Playwright) | Full browser flow: register → upload → filter → delete, with real CORS + cookies across apps. |
+| Auth regression      | existing `auth.test.ts` still passes                                                | Confirms the session-helper extraction + auth-plugin refactor didn't break auth.                                                                                                                                                                     |
+| E2E                  | `tests/e2e/assets.spec.ts` (Playwright)                                             | Full browser flow: register → upload → filter → delete, with real CORS + cookies across apps.                                                                                                                                                        |
 
 `assets.test.ts` creates assets owned by a freshly registered test user (via the auth `/register` endpoint to get a real session cookie, like `auth.test.ts` does), uploads via `app.handle` with a multipart `Request`, and asserts on the JSON responses and the on-disk file existence. Files are written under a test-specific `STORAGE_DIR` (or cleaned up) to avoid polluting dev storage.
 
@@ -522,6 +554,7 @@ Add a third `webServer` entry for the assets app:
 ## 9. File Change Summary
 
 **New:**
+
 - `packages/storage/{package.json,tsconfig.json,src/{index,types,local,client}.ts}`
 - `services/api/src/shared/session.ts`
 - `services/api/src/plugins/auth.ts`
@@ -533,6 +566,7 @@ Add a third `webServer` entry for the assets app:
 - `tests/e2e/fixtures/sample.png`
 
 **Modified:**
+
 - `packages/contracts/src/assets.ts` (new kinds/sources/statuses/roles + DTOs)
 - `packages/db/src/schema/assets.ts` (rewritten main table + new `asset_files`)
 - `packages/db/src/index.ts` (export `assetFiles`)
