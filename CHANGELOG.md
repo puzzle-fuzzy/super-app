@@ -9,6 +9,7 @@
 - Added `@super-app/contracts` with shared API response, auth, asset, and canvas schemas.
 - Added `@super-app/db` with Drizzle schema, client, config, and initial migration for MVP identity, asset, and canvas tables.
 - Added modular `@super-app/api` Elysia service skeleton with `GET /api/health`.
+- Added API DB plugin and MVP auth endpoints for register, login, logout, and current user lookup.
 - Initialized Git repository metadata and line-ending normalization.
 
 ### Changed

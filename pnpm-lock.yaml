@@ -88,9 +88,15 @@ importers:
       '@super-app/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@super-app/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@super-app/env':
         specifier: workspace:*
         version: link:../../packages/env
+      drizzle-orm:
+        specifier: ^0.44.2
+        version: 0.44.7(bun-types@1.3.14)(postgres@3.4.9)
       elysia:
         specifier: latest
         version: 1.4.29(@sinclair/typebox@0.34.49)(exact-mirror@1.2.2)(file-type@22.0.1)(openapi-types@12.1.3)(typescript@5.9.3)

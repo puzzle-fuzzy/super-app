@@ -7,4 +7,7 @@
 - [x] Add modular Elysia API skeleton with `GET /api/health`.
 - [x] Add `packages/contracts` shared API response and DTO schemas.
 - [x] Add `packages/db` Drizzle schema and migrations.
-- [ ] Implement auth API module.
+- [x] Add API database plugin.
+- [x] Implement auth API module.
+- [ ] Add auth integration tests with a test database.
+- [ ] Implement `packages/api-client`.
