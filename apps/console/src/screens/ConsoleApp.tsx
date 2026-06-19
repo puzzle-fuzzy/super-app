@@ -89,6 +89,7 @@ function ConsoleAppContent({
       const result = await apiKeysApi.create(newKeyName.trim())
       setCreatedKey(result.fullKey)
       setNewKeyName('')
+      setCreateOpen(false)
       await loadKeys()
     } catch {
       // Silent
