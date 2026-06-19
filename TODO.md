@@ -29,5 +29,5 @@
 - [x] Implement Canvas API endpoints (CRUD projects, versioning, pagination).
 - [x] Scaffold Canvas frontend app (project list, editor view, CRUD dialogs).
 - [x] Integrate workspace with live recent-assets and recent-projects data.
-- [ ] Build API Console application for API key management.
+- [x] Build API Console application for API key management.
 - [ ] Add asset tags UI (display and edit).

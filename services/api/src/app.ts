@@ -5,6 +5,7 @@ import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import path from 'node:path'
 
+import { apiKeysModule } from './modules/api-keys'
 import { authModule } from './modules/auth'
 import { assetsModule } from './modules/assets'
 import { canvasModule } from './modules/canvas'
@@ -36,6 +37,7 @@ const baseApp = new Elysia()
       .use(textsModule)
       .use(subjectsModule)
       .use(canvasModule)
+      .use(apiKeysModule)
       .use(transfersModule)
   )
 

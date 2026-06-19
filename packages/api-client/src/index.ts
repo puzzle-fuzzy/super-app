@@ -1,4 +1,5 @@
 import type { ApiError as ApiErrorPayload, ApiResponse } from '@super-app/contracts/api'
+import type { ApiKeyDto, CreateApiKeyResponse } from '@super-app/contracts/api-keys'
 import type {
   AssetDto,
   AssetKind,
@@ -203,6 +204,23 @@ export const canvasApi = {
 
   remove(id: string) {
     return apiFetch<{ deleted: true }>(`/canvas/projects/${id}`, { method: 'DELETE' })
+  },
+}
+
+export const apiKeysApi = {
+  create(name: string) {
+    return apiFetch<CreateApiKeyResponse>('/api-keys/', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    })
+  },
+
+  list() {
+    return apiFetch<{ items: ApiKeyDto[] }>('/api-keys/')
+  },
+
+  revoke(id: string) {
+    return apiFetch<{ deleted: true }>(`/api-keys/${id}`, { method: 'DELETE' })
   },
 }
 
