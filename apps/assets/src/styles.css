@@ -1,5 +1,8 @@
 @import '@super-app/design-tokens/css';
 @import 'tailwindcss';
+@import 'overlayscrollbars/overlayscrollbars.css';
+
+@source "../../packages/ui-react/src/**/*.tsx";
 
 * {
   box-sizing: border-box;
@@ -52,4 +55,16 @@ a:focus-visible {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* OverlayScrollbars dark theme */
+.os-theme-dark {
+  --os-handle-bg: rgb(255 255 255 / 0.12);
+  --os-handle-bg-hover: rgb(255 255 255 / 0.2);
+  --os-handle-bg-active: rgb(255 255 255 / 0.28);
+  --os-track-bg: transparent;
+  --os-handle-border-radius: 4px;
+  --os-size: 8px;
+  --os-padding-perpendicular: 2px;
+  --os-padding-axis: 2px;
 }

@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import { Modal, Select } from '@super-app/ui-react'
 import {
   Box,
+  Check,
+  ChevronDown,
   Copy,
   Download,
   Ellipsis,
@@ -12,6 +15,7 @@ import {
   LogOut,
   Music,
   Plus,
+  Save,
   Search,
   Send,
   Share2,
@@ -90,16 +94,26 @@ const CONSISTENCY_OPTIONS = [
   { value: 'high', label: '高' },
 ] as const
 
+const LANGUAGE_OPTIONS = [
+  { value: 'zh', label: '中文' },
+  { value: 'en', label: 'English' },
+  { value: 'ja', label: '日本語' },
+  { value: 'ko', label: '한국어' },
+  { value: 'fr', label: 'Français' },
+  { value: 'de', label: 'Deutsch' },
+  { value: 'es', label: 'Español' },
+  { value: 'other', label: '其他' },
+]
+
 const surfaceButton =
-  'inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-colors active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45'
+  'inline-flex h-10 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-colors active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45'
 const primaryButton = `${surfaceButton} bg-white px-4 text-[#141414] hover:bg-neutral-200`
 const secondaryButton = `${surfaceButton} border border-[#2a2a2a] bg-[#1c1c1c] px-3.5 text-[#e5e5e5] hover:border-[#3a3a3a] hover:bg-[#2a2a2a]`
-const iconButton = `${surfaceButton} w-10 h-10 border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]`
 const menuItem =
   'flex h-9 w-full cursor-pointer appearance-none items-center justify-start gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left font-sans text-[13px] font-medium leading-[13px] text-[#999999] no-underline hover:bg-[#2a2a2a] hover:text-[#e5e5e5] disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:size-[15px] [&_svg]:shrink-0'
 const modalBackdrop = 'fixed inset-0 z-50 grid place-items-center bg-black/70 p-[22px]'
 const modalPanel =
-  'max-h-[90vh] w-[min(680px,100%)] overflow-auto rounded-[14px] border border-[#3a3a3a] bg-[#1c1c1c] p-6'
+  'max-h-[90vh] w-[min(680px,100%)] rounded-[14px] border border-[#3a3a3a] bg-[#1c1c1c] p-6'
 const panelKicker = 'm-0 text-xs font-bold text-[#666666]'
 const panelTitle = 'mt-2.5 text-2xl font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]'
 const fieldClass = 'grid gap-[7px]'
@@ -152,6 +166,7 @@ export function AssetsApp() {
   const [sharingAssetId, setSharingAssetId] = useState<string | null>(null)
   const [transferringAssetId, setTransferringAssetId] = useState<string | null>(null)
   const [openActionAssetId, setOpenActionAssetId] = useState<string | null>(null)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
   const activeTransferRef = useRef<ReturnType<typeof startAssetTransferSender> | null>(null)
 
@@ -215,6 +230,31 @@ export function AssetsApp() {
     }
   }, [openActionAssetId])
 
+  useEffect(() => {
+    if (!userMenuOpen) return
+
+    function closeOnOutsidePointer(event: PointerEvent) {
+      const target = event.target
+      if (target instanceof Element && target.closest('[data-user-menu-root]')) {
+        return
+      }
+      setUserMenuOpen(false)
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setUserMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', closeOnOutsidePointer)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointer)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [userMenuOpen])
+
   if (isLoading) {
     return <StateScreen title="正在确认登录状态" description="Super 正在连接资产中心。" />
   }
@@ -224,7 +264,7 @@ export function AssetsApp() {
   }
 
   function openNewText() {
-    setEditor({ kind: 'text', title: '', textType: 'prompt', content: '', language: '' })
+    setEditor({ kind: 'text', title: '', textType: 'prompt', content: '', language: 'zh' })
   }
 
   function openNewSubject() {
@@ -325,7 +365,7 @@ export function AssetsApp() {
         assetId: asset.id,
         pageUrl: session.pageUrl,
         expiresAt: session.expiresAt,
-        status: '局域网传输链接已复制，30 秒内打开即可接收。',
+        status: '局域网传输链接已复制，3 分钟内打开即可接收。',
       })
     } catch (err) {
       setListError(err instanceof Error ? err.message : '创建传输失败')
@@ -493,14 +533,52 @@ export function AssetsApp() {
                 <UserRound size={16} aria-hidden="true" />
                 新建主体
               </button>
-              <button
-                type="button"
-                className={iconButton}
-                onClick={handleLogout}
-                aria-label="退出登录"
-              >
-                <LogOut size={16} aria-hidden="true" />
-              </button>
+              <div className="relative" data-user-menu-root>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] px-2 py-1.5 text-sm text-[#e5e5e5] transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
+                  onClick={() => setUserMenuOpen((prev) => !prev)}
+                  aria-expanded={userMenuOpen}
+                  aria-haspopup="true"
+                >
+                  {user.avatarUrl ? (
+                    <img
+                      className="h-7 w-7 rounded-full object-cover"
+                      src={user.avatarUrl}
+                      alt={user.name ?? user.email}
+                    />
+                  ) : (
+                    <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2a2a2a] text-[#999999]">
+                      <UserRound size={14} aria-hidden="true" />
+                    </span>
+                  )}
+                  <span className="max-w-[120px] truncate text-[13px] font-medium">
+                    {user.name ?? user.email}
+                  </span>
+                  <ChevronDown
+                    size={14}
+                    className={`text-[#666666] transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
+                    aria-hidden="true"
+                  />
+                </button>
+                <div
+                  className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
+                    userMenuOpen ? 'grid' : 'hidden'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserMenuOpen(false)
+                      handleLogout()
+                    }}
+                    className={menuItem}
+                  >
+                    <LogOut size={15} aria-hidden="true" />
+                    退出登录
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           <input
@@ -689,7 +767,7 @@ function AssetCard({
               <span className="text-xs font-bold tracking-[0.08em] text-[#666666] uppercase">
                 {assetKindLabel(asset.kind)}
               </span>
-              <p className="mt-2.5 mb-10 line-clamp-4 flex-1 overflow-hidden text-[13px] leading-[1.7] text-[#777777]">
+              <p className="mt-2.5 line-clamp-4 flex-1 overflow-hidden text-[13px] leading-[1.7] text-[#777777]">
                 {assetSummary(asset)}
               </p>
             </div>
@@ -832,9 +910,17 @@ function TransferNoticeDialog({
   notice: TransferNotice
   onClose: () => void
 }) {
+  const [copied, setCopied] = useState(false)
+
+  function handleCopy() {
+    copyToClipboard(notice.pageUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1800)
+  }
+
   return (
     <div className={modalBackdrop} role="dialog" aria-label="传输分享">
-      <div className={`${modalPanel} w-[min(440px,100%)]`}>
+      <div className={`${modalPanel} overflow-auto w-[min(440px,100%)]`}>
         <p className={panelKicker}>传输分享</p>
         <h2 className={panelTitle}>链接已准备好</h2>
         <p className="text-sm leading-relaxed text-[#999999]">{notice.status}</p>
@@ -853,10 +939,20 @@ function TransferNoticeDialog({
           <button
             className={primaryButton}
             type="button"
-            onClick={() => copyToClipboard(notice.pageUrl)}
+            onClick={handleCopy}
+            disabled={copied}
           >
-            <Copy size={15} aria-hidden="true" />
-            复制链接
+            {copied ? (
+              <>
+                <Check size={15} aria-hidden="true" />
+                已复制
+              </>
+            ) : (
+              <>
+                <Copy size={15} aria-hidden="true" />
+                复制链接
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -901,40 +997,39 @@ function EditorPanel({
   onSave: () => void
 }) {
   return (
-    <aside className={modalBackdrop} role="dialog" aria-label="资产编辑器">
-      <div className={`${modalPanel} grid gap-[15px]`}>
-        <header>
-          <p className={panelKicker}>创作编辑</p>
-          <h2 className={panelTitle}>
-            {(editor.id ? '编辑' : '新建') + (editor.kind === 'text' ? '文本' : '主体')}
-          </h2>
-        </header>
+    <Modal open onClose={onCancel}>
+      <Modal.Header
+        kicker="创作编辑"
+        title={(editor.id ? '编辑' : '新建') + (editor.kind === 'text' ? '文本' : '主体')}
+      />
+      <Modal.Body>
+        <div className="grid gap-[15px]">
+          <label className={fieldClass}>
+            <span className={fieldLabel}>标题</span>
+            <input
+              className={fieldControl}
+              value={editor.title}
+              onChange={(event) => setEditor({ ...editor, title: event.target.value })}
+            />
+          </label>
 
-        <label className={fieldClass}>
-          <span className={fieldLabel}>标题</span>
-          <input
-            className={fieldControl}
-            value={editor.title}
-            onChange={(event) => setEditor({ ...editor, title: event.target.value })}
-          />
-        </label>
-
-        {editor.kind === 'text' ? (
-          <TextEditorFields editor={editor} setEditor={setEditor} />
-        ) : (
-          <SubjectEditorFields editor={editor} setEditor={setEditor} />
-        )}
-
-        <div className="mt-1 flex flex-wrap justify-end gap-2">
-          <button className={secondaryButton} type="button" onClick={onCancel} disabled={saving}>
-            取消
-          </button>
-          <button className={primaryButton} type="button" onClick={onSave} disabled={saving}>
-            {saving ? '保存中...' : '保存'}
-          </button>
+          {editor.kind === 'text' ? (
+            <TextEditorFields editor={editor} setEditor={setEditor} />
+          ) : (
+            <SubjectEditorFields editor={editor} setEditor={setEditor} />
+          )}
         </div>
-      </div>
-    </aside>
+      </Modal.Body>
+      <Modal.Footer>
+        <button className={secondaryButton} type="button" onClick={onCancel} disabled={saving}>
+          取消
+        </button>
+        <button className={primaryButton} type="button" onClick={onSave} disabled={saving}>
+          <Save size={15} aria-hidden="true" />
+          {saving ? '保存中...' : '保存'}
+        </button>
+      </Modal.Footer>
+    </Modal>
   )
 }
 
@@ -947,28 +1042,22 @@ function TextEditorFields({
 }) {
   return (
     <>
-      <label className={fieldClass}>
+      <div className={fieldClass}>
         <span className={fieldLabel}>类型</span>
-        <select
-          className={fieldControl}
+        <Select
+          options={TEXT_TYPE_OPTIONS}
           value={editor.textType}
-          onChange={(event) => setEditor({ ...editor, textType: event.target.value as TextType })}
-        >
-          {TEXT_TYPE_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className={fieldClass}>
-        <span className={fieldLabel}>语言（可选，如 zh / en）</span>
-        <input
-          className={fieldControl}
-          value={editor.language}
-          onChange={(event) => setEditor({ ...editor, language: event.target.value })}
+          onChange={(value) => setEditor({ ...editor, textType: value as TextType })}
         />
-      </label>
+      </div>
+      <div className={fieldClass}>
+        <span className={fieldLabel}>语言</span>
+        <Select
+          options={LANGUAGE_OPTIONS}
+          value={editor.language || 'zh'}
+          onChange={(value) => setEditor({ ...editor, language: value })}
+        />
+      </div>
       <label className={fieldClass}>
         <span className={fieldLabel}>正文</span>
         <textarea
@@ -991,22 +1080,14 @@ function SubjectEditorFields({
 }) {
   return (
     <>
-      <label className={fieldClass}>
+      <div className={fieldClass}>
         <span className={fieldLabel}>主体类型</span>
-        <select
-          className={fieldControl}
+        <Select
+          options={SUBJECT_TYPE_OPTIONS}
           value={editor.subjectType}
-          onChange={(event) =>
-            setEditor({ ...editor, subjectType: event.target.value as SubjectType })
-          }
-        >
-          {SUBJECT_TYPE_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
+          onChange={(value) => setEditor({ ...editor, subjectType: value as SubjectType })}
+        />
+      </div>
       <label className={fieldClass}>
         <span className={fieldLabel}>显示名称</span>
         <input
@@ -1042,25 +1123,19 @@ function SubjectEditorFields({
           onChange={(event) => setEditor({ ...editor, negativePrompt: event.target.value })}
         />
       </label>
-      <label className={fieldClass}>
+      <div className={fieldClass}>
         <span className={fieldLabel}>一致性</span>
-        <select
-          className={fieldControl}
+        <Select
+          options={[...CONSISTENCY_OPTIONS]}
           value={editor.consistencyLevel}
-          onChange={(event) =>
+          onChange={(value) =>
             setEditor({
               ...editor,
-              consistencyLevel: event.target.value as 'low' | 'medium' | 'high',
+              consistencyLevel: value as 'low' | 'medium' | 'high',
             })
           }
-        >
-          {CONSISTENCY_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
+        />
+      </div>
     </>
   )
 }
@@ -1076,7 +1151,7 @@ function DeleteConfirm({
 }) {
   return (
     <div className={modalBackdrop} role="dialog" aria-label="删除确认">
-      <div className={`${modalPanel} w-[min(440px,100%)]`}>
+      <div className={`${modalPanel} overflow-auto w-[min(440px,100%)]`}>
         <p className={panelKicker}>确认删除</p>
         <h2 className={panelTitle}>删除「{asset.title}」？</h2>
         <p className="text-sm leading-relaxed text-[#999999]">
