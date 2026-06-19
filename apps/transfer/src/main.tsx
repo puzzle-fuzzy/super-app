@@ -1,9 +1,15 @@
 import { StrictMode, useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { OverlayScrollbarsComponent } from 'overlayscrollbars-react'
+import { ArrowDownToLine, House, Loader, Wifi, WifiOff } from 'lucide-react'
 
 import { clientEnv } from '@super-app/env/client'
 
 import './styles.css'
+
+/* -------------------------------------------------------------------------- */
+/*  Types                                                                      */
+/* -------------------------------------------------------------------------- */
 
 interface FileOffer {
   transferId: string
@@ -27,13 +33,18 @@ interface CompletedFile {
   size: number
 }
 
+/* -------------------------------------------------------------------------- */
+/*  TransferApp                                                                */
+/* -------------------------------------------------------------------------- */
+
 function TransferApp() {
   const roomId = new URLSearchParams(window.location.search).get('room')
-  const [status, setStatus] = useState(roomId ? '正在连接传输房间。' : '缺少传输房间。')
+  const [status, setStatus] = useState(roomId ? '正在连接传输房间…' : '缺少传输房间参数')
   const [peerId, setPeerId] = useState<string | null>(null)
   const [offer, setOffer] = useState<FileOffer | null>(null)
   const [progress, setProgress] = useState(0)
   const [completed, setCompleted] = useState<CompletedFile | null>(null)
+  const [connected, setConnected] = useState(false)
   const socketRef = useRef<WebSocket | null>(null)
   const offerRef = useRef<FileOffer | null>(null)
   const connectionRef = useRef<RTCPeerConnection | null>(null)
@@ -48,8 +59,14 @@ function TransferApp() {
     const socket = new WebSocket(wsUrlForRoom(roomId))
     socketRef.current = socket
 
-    socket.addEventListener('open', () => setStatus('已进入房间，等待发送方。'))
-    socket.addEventListener('close', () => setStatus('传输房间已关闭或过期。'))
+    socket.addEventListener('open', () => {
+      setConnected(true)
+      setStatus('已进入房间，等待发送方…')
+    })
+    socket.addEventListener('close', () => {
+      setConnected(false)
+      setStatus('传输房间已关闭或过期')
+    })
     socket.addEventListener('message', (event) => {
       const message = parseSignalingMessage(event.data)
       if (!message) return
@@ -62,11 +79,7 @@ function TransferApp() {
       if (message.type === 'peers') {
         const ids = (message.payload as { ids: string[] }).ids
         ids.forEach((id) => {
-          sendSocket({
-            type: 'receiver-ready',
-            to: id,
-            payload: { roomId },
-          })
+          sendSocket({ type: 'receiver-ready', to: id, payload: { roomId } })
         })
         return
       }
@@ -74,11 +87,7 @@ function TransferApp() {
       if (message.type === 'peer-joined' && message.from === 'server') {
         const id = (message.payload as { id: string }).id
         if (id !== peerId) {
-          sendSocket({
-            type: 'receiver-ready',
-            to: id,
-            payload: { roomId },
-          })
+          sendSocket({ type: 'receiver-ready', to: id, payload: { roomId } })
         }
         return
       }
@@ -88,7 +97,7 @@ function TransferApp() {
         const nextOffer = { ...payload, fromPeerId: message.from }
         offerRef.current = nextOffer
         setOffer(nextOffer)
-        setStatus('发现可接收文件。')
+        setStatus('发现可接收文件')
         return
       }
 
@@ -107,17 +116,12 @@ function TransferApp() {
   async function loadRoomFileInfo(id: string) {
     const response = await fetch(`${apiBaseUrl()}/transfers/${encodeURIComponent(id)}/file-info`)
     if (!response.ok) {
-      setStatus('传输房间不存在或已过期。')
+      setStatus('传输房间不存在或已过期')
       return
     }
 
     const body = (await response.json()) as {
-      data: {
-        fileName: string
-        fileSize: number
-        fileType: string
-        downloadUrl: string
-      }
+      data: { fileName: string; fileSize: number; fileType: string; downloadUrl: string }
     }
     setOffer({
       transferId: id,
@@ -134,11 +138,11 @@ function TransferApp() {
     if (!offer.fromPeerId && offer.downloadUrl) {
       setCompleted({ fileName: offer.fileName, url: offer.downloadUrl, size: offer.fileSize })
       setProgress(100)
-      setStatus('文件已准备好下载。')
+      setStatus('文件已准备好下载')
       return
     }
 
-    setStatus('正在建立点对点连接。')
+    setStatus('正在建立点对点连接…')
     sendSocket({
       type: 'file-accept',
       to: offer.fromPeerId,
@@ -167,10 +171,7 @@ function TransferApp() {
           sendSocket({
             type: 'webrtc-signal',
             to: message.from,
-            payload: {
-              transferId: payload.transferId,
-              signal: { type: 'ice-candidate', candidate: event.candidate },
-            },
+            payload: { transferId: payload.transferId, signal: { type: 'ice-candidate', candidate: event.candidate } },
           })
         }
       }
@@ -180,13 +181,11 @@ function TransferApp() {
           if (typeof channelEvent.data === 'string') {
             const done = JSON.parse(channelEvent.data) as { type: string }
             if (done.type === 'done') {
-              const blob = new Blob(chunksRef.current, {
-                type: currentOffer.fileType || 'application/octet-stream',
-              })
+              const blob = new Blob(chunksRef.current, { type: currentOffer.fileType || 'application/octet-stream' })
               const url = URL.createObjectURL(blob)
               setCompleted({ fileName: currentOffer.fileName, url, size: blob.size })
               setProgress(100)
-              setStatus('文件接收完成。')
+              setStatus('文件接收完成')
             }
             return
           }
@@ -195,7 +194,7 @@ function TransferApp() {
           chunksRef.current.push(chunk)
           receivedRef.current += chunk.byteLength
           setProgress(Math.min(99, Math.round((receivedRef.current / currentOffer.fileSize) * 100)))
-          setStatus('正在接收文件。')
+          setStatus('正在接收文件…')
         }
       }
 
@@ -205,10 +204,7 @@ function TransferApp() {
       sendSocket({
         type: 'webrtc-signal',
         to: message.from,
-        payload: {
-          transferId: payload.transferId,
-          signal: { type: 'answer', sdp: connection.localDescription },
-        },
+        payload: { transferId: payload.transferId, signal: { type: 'answer', sdp: connection.localDescription } },
       })
       return
     }
@@ -225,46 +221,144 @@ function TransferApp() {
     }
   }
 
+  /* ---- Render ---------------------------------------------------------- */
+
+  const hasError = !roomId
+  const isConnecting = !!roomId && !offer && !completed
+  const isReady = !!offer && !completed
+  const isDone = !!completed
+
   return (
-    <main className="transfer-shell">
-      <section className="transfer-card">
-        <p className="transfer-kicker">Super Transfer</p>
-        <h1>局域网文件接收</h1>
-        <p>{status}</p>
-
-        {peerId ? <span className="peer-pill">设备 {peerId.slice(0, 8)}</span> : null}
-
-        {offer ? (
-          <article className="offer-card">
-            <span>待接收文件</span>
-            <strong>{offer.fileName}</strong>
-            <small>{formatBytes(offer.fileSize)}</small>
-            <button type="button" onClick={acceptOffer}>
-              接收文件
-            </button>
-          </article>
-        ) : null}
-
-        {progress > 0 ? (
-          <div className="progress-track" aria-label="接收进度">
-            <span style={{ width: `${progress}%` }} />
+    <main className="min-h-screen bg-[#141414] text-[#e5e5e5]">
+      <section className="mx-auto w-full max-w-[720px] px-8 py-8 pb-16 max-[620px]:px-3.5 max-[620px]:py-5">
+        {/* Header */}
+        <header className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="grid h-9 w-9 place-items-center rounded-[12px] border border-[#3a3a3a] text-sm font-bold text-[#999999]">
+              S
+            </span>
+            <strong className="text-base font-semibold tracking-tight">Super Transfer</strong>
           </div>
-        ) : null}
-
-        {completed ? (
-          <a className="download-link" href={completed.url} download={completed.fileName}>
-            下载 {completed.fileName}
+          <a
+            href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
+            className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
+            aria-label="首页"
+            title="首页"
+          >
+            <House size={16} aria-hidden="true" />
           </a>
-        ) : null}
+        </header>
+
+        {/* Card */}
+        <div className="rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+          {/* Kicker + Title */}
+          <p className="mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
+            P2P FILE TRANSFER
+          </p>
+          <h1 className="m-0 text-[clamp(36px,7vw,56px)] font-bold leading-[0.98] tracking-[-0.02em]">
+            局域网文件接收
+          </h1>
+
+          {/* Connection indicator */}
+          <div className="mt-5 flex items-center gap-2">
+            {connected ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#064e3b] px-3 py-1 text-[12px] font-semibold text-[#34d399]">
+                <Wifi size={12} />
+                已连接
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#2a1f1f] px-3 py-1 text-[12px] font-semibold text-[#f87171]">
+                <WifiOff size={12} />
+                {roomId ? '未连接' : '无房间'}
+              </span>
+            )}
+            {peerId && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1e293b] px-3 py-1 text-[12px] font-semibold text-[#60a5fa]">
+                设备 {peerId.slice(0, 8)}
+              </span>
+            )}
+          </div>
+
+          {/* Status */}
+          <p className="mt-5 leading-[1.7] text-[#999999]">{status}</p>
+
+          {/* File Offer Card */}
+          {isReady && offer && (
+            <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
+              <p className="m-0 mb-1 text-[12px] font-semibold tracking-[0.08em] text-[#666666]">
+                待接收文件
+              </p>
+              <p className="m-0 text-[20px] font-bold tracking-[-0.01em] break-all">
+                {offer.fileName}
+              </p>
+              <p className="m-0 mt-1 text-[13px] text-[#999999]">{formatBytes(offer.fileSize)}</p>
+              <button
+                type="button"
+                className="mt-5 flex h-11 cursor-pointer items-center gap-2 rounded-[12px] border-0 bg-[#e5e5e5] px-6 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
+                onClick={acceptOffer}
+              >
+                <ArrowDownToLine size={16} />
+                接收文件
+              </button>
+            </div>
+          )}
+
+          {/* Connecting state */}
+          {isConnecting && (
+            <div className="mt-6 flex items-center gap-3 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
+              <Loader size={20} className="animate-spin text-[#666666]" />
+              <p className="m-0 text-[14px] text-[#999999]">等待发送方接入…</p>
+            </div>
+          )}
+
+          {/* Error state */}
+          {hasError && (
+            <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
+              <p className="m-0 text-[14px] text-[#999999]">
+                请使用资产库中的「传输」功能生成的链接来访问此页面。
+              </p>
+            </div>
+          )}
+
+          {/* Progress */}
+          {progress > 0 && !completed && (
+            <div className="mt-6">
+              <div className="mb-2 flex items-center justify-between text-[12px] text-[#666666]">
+                <span>接收进度</span>
+                <span>{progress}%</span>
+              </div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-[#2a2a2a]">
+                <div
+                  className="h-full rounded-full bg-[#e5e5e5] transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Completed Download */}
+          {isDone && completed && (
+            <a
+              className="mt-6 flex h-11 cursor-pointer items-center justify-center gap-2 rounded-[12px] border-0 bg-[#064e3b] px-6 text-[13px] font-semibold text-[#34d399] no-underline transition-colors hover:bg-[#065f46]"
+              href={completed.url}
+              download={completed.fileName}
+            >
+              <ArrowDownToLine size={16} />
+              下载 {completed.fileName}（{formatBytes(completed.size)}）
+            </a>
+          )}
+        </div>
       </section>
     </main>
   )
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Helpers                                                                    */
+/* -------------------------------------------------------------------------- */
+
 function wsUrlForRoom(roomId: string) {
-  const base = apiBaseUrl()
-    .replace(/^http:/, 'ws:')
-    .replace(/^https:/, 'wss:')
+  const base = apiBaseUrl().replace(/^http:/, 'ws:').replace(/^https:/, 'wss:')
   return `${base}/transfers/${encodeURIComponent(roomId)}/ws`
 }
 
@@ -288,8 +382,18 @@ function formatBytes(size: number) {
   return `${(size / 1024 / 1024).toFixed(1)} MB`
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Mount                                                                      */
+/* -------------------------------------------------------------------------- */
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <TransferApp />
+    <OverlayScrollbarsComponent
+      style={{ height: '100vh', width: '100vw' }}
+      options={{ scrollbars: { autoHide: 'scroll', theme: 'os-theme-dark' } }}
+      defer
+    >
+      <TransferApp />
+    </OverlayScrollbarsComponent>
   </StrictMode>
 )

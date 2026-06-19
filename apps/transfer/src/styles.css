@@ -1,17 +1,26 @@
 @import '@super-app/design-tokens/css';
 @import 'tailwindcss';
+@import 'overlayscrollbars/overlayscrollbars.css';
 
 * {
   box-sizing: border-box;
 }
 
+:root {
+  color-scheme: dark;
+}
+
 html,
 body {
-  margin: 0;
   min-width: 320px;
+  min-height: 100%;
+  background: #141414;
+}
+
+body {
+  margin: 0;
   min-height: 100vh;
-  background: #10100f;
-  color: #f7f2e8;
+  color: #e5e5e5;
   font-family:
     ui-sans-serif,
     system-ui,
@@ -22,110 +31,35 @@ body {
 }
 
 button,
-a {
-  font: inherit;
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
-.transfer-shell {
-  display: grid;
-  min-height: 100vh;
-  place-items: center;
-  padding: 24px;
-  background:
-    radial-gradient(circle at 20% 10%, rgba(244, 216, 143, 0.18), transparent 28rem), #10100f;
+button:focus-visible,
+a:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(229 229 229 / 0.16);
 }
 
-.transfer-card {
-  width: min(560px, 100%);
-  padding: clamp(28px, 6vw, 48px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.055);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
-.transfer-kicker {
-  margin: 0;
-  color: #f4d88f;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.transfer-card h1 {
-  margin: 10px 0 0;
-  font-size: clamp(36px, 9vw, 64px);
-  line-height: 0.96;
-  letter-spacing: -0.04em;
-}
-
-.transfer-card p {
-  color: #b9b1a2;
-  line-height: 1.7;
-}
-
-.peer-pill {
-  display: inline-flex;
-  margin-top: 8px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: rgba(244, 216, 143, 0.14);
-  color: #f4d88f;
-  font-size: 13px;
-  font-weight: 750;
-}
-
-.offer-card {
-  display: grid;
-  gap: 8px;
-  margin-top: 24px;
-  padding: 18px;
-  border-radius: 18px;
-  background: rgba(0, 0, 0, 0.22);
-}
-
-.offer-card span,
-.offer-card small {
-  color: #b9b1a2;
-  font-size: 13px;
-}
-
-.offer-card strong {
-  overflow-wrap: anywhere;
-  font-size: 20px;
-}
-
-.offer-card button,
-.download-link {
-  display: inline-flex;
-  width: max-content;
-  min-height: 42px;
-  align-items: center;
-  justify-content: center;
-  margin-top: 8px;
-  padding: 0 18px;
-  border: 0;
-  border-radius: 999px;
-  background: #f4d88f;
-  color: #1c1608;
-  cursor: pointer;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.progress-track {
-  height: 10px;
-  overflow: hidden;
-  margin-top: 22px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.progress-track span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: #f4d88f;
-}
-
-.download-link {
-  margin-top: 22px;
+/* OverlayScrollbars dark theme */
+.os-theme-dark {
+  --os-handle-bg: rgb(255 255 255 / 0.12);
+  --os-handle-bg-hover: rgb(255 255 255 / 0.2);
+  --os-handle-bg-active: rgb(255 255 255 / 0.28);
+  --os-track-bg: transparent;
+  --os-handle-border-radius: 4px;
+  --os-size: 8px;
+  --os-padding-perpendicular: 2px;
+  --os-padding-axis: 2px;
 }
