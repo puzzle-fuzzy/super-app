@@ -20,6 +20,7 @@ http://localhost:5103/workspace/
 ```txt
 workspace must require auth through @super-app/auth-client/react
 business apps must navigate through shared SUPER_PUBLIC_* URLs
+Tailwind CSS is wired through @tailwindcss/vite
 production base path is /workspace/
 dev port is 5103
 ```

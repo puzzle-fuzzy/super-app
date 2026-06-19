@@ -15,6 +15,7 @@
 - [x] Implement `packages/auth-client`.
 - [x] Implement `packages/api-client`.
 - [x] Add shared design tokens and Tailwind preset.
+- [x] Migrate Vite apps to Tailwind CSS v4 Vite plugin.
 - [x] Scaffold `apps/auth`.
 - [x] Scaffold `apps/workspace`.
 - [ ] Add auth app end-to-end browser flow.

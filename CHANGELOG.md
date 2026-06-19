@@ -21,3 +21,4 @@
 - Organized `.env.example` with Chinese section comments.
 - Updated API response helpers to re-export shared contracts.
 - Scoped API error handling globally so module errors return the unified JSON shape.
+- Migrated React/Vite apps from Tailwind config files to the Tailwind CSS v4 Vite plugin.

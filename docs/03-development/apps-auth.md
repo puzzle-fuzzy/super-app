@@ -30,6 +30,7 @@ cp .env.example .env
 ```txt
 business apps must not implement their own login pages
 auth app uses @super-app/auth-client for login/register
+Tailwind CSS is wired through @tailwindcss/vite
 production base path is /auth/
 dev port is 5100
 ```
