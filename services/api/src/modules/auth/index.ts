@@ -1,19 +1,18 @@
 import { LoginRequestSchema, RegisterRequestSchema } from '@super-app/contracts/auth'
 import { Elysia } from 'elysia'
 
-import { dbPlugin } from '../../plugins/db'
+import { authPlugin } from '../../plugins/auth'
+import { getSessionTokenFromCookie } from '../../shared/session'
 import { fail, ok } from '../../shared/response'
 import {
   createExpiredSessionCookie,
   createSessionCookie,
-  getCurrentUser,
-  getSessionTokenFromCookie,
   loginUser,
   logoutUser,
   registerUser,
 } from './service'
 
-export const authModule = new Elysia({ name: 'auth' }).use(dbPlugin).group('/auth', (auth) =>
+export const authModule = new Elysia({ name: 'auth' }).use(authPlugin).group('/auth', (auth) =>
   auth
     .post(
       '/register',
@@ -50,10 +49,7 @@ export const authModule = new Elysia({ name: 'auth' }).use(dbPlugin).group('/aut
 
       return ok({ loggedOut: true })
     })
-    .get('/me', async ({ db, headers, set }) => {
-      const token = getSessionTokenFromCookie(headers.cookie)
-      const user = await getCurrentUser(db, token)
-
+    .get('/me', async ({ user, set }) => {
       if (!user) {
         set.status = 401
         return fail('UNAUTHORIZED', 'Unauthorized')
