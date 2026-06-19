@@ -8,7 +8,8 @@
     "./api": "./src/api.ts",
     "./assets": "./src/assets.ts",
     "./auth": "./src/auth.ts",
-    "./canvas": "./src/canvas.ts"
+    "./canvas": "./src/canvas.ts",
+    "./text-assets": "./src/text-assets.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
