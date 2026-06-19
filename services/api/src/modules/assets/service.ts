@@ -367,7 +367,8 @@ async function loadFilesForAssets(
 
 export function toAssetDto(
   asset: typeof assets.$inferSelect,
-  files: (typeof assetFiles.$inferSelect)[]
+  files: (typeof assetFiles.$inferSelect)[],
+  tags: string[] = []
 ): AssetDto {
   const baseUrl = serverEnv.SUPER_PUBLIC_STORAGE_BASE_URL.replace(/\/$/, '')
   const fileDtos: AssetFileDto[] = files.map((file) => ({
@@ -389,6 +390,7 @@ export function toAssetDto(
     kind: asset.kind,
     title: asset.title,
     description: asset.description ?? undefined,
+    tags,
     status: asset.status,
     visibility: asset.visibility,
     source: asset.source,

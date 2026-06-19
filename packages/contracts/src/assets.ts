@@ -63,6 +63,7 @@ export const AssetDtoSchema = z.object({
   kind: AssetKindSchema,
   title: z.string(),
   description: z.string().optional(),
+  tags: z.array(z.string()),
   status: AssetStatusSchema,
   visibility: AssetVisibilitySchema,
   source: AssetSourceSchema,
