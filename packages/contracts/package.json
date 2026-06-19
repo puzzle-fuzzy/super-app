@@ -10,6 +10,7 @@
     "./assets": "./src/assets.ts",
     "./auth": "./src/auth.ts",
     "./canvas": "./src/canvas.ts",
+    "./style-assets": "./src/style-assets.ts",
     "./subject-assets": "./src/subject-assets.ts",
     "./text-assets": "./src/text-assets.ts"
   },
