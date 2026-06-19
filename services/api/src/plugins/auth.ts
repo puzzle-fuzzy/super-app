@@ -25,10 +25,14 @@ export const authPlugin = new Elysia({ name: 'auth' })
  * Guard that rejects unauthenticated requests with 401 + unified error shape.
  * Apply by wrapping a group:
  * `.guard({ beforeHandle: requireUser }, (g) => g.group('/assets', ...))`
+ *
+ * The context is typed loosely (`any`) so Elysia accepts it as a generic
+ * `beforeHandle` handler; `user` is provided by `authPlugin`'s derive at runtime.
  */
-export function requireUser({ user, set }: { user: CurrentUser | null; set: any }) {
+export function requireUser({ user, set }: any): { success: false; error: { code: string; message: string } } | undefined {
   if (!user) {
     set.status = 401
     return fail('UNAUTHORIZED', 'Unauthorized')
   }
+  return undefined
 }
