@@ -13,6 +13,11 @@ import type {
   UpdateSubjectAssetRequest,
 } from '@super-app/contracts/subject-assets'
 import type {
+  CreateTemplateAssetRequest,
+  TemplateAssetDetailDto,
+  UpdateTemplateAssetRequest,
+} from '@super-app/contracts/template-assets'
+import type {
   CreateStyleAssetRequest,
   StyleAssetDetailDto,
   UpdateStyleAssetRequest,
@@ -201,6 +206,30 @@ export const stylesApi = {
 
   remove(id: string) {
     return apiFetch<{ deleted: true }>(`/assets/styles/${id}`, { method: 'DELETE' })
+  },
+}
+
+export const templatesApi = {
+  create(input: CreateTemplateAssetRequest) {
+    return apiFetch<TemplateAssetDetailDto>('/assets/templates/', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
+  },
+
+  get(id: string) {
+    return apiFetch<TemplateAssetDetailDto>(`/assets/templates/${id}`)
+  },
+
+  update(id: string, input: UpdateTemplateAssetRequest) {
+    return apiFetch<TemplateAssetDetailDto>(`/assets/templates/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    })
+  },
+
+  remove(id: string) {
+    return apiFetch<{ deleted: true }>(`/assets/templates/${id}`, { method: 'DELETE' })
   },
 }
 
