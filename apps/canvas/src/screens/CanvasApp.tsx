@@ -30,11 +30,13 @@ import {
   useReactFlow,
   type Connection,
   type Edge,
+  type NodeProps,
   type OnSelectionChangeFunc,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
 import type { AssetDto, AssetKind } from '@super-app/contracts/assets'
+import type { CanvasProjectDetailDto, CanvasProjectDto } from '@super-app/contracts/canvas'
 import { assetsApi, canvasApi } from '@super-app/api-client'
 import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
@@ -56,13 +58,12 @@ import ErrorToast from '../components/ErrorToast'
 import LoadingIndicator from '../components/LoadingIndicator'
 import EmptyHint from '../components/EmptyHint'
 import { useCanvasStore, setPersistCallback } from '../stores/canvasStore'
-import { useUIStore } from '../stores/uiStore'
 import { useCanvasActions } from '../hooks/useCanvasActions'
 import { useInputListeners } from '../hooks/useInputListeners'
 import { useSelectionToolbar } from '../hooks/useSelectionToolbar'
 import { useGroupToolbar } from '../hooks/useGroupToolbar'
 import { useNodeActions } from '../hooks/useNodeActions'
-import type { AppNode } from '../types'
+import type { AppNode, DocNodeType, ImageNodeType, TextNodeType, VideoNodeType } from '../types'
 
 /* -------------------------------------------------------------------------- */
 /*  Node Types (stable module-level identity)                                  */
@@ -70,7 +71,7 @@ import type { AppNode } from '../types'
 
 const nodeTypes = {
   imageNode: (() => {
-    const W = (props: any) => (
+    const W = (props: NodeProps<ImageNodeType>) => (
       <ErrorBoundary level="node">
         <MediaNode {...props} />
       </ErrorBoundary>
@@ -79,7 +80,7 @@ const nodeTypes = {
     return W
   })(),
   videoNode: (() => {
-    const W = (props: any) => (
+    const W = (props: NodeProps<VideoNodeType>) => (
       <ErrorBoundary level="node">
         <MediaNode {...props} />
       </ErrorBoundary>
@@ -88,7 +89,7 @@ const nodeTypes = {
     return W
   })(),
   docNode: (() => {
-    const W = (props: any) => (
+    const W = (props: NodeProps<DocNodeType>) => (
       <ErrorBoundary level="node">
         <DocNode {...props} />
       </ErrorBoundary>
@@ -97,7 +98,7 @@ const nodeTypes = {
     return W
   })(),
   textNode: (() => {
-    const W = (props: any) => (
+    const W = (props: NodeProps<TextNodeType>) => (
       <ErrorBoundary level="node">
         <TextNode {...props} />
       </ErrorBoundary>
@@ -112,19 +113,9 @@ const nodeTypes = {
 /*  Types                                                                      */
 /* -------------------------------------------------------------------------- */
 
-interface ProjectSummary {
-  id: string
-  title: string
-  description?: string
-  status: string
-  updatedAt: string
-  createdAt: string
-}
+type ProjectSummary = CanvasProjectDto
 
-interface ProjectDetail extends ProjectSummary {
-  data: Record<string, unknown>
-  version: number
-}
+type ProjectDetail = CanvasProjectDetailDto
 
 interface CanvasData {
   nodes: AppNode[]
@@ -209,7 +200,7 @@ function ListView({
     try {
       setLoading(true)
       const result = await canvasApi.list({ limit: 50 })
-      setProjects((result as any).items ?? [])
+      setProjects(result.items)
     } catch {
       // Keep stale list on failure
     } finally {
@@ -686,8 +677,8 @@ function EditorViewInner({
 
   // 粘贴事件
   useEffect(() => {
-    window.addEventListener('paste', actions.handlePaste as any)
-    return () => window.removeEventListener('paste', actions.handlePaste as any)
+    window.addEventListener('paste', actions.handlePaste)
+    return () => window.removeEventListener('paste', actions.handlePaste)
   }, [actions.handlePaste])
 
   // 选择变化
@@ -904,7 +895,8 @@ async function saveProject(projectId: string, nodes: AppNode[], edges: Edge[]) {
       ...(selectable !== undefined ? { selectable } : {}),
       ...(draggable !== undefined ? { draggable } : {}),
     }))
-    await canvasApi.update(projectId, { data: { nodes: serializableNodes, edges } as any })
+    const data: Record<string, unknown> = { nodes: serializableNodes, edges }
+    await canvasApi.update(projectId, { data })
   } catch {
     // Silent
   }

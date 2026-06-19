@@ -1,4 +1,4 @@
-import { Download, Trash2, Group, Maximize, Copy, Share2, LayoutGrid } from 'lucide-react'
+import { Trash2, Group, Maximize, Copy, LayoutGrid } from 'lucide-react'
 import { useCanvasStore } from '../stores/canvasStore'
 import { useUIStore } from '../stores/uiStore'
 import { getNodeGroupId, type AppNode } from '../types'
@@ -10,15 +10,16 @@ interface SelectionToolbarProps {
 
 export default function SelectionToolbar({ position, selectedCount }: SelectionToolbarProps) {
   const nodes = useCanvasStore((s) => s.nodes)
+  const selectedNodeIds = useCanvasStore((s) => s.selectedNodeIds)
   const handleDeleteSelected = useCanvasStore((s) => s.handleDeleteSelected)
-  const handleCreateGroup = useCanvasStore((s) => s.handleCreateGroup)
   const handleOrganize = useCanvasStore((s) => s.handleOrganize)
   const openGroupNameModal = useUIStore((s) => s.openGroupNameModal)
   const setFullscreenPreview = useUIStore((s) => s.setFullscreenPreview)
 
   if (selectedCount === 0) return null
 
-  const selectedNodes = nodes.filter((n) => selectedNodeIds(nodes))
+  const selectedIds = new Set(selectedNodeIds)
+  const selectedNodes = nodes.filter((node) => selectedIds.has(node.id))
   const hasMedia = selectedNodes.some((n) => n.type === 'imageNode' || n.type === 'videoNode')
   const canGroup =
     selectedCount >= 2 && selectedNodes.every((n) => n.type !== 'groupNode' && !getNodeGroupId(n))
@@ -130,7 +131,7 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
         </button>
       )}
 
-      {selectedNodes.length === 1 && (selectedNodes[0]?.data as any)?.src && (
+      {selectedNodes.length === 1 && getNodeSource(selectedNodes[0]) && (
         <button
           type="button"
           style={btnStyle}
@@ -169,9 +170,9 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
   )
 }
 
-// Helper to get selected node IDs from store
-function selectedNodeIds(nodes: AppNode[]): (n: AppNode) => boolean {
-  const ids = useCanvasStore.getState().selectedNodeIds
-  const set = new Set(ids)
-  return (n: AppNode) => set.has(n.id)
+function getNodeSource(node: AppNode | undefined): string | undefined {
+  if (!node || node.type === 'groupNode' || node.type === 'textNode') {
+    return undefined
+  }
+  return node.data.src || undefined
 }

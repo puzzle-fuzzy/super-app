@@ -5,7 +5,7 @@ import type { ImageNodeType, VideoNodeType } from '../types'
 
 type MediaNodeProps = NodeProps<ImageNodeType> | NodeProps<VideoNodeType>
 
-export default function MediaNode({ data, type, id }: MediaNodeProps) {
+export default function MediaNode({ data, type }: MediaNodeProps) {
   const isVideo = type === 'videoNode'
   const videoRef = useRef<HTMLVideoElement>(null)
   const [imageError, setImageError] = useState(false)

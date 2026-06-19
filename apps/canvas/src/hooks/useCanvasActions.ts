@@ -19,7 +19,6 @@ function saveViewport(viewport: { x: number; y: number; zoom: number }) {
 export function useCanvasActions() {
   const { screenToFlowPosition, getViewport } = useReactFlow()
   const { addNodeFromFiles, addNodeFromUrl, addNodeFromText } = useNodeActions()
-  const setNodes = useCanvasStore((s) => s.setNodes)
 
   // ---- 粘贴处理 ----
 

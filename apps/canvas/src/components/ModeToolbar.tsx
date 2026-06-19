@@ -1,4 +1,4 @@
-import { Hand, MousePointer2, UserRound } from 'lucide-react'
+import { Hand, MousePointer2 } from 'lucide-react'
 import { useCanvasStore } from '../stores/canvasStore'
 
 interface ModeToolbarProps {
