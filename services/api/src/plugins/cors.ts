@@ -16,6 +16,10 @@ const allowedOrigins = [
 export const corsPlugin = new Elysia({ name: 'cors' }).use(
   cors({
     credentials: true,
-    origin: allowedOrigins,
+    origin:
+      serverEnv.NODE_ENV === 'production'
+        ? allowedOrigins
+        : // In dev, reflect any origin so LAN IPs (e.g. 192.168.x.x) work
+          () => true,
   })
 )
