@@ -13,6 +13,7 @@
 - Added local Docker Compose PostgreSQL setup and auth integration tests.
 - Added `@super-app/auth-client` and `@super-app/api-client` for shared frontend auth and API access.
 - Added shared design tokens, Tailwind preset, and the React/Vite `apps/auth` login/register app.
+- Added the React/Vite `apps/workspace` authenticated home app.
 - Initialized Git repository metadata and line-ending normalization.
 
 ### Changed

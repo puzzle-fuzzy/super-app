@@ -16,4 +16,6 @@
 - [x] Implement `packages/api-client`.
 - [x] Add shared design tokens and Tailwind preset.
 - [x] Scaffold `apps/auth`.
-- [ ] Scaffold `apps/workspace`.
+- [x] Scaffold `apps/workspace`.
+- [ ] Add auth app end-to-end browser flow.
+- [ ] Implement assets API module.
