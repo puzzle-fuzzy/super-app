@@ -13,6 +13,14 @@ import {
   UserRound,
 } from 'lucide-react'
 import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+  useParams,
+} from 'react-router-dom'
+import {
   Background,
   Controls,
   MiniMap,
@@ -54,7 +62,7 @@ interface CanvasData {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  CanvasApp                                                                  */
+/*  CanvasApp  — entry point with router                                        */
 /* -------------------------------------------------------------------------- */
 
 export function CanvasApp() {
@@ -68,19 +76,25 @@ export function CanvasApp() {
     return <ScreenState title="需要登录" description="正在跳转到统一登录中心。" />
   }
 
-  return <CanvasAppContent user={user} />
+  return (
+    <BrowserRouter basename="/canvas">
+      <Routes>
+        <Route path="/" element={<ListView user={user} />} />
+        <Route path="/project/:id" element={<EditorRoute user={user} />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
 
 /* -------------------------------------------------------------------------- */
-/*  CanvasAppContent                                                           */
+/*  ListView                                                                    */
 /* -------------------------------------------------------------------------- */
 
-function CanvasAppContent({ user }: { user: { id: string; name?: string; email: string; avatarUrl?: string } }) {
-  const [view, setView] = useState<'list' | 'editor'>('list')
+function ListView({ user }: { user: { id: string; name?: string; email: string; avatarUrl?: string } }) {
+  const navigate = useNavigate()
   const [projects, setProjects] = useState<ProjectSummary[]>([])
-  const [activeProject, setActiveProject] = useState<ProjectDetail | null>(null)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const [newTitle, setNewTitle] = useState('')
@@ -90,7 +104,7 @@ function CanvasAppContent({ user }: { user: { id: string; name?: string; email: 
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
 
-  /* ---- Auth / user menu ------------------------------------------------ */
+  /* ---- User menu ------------------------------------------------------- */
 
   useEffect(() => {
     if (!userMenuOpen) return
@@ -137,7 +151,7 @@ function CanvasAppContent({ user }: { user: { id: string; name?: string; email: 
     loadProjects()
   }, [loadProjects])
 
-  /* ---- CRUD operations ------------------------------------------------- */
+  /* ---- CRUD ------------------------------------------------------------ */
 
   async function handleCreate() {
     if (!newTitle.trim()) return
@@ -159,9 +173,6 @@ function CanvasAppContent({ user }: { user: { id: string; name?: string; email: 
       setRenameId(null)
       setRenameTitle('')
       await loadProjects()
-      if (activeProject?.id === renameId) {
-        setActiveProject((prev) => (prev ? { ...prev, title: renameTitle.trim() } : null))
-      }
     } catch {
       // Silent
     }
@@ -172,47 +183,13 @@ function CanvasAppContent({ user }: { user: { id: string; name?: string; email: 
       await canvasApi.remove(id)
       setDeleteConfirm(null)
       setMenuOpenId(null)
-      if (activeProject?.id === id) {
-        setActiveProject(null)
-        setView('list')
-      }
       await loadProjects()
     } catch {
       // Silent
     }
   }
 
-  async function handleOpenProject(id: string) {
-    try {
-      const project = await canvasApi.get(id)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setActiveProject(project as any as ProjectDetail)
-      setView('editor')
-    } catch {
-      // Silent
-    }
-  }
-
-  /* ---- Render: list view ----------------------------------------------- */
-
-  if (view === 'editor' && activeProject) {
-    return (
-      <EditorView
-        user={user}
-        project={activeProject}
-        saving={saving}
-        setSaving={setSaving}
-        userMenuOpen={userMenuOpen}
-        setUserMenuOpen={setUserMenuOpen}
-        onBack={() => {
-          setView('list')
-          setActiveProject(null)
-          loadProjects()
-        }}
-        onLogout={handleLogout}
-      />
-    )
-  }
+  /* ---- Render ---------------------------------------------------------- */
 
   return (
     <main className="min-h-screen bg-[#141414] text-[#e5e5e5]">
@@ -234,52 +211,12 @@ function CanvasAppContent({ user }: { user: { id: string; name?: string; email: 
               <House size={16} aria-hidden="true" />
             </a>
 
-            {/* User Avatar Dropdown */}
-            <div className="relative" data-user-menu-root>
-              <button
-                type="button"
-                className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] px-2 py-1.5 text-sm transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a]"
-                onClick={() => setUserMenuOpen((prev) => !prev)}
-                aria-expanded={userMenuOpen}
-                aria-haspopup="true"
-              >
-                {user.avatarUrl ? (
-                  <img
-                    className="h-7 w-7 rounded-full object-cover"
-                    src={user.avatarUrl}
-                    alt={user.name ?? user.email}
-                  />
-                ) : (
-                  <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2a2a2a] text-[#999999]">
-                    <UserRound size={14} aria-hidden="true" />
-                  </span>
-                )}
-                <span className="max-w-[120px] truncate text-[13px] font-medium text-[#e5e5e5]">
-                  {user.name ?? user.email}
-                </span>
-                <ChevronDown
-                  size={14}
-                  className={`text-[#666666] transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
-              <div
-                className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
-                  userMenuOpen ? 'grid' : 'hidden'
-                }`}
-              >
-                <button
-                  type="button"
-                  className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left text-[13px] font-medium text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-                  onClick={() => {
-                    setUserMenuOpen(false)
-                    handleLogout()
-                  }}
-                >
-                  <LogOut size={15} aria-hidden="true" />
-                  退出登录
-                </button>
-              </div>
-            </div>
+            <UserMenu
+              user={user}
+              open={userMenuOpen}
+              setOpen={setUserMenuOpen}
+              onLogout={handleLogout}
+            />
           </div>
         </header>
 
@@ -333,7 +270,7 @@ function CanvasAppContent({ user }: { user: { id: string; name?: string; email: 
               <div
                 key={project.id}
                 className="group relative flex min-h-[180px] cursor-pointer flex-col rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-5 transition-all duration-160 hover:-translate-y-[3px] hover:border-[#3a3a3a] hover:bg-[#202020]"
-                onClick={() => handleOpenProject(project.id)}
+                onClick={() => navigate(`/project/${project.id}`)}
               >
                 {/* Context menu trigger */}
                 <div className="absolute top-4 right-4 z-10">
@@ -508,28 +445,86 @@ function CanvasAppContent({ user }: { user: { id: string; name?: string; email: 
 }
 
 /* -------------------------------------------------------------------------- */
+/*  EditorRoute  — loads project by URL :id                                    */
+/* -------------------------------------------------------------------------- */
+
+function EditorRoute({ user }: { user: { id: string; name?: string; email: string; avatarUrl?: string } }) {
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const [project, setProject] = useState<ProjectDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    if (!id) return
+
+    let cancelled = false
+
+    async function load() {
+      try {
+        setLoading(true)
+        setError(false)
+        const result = await canvasApi.get(id!)
+        if (cancelled) return
+        setProject(result as unknown as ProjectDetail)
+      } catch {
+        if (!cancelled) setError(true)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [id])
+
+  if (loading) {
+    return <ScreenState title="加载画布…" description="正在获取项目数据。" />
+  }
+
+  if (error || !project) {
+    return (
+      <ScreenState
+        title="项目未找到"
+        description="该画布项目不存在或已被删除。"
+      />
+    )
+  }
+
+  return (
+    <EditorView
+      user={user}
+      project={project}
+      onBack={() => navigate('/')}
+      onLogout={async () => {
+        await logout()
+        window.location.assign(clientEnv.SUPER_PUBLIC_AUTH_APP_URL)
+      }}
+    />
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*  EditorView  — powered by @xyflow/react                                     */
 /* -------------------------------------------------------------------------- */
 
 function EditorView({
   user,
   project,
-  saving,
-  setSaving,
-  userMenuOpen,
-  setUserMenuOpen,
   onBack,
   onLogout,
 }: {
   user: { id: string; name?: string; email: string; avatarUrl?: string }
   project: ProjectDetail
-  saving: boolean
-  setSaving: (v: boolean) => void
-  userMenuOpen: boolean
-  setUserMenuOpen: React.Dispatch<React.SetStateAction<boolean>>
   onBack: () => void
   onLogout: () => void
 }) {
+  const [saving, setSaving] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+
   // Load existing canvas data or start fresh
   const initialData = useMemo<CanvasData>(() => {
     const raw = project.data as Partial<CanvasData> | undefined
@@ -537,7 +532,6 @@ function EditorView({
       nodes: Array.isArray(raw?.nodes) ? raw.nodes : [],
       edges: Array.isArray(raw?.edges) ? raw.edges : [],
     }
-    // Only seed from project on mount — live state is managed by hooks below
   }, [project.id])
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialData.nodes)
@@ -574,9 +568,7 @@ function EditorView({
         x: 100 + Math.random() * 300,
         y: 100 + Math.random() * 300,
       },
-      data: {
-        label: '双击编辑文本',
-      },
+      data: { label: '双击编辑文本' },
       style: {
         background: '#1c1c1c',
         color: '#e5e5e5',
@@ -674,49 +666,12 @@ function EditorView({
             <House size={16} aria-hidden="true" />
           </a>
 
-          {/* User Avatar Dropdown */}
-          <div className="relative shrink-0" data-user-menu-root>
-            <button
-              type="button"
-              className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] px-2 py-1.5 text-sm transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a]"
-              onClick={() => setUserMenuOpen((prev) => !prev)}
-              aria-expanded={userMenuOpen}
-              aria-haspopup="true"
-            >
-              {user.avatarUrl ? (
-                <img
-                  className="h-7 w-7 rounded-full object-cover"
-                  src={user.avatarUrl}
-                  alt={user.name ?? user.email}
-                />
-              ) : (
-                <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2a2a2a] text-[#999999]">
-                  <UserRound size={14} aria-hidden="true" />
-                </span>
-              )}
-              <ChevronDown
-                size={14}
-                className={`text-[#666666] transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
-              />
-            </button>
-            <div
-              className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
-                userMenuOpen ? 'grid' : 'hidden'
-              }`}
-            >
-              <button
-                type="button"
-                className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left text-[13px] font-medium text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-                onClick={() => {
-                  setUserMenuOpen(false)
-                  onLogout()
-                }}
-              >
-                <LogOut size={15} aria-hidden="true" />
-                退出登录
-              </button>
-            </div>
-          </div>
+          <UserMenu
+            user={user}
+            open={userMenuOpen}
+            setOpen={setUserMenuOpen}
+            onLogout={onLogout}
+          />
         </div>
       </header>
 
@@ -732,14 +687,8 @@ function EditorView({
           proOptions={{ hideAttribution: true }}
           style={{ background: '#1a1a1a' }}
         >
-          <Background
-            color="#2a2a2a"
-            gap={24}
-            size={1}
-          />
-          <Controls
-            className="[&>button]:!bg-[#1c1c1c] [&>button]:!border-[#2a2a2a] [&>button]:!text-[#e5e5e5] [&>button]:!fill-[#e5e5e5]"
-          />
+          <Background color="#2a2a2a" gap={24} size={1} />
+          <Controls className="[&>button]:!bg-[#1c1c1c] [&>button]:!border-[#2a2a2a] [&>button]:!text-[#e5e5e5] [&>button]:!fill-[#e5e5e5]" />
           <MiniMap
             style={{ background: '#1c1c1c', border: '1px solid #2a2a2a' }}
             maskColor="rgba(0,0,0,0.6)"
@@ -752,8 +701,68 @@ function EditorView({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  DialogOverlay                                                              */
+/*  Shared components                                                           */
 /* -------------------------------------------------------------------------- */
+
+function UserMenu({
+  user,
+  open,
+  setOpen,
+  onLogout,
+}: {
+  user: { id: string; name?: string; email: string; avatarUrl?: string }
+  open: boolean
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>
+  onLogout: () => void
+}) {
+  return (
+    <div className="relative" data-user-menu-root>
+      <button
+        type="button"
+        className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] px-2 py-1.5 text-sm transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a]"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        aria-haspopup="true"
+      >
+        {user.avatarUrl ? (
+          <img
+            className="h-7 w-7 rounded-full object-cover"
+            src={user.avatarUrl}
+            alt={user.name ?? user.email}
+          />
+        ) : (
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2a2a2a] text-[#999999]">
+            <UserRound size={14} aria-hidden="true" />
+          </span>
+        )}
+        <span className="max-w-[120px] truncate text-[13px] font-medium text-[#e5e5e5]">
+          {user.name ?? user.email}
+        </span>
+        <ChevronDown
+          size={14}
+          className={`text-[#666666] transition-transform ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+      <div
+        className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
+          open ? 'grid' : 'hidden'
+        }`}
+      >
+        <button
+          type="button"
+          className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left text-[13px] font-medium text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
+          onClick={() => {
+            setOpen(false)
+            onLogout()
+          }}
+        >
+          <LogOut size={15} aria-hidden="true" />
+          退出登录
+        </button>
+      </div>
+    </div>
+  )
+}
 
 function DialogOverlay({
   children,
@@ -781,10 +790,6 @@ function DialogOverlay({
     </div>
   )
 }
-
-/* -------------------------------------------------------------------------- */
-/*  ScreenState (loading / error)                                              */
-/* -------------------------------------------------------------------------- */
 
 function ScreenState({ title, description }: { title: string; description: string }) {
   return (

@@ -45,7 +45,8 @@
       "Bash(git commit *)",
       "Bash(pnpm --filter @super-app/auth-client typecheck)",
       "Bash(pnpm --filter @super-app/auth-client lint)",
-      "Bash(pnpm --filter @super-app/canvas add @xyflow/react)"
+      "Bash(pnpm --filter @super-app/canvas add @xyflow/react)",
+      "Bash(pnpm --filter @super-app/canvas add react-router-dom)"
     ],
     "additionalDirectories": [
       "/tmp",
