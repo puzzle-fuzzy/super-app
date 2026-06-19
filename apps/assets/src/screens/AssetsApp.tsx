@@ -71,7 +71,7 @@ const FILTERS: FilterOption[] = [
   { value: 'file', label: '文件', helper: '文档附件' },
   { value: 'text', label: '文本', helper: '提示词和备注' },
   { value: 'subject', label: '主体', helper: '人物和商品' },
-  { value: 'style', label: '风格', helper: '即将上线', disabled: true },
+  { value: 'style', label: '风格', helper: '可复用生成风格' },
   { value: 'template', label: '模板', helper: '即将上线', disabled: true },
 ]
 
@@ -468,7 +468,9 @@ export function AssetsApp() {
           negativePrompt: detail.negativePrompt ?? '',
           recommendedModel: detail.recommendedModel ?? '',
           colorPalette: detail.colorPalette ? JSON.stringify(detail.colorPalette) : '',
-          recommendedParams: detail.recommendedParams ? JSON.stringify(detail.recommendedParams) : '',
+          recommendedParams: detail.recommendedParams
+            ? JSON.stringify(detail.recommendedParams)
+            : '',
         })
       })
       .catch((err) => setListError(err instanceof Error ? err.message : '加载风格失败'))
@@ -1054,12 +1056,7 @@ function TransferNoticeDialog({
           <button className={secondaryButton} type="button" onClick={onClose}>
             关闭
           </button>
-          <button
-            className={primaryButton}
-            type="button"
-            onClick={handleCopy}
-            disabled={copied}
-          >
+          <button className={primaryButton} type="button" onClick={handleCopy} disabled={copied}>
             {copied ? (
               <>
                 <Check size={15} aria-hidden="true" />
@@ -1118,7 +1115,10 @@ function EditorPanel({
     <Modal open onClose={onCancel}>
       <Modal.Header
         kicker="创作编辑"
-        title={(editor.id ? '编辑' : '新建') + (editor.kind === 'text' ? '文本' : editor.kind === 'subject' ? '主体' : '风格')}
+        title={
+          (editor.id ? '编辑' : '新建') +
+          (editor.kind === 'text' ? '文本' : editor.kind === 'subject' ? '主体' : '风格')
+        }
       />
       <Modal.Body>
         <div className="grid gap-[15px]">
