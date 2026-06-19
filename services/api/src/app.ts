@@ -24,7 +24,39 @@ const storageRoot = path.resolve(serverEnv.STORAGE_DIR)
 const baseApp = new Elysia()
   .use(
     openapi({
-      path: '/api/openapi',
+      path: '/api/docs',
+      specPath: '/api/openapi',
+      provider: 'swagger-ui',
+      swagger: {
+        autoDarkMode: true,
+      },
+      documentation: {
+        info: {
+          title: 'Super API',
+          version: '0.1.0',
+          description:
+            'Super 云工作区 REST API 文档。所有需要认证的接口请先通过 /api/auth/login 获取会话。',
+        },
+        servers: [
+          {
+            url:
+              serverEnv.NODE_ENV === 'production'
+                ? serverEnv.API_BASE_URL.replace(/\/$/, '')
+                : 'http://localhost:5200',
+            description: serverEnv.NODE_ENV === 'production' ? 'Production' : 'Local',
+          },
+        ],
+        tags: [
+          { name: 'system', description: '系统健康检查' },
+          { name: 'auth', description: '认证（注册/登录/登出）' },
+          { name: 'assets', description: '资产上传与管理' },
+          { name: 'texts', description: '文本资产（CRUD）' },
+          { name: 'subjects', description: '主体资产（AI 角色/物品）' },
+          { name: 'canvas', description: '画布项目（CRUD）' },
+          { name: 'api-keys', description: 'API 密钥管理' },
+          { name: 'transfers', description: 'P2P 文件传输' },
+        ],
+      },
     })
   )
   .use(corsPlugin)
