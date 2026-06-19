@@ -1,5 +1,10 @@
 import type { ApiError as ApiErrorPayload, ApiResponse } from '@super-app/contracts/api'
 import type { AssetDto, AssetKind, AssetListResponse } from '@super-app/contracts/assets'
+import type {
+  CreateTextAssetRequest,
+  TextAssetDetailDto,
+  UpdateTextAssetRequest,
+} from '@super-app/contracts/text-assets'
 import type { CurrentUser, LoginRequest, RegisterRequest } from '@super-app/contracts/auth'
 import { redirectToLogin } from '@super-app/auth-client'
 import { clientEnv } from '@super-app/env/client'
@@ -93,6 +98,30 @@ export const assetsApi = {
 
   remove(id: string) {
     return apiFetch<{ deleted: true }>(`/assets/${id}`, { method: 'DELETE' })
+  },
+}
+
+export const textsApi = {
+  create(input: CreateTextAssetRequest) {
+    return apiFetch<TextAssetDetailDto>('/assets/texts/', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
+  },
+
+  get(id: string) {
+    return apiFetch<TextAssetDetailDto>(`/assets/texts/${id}`)
+  },
+
+  update(id: string, input: UpdateTextAssetRequest) {
+    return apiFetch<TextAssetDetailDto>(`/assets/texts/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    })
+  },
+
+  remove(id: string) {
+    return apiFetch<{ deleted: true }>(`/assets/texts/${id}`, { method: 'DELETE' })
   },
 }
 
