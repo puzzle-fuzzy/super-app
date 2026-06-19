@@ -1,4 +1,5 @@
 export * from './assets'
 export * from './canvas'
 export * from './identity'
+export * from './subject-assets'
 export * from './text-assets'
