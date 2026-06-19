@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
+    "dev": "bun run --watch --env-file=../../.env src/index.ts",
     "build": "bun build src/index.ts --target=bun --outdir=dist",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
-    "test": "bun test src"
+    "test": "bun test --env-file=../../.env src"
   },
   "dependencies": {
     "@super-app/contracts": "workspace:*",
