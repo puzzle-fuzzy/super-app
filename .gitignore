@@ -17,3 +17,6 @@ storage/
 .env.test
 
 !.env.example
+
+# Astro generated files
+.astro/
