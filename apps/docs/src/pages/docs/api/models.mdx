@@ -1,0 +1,36 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 模型目录 API
+---
+
+# 模型目录 API
+
+## 模型列表
+
+<span class="endpoint"><span class="method get">GET</span> `/api/models`</span>
+
+返回所有可用 AI 模型及其定价和参数。
+
+### 文本模型
+
+| 模型 | 输入价格 | 输出价格 |
+|------|---------|---------|
+| `qwen-max` | 240¢ / 1M token | 960¢ / 1M token |
+| `qwen-plus` | 80¢ / 1M token | 200¢ / 1M token |
+| `qwen-turbo` | 30¢ / 1M token | 60¢ / 1M token |
+
+### 图片模型
+
+| 模型 | 价格 |
+|------|------|
+| `qwen-image-2.0-pro` | 25¢ / 张 |
+| `qwen-image-2.0` | 12¢ / 张 |
+| `qwen-image-max` | 20¢ / 张 |
+| `qwen-image-plus` | 8¢ / 张 |
+
+### 视频模型
+
+| 模型 | 720P | 1080P |
+|------|------|-------|
+| `wan2.7-t2v-2026-04-25` | 60¢ / 秒 | 100¢ / 秒 |
+| `happyhorse-1.0-t2v` | 90¢ / 秒 | 160¢ / 秒 |

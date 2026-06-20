@@ -1,0 +1,51 @@
+---
+layout: ../layouts/DocsLayout.astro
+title: API 参考
+---
+
+# API 参考
+
+Super API 是 RESTful 风格，基础路径为 `/api`。
+
+## 通用规范
+
+**认证**：大部分接口需要登录。使用 HttpOnly Cookie (`super.sid`) 或 Bearer Token (API Key)。
+
+**响应格式**：
+
+```json
+// 成功
+{ "success": true, "data": { ... } }
+
+// 列表
+{ "success": true, "items": [...], "total": 42 }
+
+// 失败
+{ "success": false, "error": "ERROR_CODE", "message": "..." }
+```
+
+**错误码**：
+
+| 码 | 含义 |
+|----|------|
+| `UNAUTHORIZED` | 未登录 |
+| `FORBIDDEN` | 无权限 |
+| `VALIDATION_ERROR` | 参数校验失败 |
+| `NOT_FOUND` | 资源不存在 |
+| `CONFLICT` | 资源冲突 |
+| `RATE_LIMITED` | 请求过于频繁 |
+| `INTERNAL_ERROR` | 服务器内部错误 |
+
+## API 模块
+
+| 模块 | 说明 |
+|------|------|
+| [认证](api/authentication) | 注册/登录/登出/忘记密码 |
+| [资产管理](api/assets) | 文件上传/CRUD/分享/传输 |
+| [画布生成](api/canvas) | AI 图片/视频生成 |
+| [任务中心](api/tasks) | 统一任务列表 |
+| [生成记录](api/records) | 生成历史管理 |
+| [计费与余额](api/billing) | 余额/交易/统计 |
+| [通知系统](api/notifications) | 实时通知 |
+| [模型目录](api/models) | 可用 AI 模型 |
+| [OpenAI 网关](api/gateway) | OpenAI 兼容接口 |

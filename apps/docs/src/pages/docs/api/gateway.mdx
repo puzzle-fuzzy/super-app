@@ -1,0 +1,54 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: OpenAI 兼容网关
+---
+
+# OpenAI 兼容网关
+
+Super 提供 OpenAI 兼容的 API 网关，可直接使用 OpenAI SDK 调用 DashScope 模型。
+
+## 聊天补全
+
+<span class="endpoint"><span class="method post">POST</span> `/v1/chat/completions`</span>
+
+**认证**：Bearer Token（API Key）或 Session Cookie。
+
+```bash
+curl -X POST https://super.yxswy.com/v1/chat/completions \
+  -H "Authorization: Bearer sk_super_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen-max",
+    "messages": [
+      {"role": "user", "content": "你好，介绍一下你自己"}
+    ]
+  }'
+```
+
+### 流式响应
+
+设置 `"stream": true` 即可获得 SSE 流式输出：
+
+```json
+{ "model": "qwen-max", "messages": [...], "stream": true }
+```
+
+### 可用模型
+
+| 模型 | 说明 |
+|------|------|
+| `qwen-max` | 最强模型，适合复杂推理 |
+| `qwen-plus` | 性价比最优 |
+| `qwen-turbo` | 超高速响应 |
+
+### 计费
+
+网关调用同样走 credit-ledger 计费流程：预估费用 → 冻结 → 调用 → 按实际 token 消耗扣款。
+
+超额保护：如果实际费用超过预估的 1.5 倍，系统自动退款并拒绝扣款。
+
+## 模型列表
+
+<span class="endpoint"><span class="method get">GET</span> `/v1/models`</span>
+
+返回 OpenAI 格式的模型列表。

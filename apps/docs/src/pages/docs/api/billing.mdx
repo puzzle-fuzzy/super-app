@@ -1,0 +1,65 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 计费与余额 API
+---
+
+# 计费与余额 API
+
+## 余额查询
+
+<span class="endpoint"><span class="method get">GET</span> `/api/billing/balance`</span>
+
+```json
+{
+  "success": true,
+  "data": {
+    "availableCents": 850,
+    "frozenCents": 150,
+    "totalCents": 1000
+  }
+}
+```
+
+- `availableCents`：可用余额
+- `frozenCents`：冻结余额（正在执行的任务）
+- `totalCents`：总额
+
+## 交易记录
+
+<span class="endpoint"><span class="method get">GET</span> `/api/billing/transactions`</span>
+
+查询参数：`limit`, `offset`。
+
+返回所有信用交易记录（reserve/debit/refund/credit）。
+
+## 费用统计
+
+<span class="endpoint"><span class="method get">GET</span> `/api/billing/statistics`</span>
+
+返回 30 天的费用聚合数据：
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalCents": 1200,
+    "todayCents": 50,
+    "weekCents": 350,
+    "monthCents": 1200,
+    "byCategory": [
+      { "category": "image", "totalCents": 800, "percentage": 67 },
+      { "category": "video", "totalCents": 400, "percentage": 33 }
+    ],
+    "byModel": [...],
+    "dailyTrend": [...]
+  }
+}
+```
+
+## 计费流程
+
+1. **Reserve（冻结）**：任务提交时预估费用并从可用余额冻结
+2. **Debit（扣款）**：任务成功后按实际消耗扣款
+3. **Refund（退款）**：任务失败或超额保护（>1.5x 预估）时退款
+
+注册新用户自动赠送 **1000 分（¥10.00）**。

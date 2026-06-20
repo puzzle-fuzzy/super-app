@@ -1,0 +1,47 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 资产管理 API
+---
+
+# 资产管理 API
+
+## 上传文件
+
+<span class="endpoint"><span class="method post">POST</span> `/api/assets/upload`</span>
+
+`multipart/form-data`，字段 `file`。
+
+## 资产列表
+
+<span class="endpoint"><span class="method get">GET</span> `/api/assets`</span>
+
+查询参数：`kind`, `status`, `limit`, `offset`。
+
+## 资产详情
+
+<span class="endpoint"><span class="method get">GET</span> `/api/assets/:id`</span>
+
+## 删除资产
+
+<span class="endpoint"><span class="method delete">DELETE</span> `/api/assets/:id`</span>
+
+## 分享链接
+
+<span class="endpoint"><span class="method post">POST</span> `/api/assets/:id/share-link`</span>
+
+生成带过期时间的分享链接。
+
+## 访问分享
+
+<span class="endpoint"><span class="method get">GET</span> `/api/assets/shared/:token`</span>
+
+无需登录，通过分享令牌访问资源。
+
+## 资产类型
+
+| 类型 | 路径前缀 | 说明 |
+|------|---------|------|
+| 文本 | `/api/assets/texts` | CRUD |
+| 主体 | `/api/assets/subjects` | CRUD |
+| 风格 | `/api/assets/styles` | CRUD |
+| 模板 | `/api/assets/templates` | CRUD |

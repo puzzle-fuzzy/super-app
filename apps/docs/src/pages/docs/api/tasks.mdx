@@ -1,0 +1,60 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 任务中心 API
+---
+
+# 任务中心 API
+
+任务中心合并 `tasks` 表和 `generation_records` 表，提供统一的用户任务视图。
+
+## 任务列表
+
+<span class="endpoint"><span class="method get">GET</span> `/api/tasks`</span>
+
+查询参数：
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `status` | string | 过滤：`queued` / `running` / `succeeded` / `failed` / `cancelled` |
+| `domain` | string | 过滤：`generate` / `canvas` / `subtitle` / `gateway` |
+| `limit` | number | 每页条数（默认 40，最大 100） |
+| `offset` | number | 偏移量 |
+
+响应示例：
+
+```json
+{
+  "success": true,
+  "items": [
+    {
+      "id": "uuid",
+      "source": "task",
+      "domain": "generate",
+      "type": "generate.image",
+      "status": "running",
+      "title": "图片生成",
+      "progress": null,
+      "canRetry": false,
+      "canCancel": true,
+      "createdAt": "2026-06-20T..."
+    }
+  ],
+  "total": 42
+}
+```
+
+## 任务详情
+
+<span class="endpoint"><span class="method get">GET</span> `/api/tasks/:id`</span>
+
+可按 `taskId` 或 `generationRecordId` 查询。
+
+## 状态说明
+
+| 状态 | 说明 |
+|------|------|
+| `queued` | 等待 Worker 领取 |
+| `running` | 执行中 |
+| `succeeded` | 成功 |
+| `failed` | 失败 |
+| `cancelled` | 已取消 |

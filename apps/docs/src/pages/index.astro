@@ -24,12 +24,27 @@ import '../styles.css'
         </a>
         <a href="/docs/api" class="card">
           <h3>API 参考</h3>
-          <p>查看完整的 REST API 接口文档和 WebSocket 信令协议。</p>
+          <p>查看完整的 REST API 接口文档，涵盖认证、资产、画布、计费等全部模块。</p>
         </a>
         <a href="/docs/development" class="card">
           <h3>开发指南</h3>
           <p>本地开发环境搭建、项目结构和贡献流程。</p>
         </a>
+      </section>
+
+      <section class="api-quick">
+        <h2>API 快速入口</h2>
+        <div class="api-grid">
+          <a href="/docs/api/authentication" class="api-link">认证</a>
+          <a href="/docs/api/assets" class="api-link">资产管理</a>
+          <a href="/docs/api/canvas" class="api-link">画布生成</a>
+          <a href="/docs/api/tasks" class="api-link">任务中心</a>
+          <a href="/docs/api/records" class="api-link">生成记录</a>
+          <a href="/docs/api/billing" class="api-link">计费与余额</a>
+          <a href="/docs/api/notifications" class="api-link">通知系统</a>
+          <a href="/docs/api/models" class="api-link">模型目录</a>
+          <a href="/docs/api/gateway" class="api-link">OpenAI 网关</a>
+        </div>
       </section>
 
       <footer>
@@ -38,3 +53,23 @@ import '../styles.css'
     </main>
   </body>
 </html>
+
+<style>
+  .api-quick { margin-bottom: 48px; }
+  .api-quick h2 {
+    font-size: 18px; font-weight: 600; color: #e5e5e5;
+    margin: 0 0 16px; letter-spacing: -0.02em;
+  }
+  .api-grid {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .api-link {
+    display: inline-block; padding: 6px 14px;
+    border: 1px solid #2a2a2a; border-radius: 8px;
+    font-size: 13px; color: #aaa; text-decoration: none;
+    transition: all 0.12s;
+  }
+  .api-link:hover {
+    border-color: #3a3a3a; color: #e5e5e5; background: #1c1c1c;
+  }
+</style>

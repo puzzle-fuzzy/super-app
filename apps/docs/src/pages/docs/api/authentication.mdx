@@ -1,0 +1,72 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 认证 API
+---
+
+# 认证 API
+
+## 注册
+
+<span class="endpoint"><span class="method post">POST</span> `/api/auth/register`</span>
+
+```json
+// 请求
+{ "email": "user@example.com", "password": "password123", "name": "可选" }
+
+// 响应
+{ "success": true, "data": { "id": "...", "email": "...", "name": "...", "roles": [...] } }
+```
+
+注册成功后自动登录并设置 Session Cookie。
+
+## 登录
+
+<span class="endpoint"><span class="method post">POST</span> `/api/auth/login`</span>
+
+```json
+// 请求
+{ "email": "user@example.com", "password": "password123" }
+
+// 响应
+{ "success": true, "data": { "id": "...", "email": "...", "roles": [...] } }
+```
+
+## 登出
+
+<span class="endpoint"><span class="method post">POST</span> `/api/auth/logout`</span>
+
+清除 Session Cookie。
+
+## 当前用户
+
+<span class="endpoint"><span class="method get">GET</span> `/api/auth/me`</span>
+
+返回当前登录用户信息。
+
+## 忘记密码
+
+<span class="endpoint"><span class="method post">POST</span> `/api/auth/forgot-password`</span>
+
+```json
+// 请求
+{ "email": "user@example.com" }
+
+// 响应
+{ "success": true }
+```
+
+发送密码重置链接到邮箱（30 分钟有效）。无论邮箱是否注册都返回成功。
+
+**限流**：per-email 5 次/小时，per-IP 10 次/小时。
+
+## 重置密码
+
+<span class="endpoint"><span class="method post">POST</span> `/api/auth/reset-password`</span>
+
+```json
+// 请求
+{ "token": "重置令牌", "password": "新密码（至少 8 位）" }
+
+// 响应
+{ "success": true }
+```

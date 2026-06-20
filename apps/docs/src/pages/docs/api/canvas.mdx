@@ -1,0 +1,48 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 画布生成 API
+---
+
+# 画布生成 API
+
+## AI 生成
+
+<span class="endpoint"><span class="method post">POST</span> `/api/canvas/generate-image`</span>
+
+发起 AI 图片或视频生成任务。
+
+```json
+// 请求
+{
+  "model": "qwen-image-2.0-pro",
+  "prompt": "一只在月光下的猫",
+  "kind": "image",
+  "size": "2048*2048"
+}
+
+// 响应
+{
+  "success": true,
+  "data": {
+    "generationRecordId": "uuid",
+    "taskId": "uuid",
+    "status": "queued"
+  }
+}
+```
+
+系统会自动：
+1. 去重检查（相同 prompt + model 不重复计费）
+2. 预估费用并从余额冻结
+3. 创建后台任务交给 Worker 执行
+4. 完成后通过 SSE 实时推送结果
+
+## 画布项目
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| `POST` | `/api/canvas/projects` | 创建项目 |
+| `GET` | `/api/canvas/projects` | 项目列表 |
+| `GET` | `/api/canvas/projects/:id` | 项目详情 |
+| `PATCH` | `/api/canvas/projects/:id` | 更新项目 |
+| `DELETE` | `/api/canvas/projects/:id` | 删除项目 |

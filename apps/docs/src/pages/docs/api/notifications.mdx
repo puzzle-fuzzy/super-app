@@ -1,0 +1,70 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 通知系统 API
+---
+
+# 通知系统 API
+
+## 通知列表
+
+<span class="endpoint"><span class="method get">GET</span> `/api/notifications`</span>
+
+查询参数：`limit`, `offset`。
+
+```json
+{
+  "success": true,
+  "items": [
+    {
+      "id": "uuid",
+      "type": "task_completed",
+      "title": "生成完成",
+      "body": "qwen-image-2.0-pro image 生成成功",
+      "read": false,
+      "meta": { "recordId": "...", "model": "qwen-image-2.0-pro" },
+      "createdAt": "2026-06-20T..."
+    }
+  ],
+  "total": 5
+}
+```
+
+## 未读计数
+
+<span class="endpoint"><span class="method get">GET</span> `/api/notifications/unread`</span>
+
+```json
+{ "success": true, "data": { "count": 3 } }
+```
+
+## 标记已读
+
+<span class="endpoint"><span class="method patch">PATCH</span> `/api/notifications/:id/read`</span>
+
+## 全部已读
+
+<span class="endpoint"><span class="method post">POST</span> `/api/notifications/read-all`</span>
+
+```json
+{ "success": true, "data": { "count": 3 } }
+```
+
+## 实时推送
+
+通知通过 SSE 实时推送到浏览器。事件名：`notification`。
+
+```javascript
+// 前端监听
+sse.on('notification', (data) => {
+  console.log(data.type, data.title)
+})
+```
+
+## 通知类型
+
+| 类型 | 说明 |
+|------|------|
+| `task_completed` | 任务完成 |
+| `task_failed` | 任务失败 |
+| `balance_warning` | 余额不足警告 |
+| `system` | 系统通知 |

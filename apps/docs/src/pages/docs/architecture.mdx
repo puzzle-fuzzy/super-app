@@ -1,0 +1,76 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 平台架构
+---
+
+# 平台架构
+
+Super 是一个**多应用统一云工作区**，采用 pnpm workspace monorepo + Turborepo 架构。
+
+## 技术栈
+
+| 层 | 技术 |
+|---|------|
+| 前端 | React 19 + Vite + Tailwind CSS v4 |
+| 后端 | Bun + Elysia (单体模块化 API) |
+| 数据库 | PostgreSQL + Drizzle ORM |
+| 存储 | S3 兼容 (MinIO/OSS) |
+| 实时通信 | SSE + WebSocket + PostgreSQL LISTEN/NOTIFY |
+| 任务队列 | 自建 Worker (PostgreSQL-based claim/lock) |
+| 构建 | Turborepo + pnpm workspaces |
+
+## 目录结构
+
+```
+apps/           # 前端应用
+  auth/         # 登录/注册
+  workspace/    # 主工作台
+  assets/       # 资产管理
+  canvas/       # 画布编辑器
+  transfer/     # P2P 传输
+  docs/         # 文档站 (Astro)
+services/
+  api/          # 后端 API (Bun + Elysia)
+  worker/       # 后台任务 Worker
+packages/
+  contracts/    # 共享类型 + Zod Schema
+  db/           # Drizzle ORM Schema + Repository
+  billing/      # 计费引擎
+  gateway/      # OpenAI 兼容网关协议
+  events/       # SSE 事件枢纽
+  ui-react/     # 内部 React 组件库
+  ...
+```
+
+## 路由策略
+
+生产环境使用**单域名路径路由**：`https://super.yxswy.com`
+
+| 路径 | 应用 |
+|------|------|
+| `/auth/` | 登录/注册 |
+| `/workspace/` | 主工作台 |
+| `/library/` | 资产管理 |
+| `/canvas/` | 画布编辑器 |
+| `/transfer/` | P2P 传输 |
+| `/docs/` | 文档站 |
+| `/api/` | REST API |
+| `/v1/` | OpenAI 兼容网关 |
+| `/storage/` | 静态文件 |
+
+## 认证流程
+
+1. 所有业务应用使用 `useRequireAuth()` 检查登录态
+2. 未登录 → 重定向到 `/auth/` + `?return_to=` 参数
+3. 登录成功后设置 HttpOnly Cookie (`super.sid`)
+4. API 调用 401 时 `@super-app/api-client` 自动跳转登录
+
+## 数据流
+
+```
+用户请求 → API Server → 创建 Generation Record + Task
+  → Worker claim 任务 → DashScope API
+  → 下载结果 → 存储到 S3/MinIO
+  → mark succeeded + debit billing
+  → PG NOTIFY → SSE Listener → 浏览器实时更新
+```

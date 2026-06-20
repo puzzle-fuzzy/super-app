@@ -1,0 +1,47 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: 生成记录 API
+---
+
+# 生成记录 API
+
+管理用户的 AI 生成历史记录。
+
+## 记录列表
+
+<span class="endpoint"><span class="method get">GET</span> `/api/records`</span>
+
+查询参数：`category` (image/video/text), `status`, `limit`, `offset`。
+
+## 记录详情
+
+<span class="endpoint"><span class="method get">GET</span> `/api/records/:id`</span>
+
+返回完整的生成记录，包含输入参数、输出结果、费用明细。
+
+## 隐藏记录
+
+<span class="endpoint"><span class="method delete">DELETE</span> `/api/records/:id`</span>
+
+软删除（隐藏），不会物理删除数据。
+
+## 重试
+
+<span class="endpoint"><span class="method post">POST</span> `/api/records/:id/retry`</span>
+
+仅 `failed` 或 `cancelled` 状态的记录可重试。
+系统会重置记录状态并创建新的后台任务。
+
+## 取消
+
+<span class="endpoint"><span class="method post">POST</span> `/api/records/:id/cancel`</span>
+
+取消进行中的生成任务，自动退还冻结的余额。
+
+## 状态机
+
+```
+pending → submitting → processing → saving_output
+                ↓              ↓
+            cancelled      succeeded / failed
+```
