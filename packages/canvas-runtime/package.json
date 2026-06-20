@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@super-app/billing": "workspace:*",
-    "@super-app/canvas-engine": "workspace:*",
+    "@super-app/canvas-schema": "workspace:*",
     "@super-app/ffmpeg": "workspace:*",
     "@super-app/prompt-engine": "workspace:*",
     "@super-app/types": "workspace:*"

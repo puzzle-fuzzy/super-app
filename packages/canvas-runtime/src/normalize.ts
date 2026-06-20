@@ -1,4 +1,4 @@
-import type { NormalizedCharacter, NormalizedLocation, NormalizedShot } from '@super-app/canvas-engine'
+import type { NormalizedCharacter, NormalizedLocation, NormalizedShot } from '@super-app/canvas-schema'
 import type { CanvasRuntimeRepoAdapter } from './adapter-types'
 
 /**

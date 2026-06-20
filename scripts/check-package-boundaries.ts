@@ -49,7 +49,7 @@ export const DEFAULT_BOUNDARY_RULES: BoundaryRule[] = [
       'packages/provider-health/src',
       'packages/subtitle/src',
       'packages/ai-models/src',
-      'packages/canvas-engine/src',
+      'packages/canvas-schema/src',
       'packages/prompt-engine/src',
       'packages/sse-hub/src',
       'packages/billing/src',

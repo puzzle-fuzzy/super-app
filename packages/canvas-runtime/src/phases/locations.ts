@@ -1,7 +1,7 @@
 import type { LocationProfile, NovelAnalysis } from '@super-app/types'
 import type { CanvasRuntimeLlmClient, CanvasRuntimeRepoAdapter } from '../adapter-types'
 import type { RunTextLlmOnceDeps } from '../llm-helpers'
-import { locationProfileSchema } from '@super-app/canvas-engine'
+import { locationProfileSchema } from '@super-app/canvas-schema'
 import { buildLocationPrompt, parseLLMJsonWithSchema } from '@super-app/prompt-engine'
 import { runTextLlmOnce } from '../llm-helpers'
 

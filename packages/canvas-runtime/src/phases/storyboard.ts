@@ -1,7 +1,7 @@
 import type { NovelAnalysis, ShotDraft } from '@super-app/types'
 import type { CanvasRuntimeLlmClient, CanvasRuntimeRepoAdapter } from '../adapter-types'
 import type { RunTextLlmOnceDeps } from '../llm-helpers'
-import { shotDraftsSchema } from '@super-app/canvas-engine'
+import { shotDraftsSchema } from '@super-app/canvas-schema'
 import { buildStoryboardPrompt, parseLLMJsonWithSchema } from '@super-app/prompt-engine'
 import { runTextLlmOnce } from '../llm-helpers'
 
