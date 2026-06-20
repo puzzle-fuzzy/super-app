@@ -1,8 +1,9 @@
 import type { Task } from '@super-app/db'
-import type { TaskOutput } from '@super-app/types'
+import type { TaskOutput, VideoOutputResult } from '@super-app/types'
 import { createStorage } from '@super-app/storage'
-import type { TaskHandler } from '@super-app/task-engine'
+import { TaskInputError, type TaskHandler } from '@super-app/task-engine'
 import { serverEnv } from '@super-app/env/server'
+import { z } from 'zod'
 import {
   markGenerationFailed,
   markGenerationProcessing,
@@ -37,29 +38,28 @@ interface DashScopeVideoTaskResponse {
   }
 }
 
-interface GenerateVideoTaskInput {
-  generationRecordId: string
-  model: string
-  prompt: string
-  ownerId: string
-  kind: string
-  estimatedCostCents: number
-  ratio?: string
-  resolution?: string
-  duration?: number
-  negativePrompt?: string
-  watermark?: boolean
-  seed?: number
-  promptExtend?: boolean
-}
+const GenerateVideoTaskInputSchema = z.object({
+  generationRecordId: z.string().uuid(),
+  model: z.string().min(1),
+  prompt: z.string().min(1),
+  ownerId: z.string().uuid(),
+  kind: z.string().min(1),
+  estimatedCostCents: z.number().finite().nonnegative(),
+  ratio: z.string().min(1).optional(),
+  resolution: z.string().min(1).optional(),
+  duration: z.number().finite().positive().optional(),
+  negativePrompt: z.string().optional(),
+  watermark: z.boolean().optional(),
+  seed: z.number().int().optional(),
+  promptExtend: z.boolean().optional(),
+})
+
+type GenerateVideoTaskInput = z.infer<typeof GenerateVideoTaskInputSchema>
 
 export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskOutput> = async (
   task
 ) => {
-  const input = task.input as unknown as GenerateVideoTaskInput
-  if (!input?.generationRecordId || !input?.ownerId) {
-    throw new AppError('Task input missing generationRecordId or ownerId')
-  }
+  const input = parseGenerateVideoTaskInput(task.input)
 
   const apiKey = process.env.DASHSCOPE_API_KEY || serverEnv.DASHSCOPE_API_KEY
   if (!apiKey?.trim()) {
@@ -126,7 +126,13 @@ export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskO
       mimeType: downloaded.mimeType,
     })
 
-    const output: Record<string, unknown> = {
+    const generationOutput: VideoOutputResult = {
+      type: 'video',
+      savedUrls: [stored.url],
+      originalUrl: providerVideoUrl,
+    }
+    const output: TaskOutput = {
+      ...generationOutput,
       videoUrl: stored.url,
       storageKey: stored.key,
       storageBucket: stored.bucket,
@@ -136,7 +142,7 @@ export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskO
       prompt: input.prompt,
     }
 
-    await markGenerationSucceeded(input.generationRecordId, output as any)
+    await markGenerationSucceeded(input.generationRecordId, generationOutput)
     await notifyTaskStatusChange(task as Task)
 
     // 结算：扣款（固定价格生成，预估即为实际）
@@ -157,7 +163,7 @@ export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskO
       }
     }
 
-    return output as TaskOutput
+    return output
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Video generation failed'
     await markGenerationFailed(input.generationRecordId, message)
@@ -180,6 +186,18 @@ export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskO
 
     throw err
   }
+}
+
+/** Validates the persisted JSONB task input before calling external providers. */
+function parseGenerateVideoTaskInput(input: Task['input']): GenerateVideoTaskInput {
+  const parsed = GenerateVideoTaskInputSchema.safeParse(input)
+  if (!parsed.success) {
+    const issues = parsed.error.issues
+      .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+      .join('; ')
+    throw new TaskInputError(`generate.video: invalid task input: ${issues}`)
+  }
+  return parsed.data
 }
 
 async function waitForVideoTask(input: {

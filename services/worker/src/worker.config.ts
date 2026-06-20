@@ -1,8 +1,12 @@
 /**
  * Worker 进程配置 — 从环境变量读取，带合理默认值。
  */
+import { serverEnv } from '@super-app/env/server'
+
 export interface WorkerConfig {
   workerId: string
+  /** 本地存储根目录，供 FFmpeg 临时文件与本地资产解析使用。 */
+  storageRoot: string
   pollIntervalMs: number
   claimTtlMs: number
   heartbeatMs: number
@@ -22,6 +26,7 @@ export function loadWorkerConfig(): WorkerConfig {
 
   return {
     workerId: `worker-${process.env.HOSTNAME ?? 'local'}-${process.pid}`,
+    storageRoot: serverEnv.STORAGE_DIR,
     pollIntervalMs: num('WORKER_POLL_INTERVAL_MS', 2000),
     claimTtlMs: num('WORKER_CLAIM_TTL_MS', 30_000),
     heartbeatMs: num('WORKER_HEARTBEAT_MS', 10_000),

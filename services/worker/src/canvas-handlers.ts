@@ -10,7 +10,11 @@
 import { z } from 'zod'
 import type { Task } from '@super-app/db'
 import type { TaskOutput } from '@super-app/types'
+import type { DashScopeClient } from '@super-app/provider'
+import type { StorageProvider } from '@super-app/storage'
+import type { TaskHandler } from '@super-app/task-engine'
 import type { WorkerTaskContext } from './task-handlers'
+import { TaskInputError } from '@super-app/task-engine'
 import { createLogger } from '@super-app/runtime'
 
 import { executeCanvasAnalysis } from './canvas-analysis'
@@ -39,7 +43,18 @@ const CanvasTaskInputSchema = z.object({
   type: z.string().startsWith('canvas.'),
 })
 
-type CanvasHandler = (task: Task, ctx: WorkerTaskContext) => Promise<TaskOutput>
+type CanvasHandler = TaskHandler<Task, WorkerTaskContext, TaskOutput>
+interface CanvasPhaseRuntime {
+  client: DashScopeClient
+  storage: StorageProvider
+  storageRoot: string
+}
+
+type CanvasPhaseExecutor = (
+  projectId: string,
+  runtime: CanvasPhaseRuntime,
+  task: Task,
+) => Promise<Record<string, unknown>>
 
 function validateCanvasTask(task: Task, phaseName: string): string {
   const parsed = CanvasTaskInputSchema.safeParse(task)
@@ -52,29 +67,60 @@ function validateCanvasTask(task: Task, phaseName: string): string {
   return parsed.data.projectId
 }
 
-function wrapCanvasPhase(
-  phaseName: string,
-  execute: (projectId: string, ...args: any[]) => Promise<Record<string, unknown>>,
-): CanvasHandler {
-  return async (task: Task, _ctx: WorkerTaskContext) => {
-    const projectId = validateCanvasTask(task, phaseName)
-
-    logger.info({ taskId: task.id, projectId, phase: phaseName }, 'canvas phase start')
-    const result = await execute(projectId)
-    logger.info({ taskId: task.id, projectId, phase: phaseName }, 'canvas phase done')
-    return { phase: phaseName, ...result } as unknown as TaskOutput
+/** Ensures canvas phase handlers receive the runtime dependencies they need. */
+function requireCanvasRuntime(ctx: WorkerTaskContext, phaseName: string): CanvasPhaseRuntime {
+  if (!ctx.llmClient) {
+    throw new TaskInputError(`Canvas phase ${phaseName}: missing DashScope client`)
+  }
+  if (!ctx.storage) {
+    throw new TaskInputError(`Canvas phase ${phaseName}: missing storage provider`)
+  }
+  if (!ctx.config) {
+    throw new TaskInputError(`Canvas phase ${phaseName}: missing worker config`)
+  }
+  return {
+    client: ctx.llmClient,
+    storage: ctx.storage,
+    storageRoot: ctx.config.storageRoot,
   }
 }
 
-export const handleCanvasAnalyze = wrapCanvasPhase('analyze', executeCanvasAnalysis)
-export const handleCanvasCharacters = wrapCanvasPhase('characters', executeCanvasCharacters)
-export const handleCanvasLocations = wrapCanvasPhase('locations', executeCanvasLocations)
-export const handleCanvasCharacterRefs = wrapCanvasPhase('character-refs', executeCanvasCharacterRefs)
-export const handleCanvasLocationRefs = wrapCanvasPhase('location-refs', executeCanvasLocationRefs)
-export const handleCanvasStoryboard = wrapCanvasPhase('storyboard', executeCanvasStoryboard)
-export const handleCanvasContinuity = wrapCanvasPhase('continuity', executeCanvasContinuity)
-export const handleCanvasRebuild = wrapCanvasPhase('rebuild', executeCanvasRebuild)
-export const handleCanvasVideos = wrapCanvasPhase('videos', executeCanvasVideos)
-export const handleCanvasDialogue = wrapCanvasPhase('dialogue', executeCanvasDialogue)
-export const handleCanvasBgm = wrapCanvasPhase('bgm', executeCanvasBgm)
-export const handleCanvasAssemble = wrapCanvasPhase('assemble', executeCanvasAssemble)
+function wrapCanvasPhase(
+  phaseName: string,
+  execute: CanvasPhaseExecutor,
+): CanvasHandler {
+  return async (task: Task, ctx: WorkerTaskContext) => {
+    const projectId = validateCanvasTask(task, phaseName)
+    const runtime = requireCanvasRuntime(ctx, phaseName)
+
+    logger.info({ taskId: task.id, projectId, phase: phaseName }, 'canvas phase start')
+    const result = await execute(projectId, runtime, task)
+    logger.info({ taskId: task.id, projectId, phase: phaseName }, 'canvas phase done')
+    return { phase: phaseName, ...result }
+  }
+}
+
+export const handleCanvasAnalyze = wrapCanvasPhase('analyze', (projectId, { client }) =>
+  executeCanvasAnalysis(projectId, client))
+export const handleCanvasCharacters = wrapCanvasPhase('characters', (projectId, { client }) =>
+  executeCanvasCharacters(projectId, client))
+export const handleCanvasLocations = wrapCanvasPhase('locations', (projectId, { client }) =>
+  executeCanvasLocations(projectId, client))
+export const handleCanvasCharacterRefs = wrapCanvasPhase('character-refs', (projectId, { client, storage }) =>
+  executeCanvasCharacterRefs(projectId, client, storage))
+export const handleCanvasLocationRefs = wrapCanvasPhase('location-refs', (projectId, { client, storage }) =>
+  executeCanvasLocationRefs(projectId, client, storage))
+export const handleCanvasStoryboard = wrapCanvasPhase('storyboard', (projectId, { client }) =>
+  executeCanvasStoryboard(projectId, client))
+export const handleCanvasContinuity = wrapCanvasPhase('continuity', (projectId) =>
+  executeCanvasContinuity(projectId))
+export const handleCanvasRebuild = wrapCanvasPhase('rebuild', (projectId) =>
+  executeCanvasRebuild(projectId))
+export const handleCanvasVideos = wrapCanvasPhase('videos', (projectId, { client }, task) =>
+  executeCanvasVideos(projectId, client, undefined, task.id))
+export const handleCanvasDialogue = wrapCanvasPhase('dialogue', (projectId, { client }) =>
+  executeCanvasDialogue(projectId, client))
+export const handleCanvasBgm = wrapCanvasPhase('bgm', (projectId, { client, storage }) =>
+  executeCanvasBgm(projectId, client, storage))
+export const handleCanvasAssemble = wrapCanvasPhase('assemble', (projectId, { storage, storageRoot }) =>
+  executeCanvasAssemble(projectId, storage, storageRoot))

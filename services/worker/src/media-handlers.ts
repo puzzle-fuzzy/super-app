@@ -9,6 +9,9 @@
  */
 
 import type { Task as TaskRow } from '@super-app/db'
+import type { NotificationNotifyPayload } from '@super-app/db'
+import type { TaskOutput } from '@super-app/types'
+import type { StorageProvider } from '@super-app/storage'
 import type { WorkerTaskContext as WorkerContext } from './task-handlers'
 import { calculateCost } from '@super-app/billing'
 import {
@@ -31,7 +34,57 @@ import { checkTaskOwnership } from './task-ownership'
 
 const logger = createLogger('media-handlers')
 
-type WorkerTaskOutput = Record<string, unknown> | undefined
+type WorkerTaskOutput = TaskOutput
+
+interface MediaRuntime {
+  config: NonNullable<WorkerContext['config']>
+  storage: StorageProvider
+}
+
+interface ExtractAudioRuntime extends MediaRuntime {
+  asrClient: NonNullable<WorkerContext['asrClient']>
+}
+
+/** Ensures media handlers fail early when the worker runtime is misconfigured. */
+function requireMediaRuntime(ctx: WorkerContext, handlerName: string): MediaRuntime {
+  if (!ctx.config) {
+    throw new TaskInputError(`${handlerName}: missing worker config`)
+  }
+  if (!ctx.storage) {
+    throw new TaskInputError(`${handlerName}: missing storage provider`)
+  }
+  return { config: ctx.config, storage: ctx.storage }
+}
+
+/** Ensures ASR-dependent media handlers receive a configured ASR client. */
+function requireExtractAudioRuntime(ctx: WorkerContext): ExtractAudioRuntime {
+  const runtime = requireMediaRuntime(ctx, 'media.extract-audio')
+  if (!ctx.asrClient) {
+    throw new TaskInputError('media.extract-audio: missing ASR client')
+  }
+  return { ...runtime, asrClient: ctx.asrClient }
+}
+
+/** Publishes a user-facing notification payload on the existing NOTIFY channel. */
+async function publishUserNotification(input: {
+  ownerId: string
+  type: 'task_completed' | 'task_failed'
+  title: string
+  body?: string
+  meta?: Record<string, unknown>
+}): Promise<void> {
+  const payload: NotificationNotifyPayload = {
+    id: crypto.randomUUID(),
+    ownerId: input.ownerId,
+    type: input.type,
+    title: input.title,
+    body: input.body ?? null,
+    meta: input.meta ?? null,
+    read: false,
+    createdAt: new Date().toISOString(),
+  }
+  await notifyNotification(payload)
+}
 
 /**
  * 处理媒体提取音频任务 — 从视频中提取音频 + 上传 + 提交 ASR
@@ -51,7 +104,7 @@ type WorkerTaskOutput = Record<string, unknown> | undefined
  */
 export async function handleMediaExtractAudio(task: TaskRow, ctx: WorkerContext): Promise<WorkerTaskOutput> {
   const { projectId, ownerId: accountId } = task
-  const { config, storage, asrClient } = ctx
+  const { config, storage, asrClient } = requireExtractAudioRuntime(ctx)
   // 解析 JSONB task.input（缺字段/类型错 → 分类 validation 永久失败，不重试）
   const parsed = parseMediaExtractAudioInput(task.input)
   if (!parsed.ok)
@@ -74,20 +127,21 @@ export async function handleMediaExtractAudio(task: TaskRow, ctx: WorkerContext)
 
     // 解析视频本地路径
     const videoPath = file.publicUrl.startsWith('/') || file.publicUrl.startsWith('./')
-      ? `${(config! as any).storageRoot}/${file.storagePath}`
+      ? `${config.storageRoot}/${file.storagePath}`
       : file.publicUrl
 
     // FFmpeg 提取音频
-    const { audioPath, durationMs: audioDurationMs } = await extractAudioFromVideo(videoPath, (config! as any).storageRoot)
+    const { audioPath, durationMs: audioDurationMs } = await extractAudioFromVideo(videoPath, config.storageRoot)
     const videoDurationMs = await getMediaDurationMs(videoPath)
 
     // 上传音频到存储
     const audioBuffer = await Bun.file(audioPath).arrayBuffer()
-    const audioFileUrl = await (storage! as any).uploadGenerated(
-      Buffer.from(audioBuffer),
-      `subtitle/audio_${projectId}.wav`,
-      'audio/wav',
-    )
+    const storedAudio = await storage.put({
+      key: `subtitle/audio_${projectId}.wav`,
+      body: Buffer.from(audioBuffer),
+      mimeType: 'audio/wav',
+    })
+    const audioFileUrl = storedAudio.url
 
     // 清理本地临时音频文件
     try {
@@ -109,7 +163,7 @@ export async function handleMediaExtractAudio(task: TaskRow, ctx: WorkerContext)
     if (!asrResult.success) {
       const errMsg = asrResult.error || 'ASR 提交失败'
       await updateSubtitleProjectStatus(projectId, 'failed', { errorMessage: errMsg })
-      await (notifyNotification as any)({
+      await publishUserNotification({
         ownerId: accountId,
         type: 'task_failed',
         title: '字幕识别提交失败',
@@ -140,17 +194,6 @@ export async function handleMediaExtractAudio(task: TaskRow, ctx: WorkerContext)
 
     // 更新项目 asrRecordId
     await updateSubtitleProjectStatus(projectId, 'asr_processing', { asrRecordId: asrRecord.id })
-
-    // SSE 通知
-    await (notifyNotification as any)({
-      ownerId: accountId,
-      recordId: asrRecord.id,
-      status: 'processing',
-      category: 'subtitle',
-      model: 'paraformer-v2',
-      taskId: asrResult.taskId,
-      traceId: asrRecord.traceId ?? undefined,
-    })
 
     // 创建 subtitle.asr task（Worker 统一队列轮询 ASR 结果）
     await createTask({
@@ -203,7 +246,7 @@ export async function handleMediaExtractAudio(task: TaskRow, ctx: WorkerContext)
  */
 export async function handleMediaBurnSubtitle(task: TaskRow, ctx: WorkerContext): Promise<WorkerTaskOutput> {
   const { projectId, ownerId: accountId } = task
-  const { config, storage } = ctx
+  const { config, storage } = requireMediaRuntime(ctx, 'media.burn-subtitle')
   // 解析 JSONB task.input（缺字段/类型错 → 分类 validation 永久失败，不重试）
   const parsed = parseMediaBurnSubtitleInput(task.input)
   if (!parsed.ok)
@@ -246,20 +289,21 @@ export async function handleMediaBurnSubtitle(task: TaskRow, ctx: WorkerContext)
     }
 
     const videoPath = file.publicUrl.startsWith('/') || file.publicUrl.startsWith('./')
-      ? `${(config! as any).storageRoot}/${file.storagePath}`
+      ? `${config.storageRoot}/${file.storagePath}`
       : file.publicUrl
 
     // FFmpeg 烧录字幕 — 长操作（数分钟重编码），先检查锁所有权
     checkTaskOwnership()
-    const { outputPath } = await burnSubtitlesToVideo(videoPath, assContent, (config! as any).storageRoot)
+    const { outputPath } = await burnSubtitlesToVideo(videoPath, assContent, config.storageRoot)
 
     // 上传导出视频到存储
     const videoBuffer = await Bun.file(outputPath).arrayBuffer()
-    const exportedVideoUrl = await (storage! as any).uploadGenerated(
-      Buffer.from(videoBuffer),
-      `subtitle/${projectId}/export_${exportRecordId}.mp4`,
-      'video/mp4',
-    )
+    const storedVideo = await storage.put({
+      key: `subtitle/${projectId}/export_${exportRecordId}.mp4`,
+      body: Buffer.from(videoBuffer),
+      mimeType: 'video/mp4',
+    })
+    const exportedVideoUrl = storedVideo.url
 
     // 清理本地临时文件
     try {
@@ -279,26 +323,16 @@ export async function handleMediaBurnSubtitle(task: TaskRow, ctx: WorkerContext)
     await updateSubtitleExport(projectId, exportRecordId, exportedVideoUrl)
     await updateSubtitleProjectStatus(projectId, 'completed')
 
-    // SSE 通知 — 导出成功
-    await (notifyNotification as any)({
-      ownerId: accountId,
-      recordId: exportRecordId,
-      status: 'succeeded',
-      category: 'subtitle',
-      model: 'ffmpeg-burn',
-      taskId: null,
-    })
-
     logger.info({ projectId }, '✅ Subtitle burn completed')
 
     // 通知用户
-    await (notifyNotification as any)({
+    await publishUserNotification({
       ownerId: accountId,
       type: 'task_completed',
       title: '字幕导出完成',
       body: '字幕已烧录到视频，可前往下载',
       meta: { recordId: exportRecordId, category: 'subtitle' },
-    }).catch((err: any) => logger.warn({ err, projectId }, 'Failed to push export completed notification'))
+    }).catch((err: unknown) => logger.warn({ err, projectId }, 'Failed to push export completed notification'))
 
     return { exportedVideoUrl }
   }

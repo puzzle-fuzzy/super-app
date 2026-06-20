@@ -14,6 +14,9 @@ import {
   notifyTaskStatusChange,
   sweepOrphanTasks,
 } from '@super-app/db'
+import { serverEnv } from '@super-app/env/server'
+import { ASRClient, DashScopeClient } from '@super-app/provider'
+import { createStorage } from '@super-app/storage'
 
 import type { WorkerConfig } from './worker.config'
 import { taskHandlers, type WorkerTaskContext } from './task-handlers'
@@ -45,7 +48,15 @@ export function setupLifecycle(config: WorkerConfig): WorkerLifecycle {
   const timers: ReturnType<typeof setInterval>[] = []
   let healthServer: ReturnType<typeof Bun.serve> | null = null
 
-  const context: WorkerTaskContext = { workerId: config.workerId }
+  const apiKey = process.env.DASHSCOPE_API_KEY || serverEnv.DASHSCOPE_API_KEY || ''
+  const baseUrl = process.env.DASHSCOPE_BASE_URL || serverEnv.DASHSCOPE_BASE_URL || undefined
+  const context: WorkerTaskContext = {
+    workerId: config.workerId,
+    config,
+    llmClient: new DashScopeClient({ apiKey, baseUrl }),
+    storage: createStorage(),
+    asrClient: new ASRClient({ apiKey, baseUrl }),
+  }
 
   /** 处理单个任务：启动 heartbeat → 执行 handler → 完成/失败 → 清除 heartbeat。 */
   const processTask = async (task: NonNullable<Awaited<ReturnType<typeof claimNextTask>>>) => {
@@ -66,13 +77,6 @@ export function setupLifecycle(config: WorkerConfig): WorkerLifecycle {
       const output = await taskHandlers.handle(task, context)
       await completeTaskWithAdapter({ task, output, adapter: repoAdapter })
       console.log(`[worker] task ${task.id} succeeded`)
-
-      // TODO: Canvas pipeline auto-advance — 需要 task 类型适配后启用
-      // advancePipelineAfterTaskSuccess(task as any, config).then((nextTaskId) => {
-      //   if (nextTaskId) console.log(`[worker] pipeline auto-advanced: created task ${nextTaskId}`)
-      // }).catch((err) => {
-      //   console.error('[worker] pipeline auto-advance error:', err)
-      // })
     } catch (err) {
       const result = await applyTaskFailureWithAdapter({
         task: {

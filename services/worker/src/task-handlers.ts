@@ -1,5 +1,7 @@
 import type { Task } from '@super-app/db'
 import type { TaskOutput } from '@super-app/types'
+import type { ASRClient, DashScopeClient } from '@super-app/provider'
+import type { StorageProvider } from '@super-app/storage'
 import { serverEnv } from '@super-app/env/server'
 import {
   createTaskHandlerRegistry,
@@ -40,32 +42,34 @@ const definitions: Array<TaskDefinition<Task, WorkerTaskContext, TaskOutput>> = 
   { type: 'generate.image', handler: generateImageHandler },
 
   // Canvas 12 阶段 pipeline
-  { type: 'canvas.analyze', handler: handleCanvasAnalyze as any },
-  { type: 'canvas.characters', handler: handleCanvasCharacters as any },
-  { type: 'canvas.locations', handler: handleCanvasLocations as any },
-  { type: 'canvas.character-refs', handler: handleCanvasCharacterRefs as any },
-  { type: 'canvas.location-refs', handler: handleCanvasLocationRefs as any },
-  { type: 'canvas.storyboard', handler: handleCanvasStoryboard as any },
-  { type: 'canvas.continuity', handler: handleCanvasContinuity as any },
-  { type: 'canvas.rebuild', handler: handleCanvasRebuild as any },
-  { type: 'canvas.videos', handler: handleCanvasVideos as any },
-  { type: 'canvas.dialogue', handler: handleCanvasDialogue as any },
-  { type: 'canvas.bgm', handler: handleCanvasBgm as any },
-  { type: 'canvas.assemble', handler: handleCanvasAssemble as any },
+  { type: 'canvas.analyze', handler: handleCanvasAnalyze },
+  { type: 'canvas.characters', handler: handleCanvasCharacters },
+  { type: 'canvas.locations', handler: handleCanvasLocations },
+  { type: 'canvas.character-refs', handler: handleCanvasCharacterRefs },
+  { type: 'canvas.location-refs', handler: handleCanvasLocationRefs },
+  { type: 'canvas.storyboard', handler: handleCanvasStoryboard },
+  { type: 'canvas.continuity', handler: handleCanvasContinuity },
+  { type: 'canvas.rebuild', handler: handleCanvasRebuild },
+  { type: 'canvas.videos', handler: handleCanvasVideos },
+  { type: 'canvas.dialogue', handler: handleCanvasDialogue },
+  { type: 'canvas.bgm', handler: handleCanvasBgm },
+  { type: 'canvas.assemble', handler: handleCanvasAssemble },
 
   // Media handlers
-  { type: 'media.extract-audio', handler: handleMediaExtractAudio as any },
-  { type: 'media.burn-subtitle', handler: handleMediaBurnSubtitle as any },
+  { type: 'media.extract-audio', handler: handleMediaExtractAudio },
+  { type: 'media.burn-subtitle', handler: handleMediaBurnSubtitle },
 ]
 
 export interface WorkerTaskContext {
   workerId: string
   /** Worker 配置（media handlers 需要 storageRoot 等） */
   config?: import('./worker.config').WorkerConfig
+  /** DashScope LLM 客户端（canvas pipeline 阶段需要文本/图像/视频生成能力） */
+  llmClient?: DashScopeClient
   /** 存储服务（media handlers 需要上传生成文件） */
-  storage?: import('@super-app/storage').StorageProvider
+  storage?: StorageProvider
   /** ASR 客户端（media handlers 需要提交语音识别） */
-  asrClient?: any
+  asrClient?: Pick<ASRClient, 'submitTranscription'>
 }
 
 export const taskHandlers = createTaskHandlerRegistry<Task, WorkerTaskContext, TaskOutput>(
