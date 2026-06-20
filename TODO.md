@@ -36,4 +36,5 @@
 - [x] Scaffold apps/site public marketing landing page.
 - [x] Persist Canvas-generated DashScope images into the asset library instead of relying on 24-hour provider URLs.
 - [x] Add Canvas generation retry and explicit failure states for longer-running image workflows.
-- [ ] Add a first-class generated-image history panel backed by persisted assets.
+- [x] Add a first-class generated-image history panel backed by persisted assets.
+- [ ] Add backend filtering and pagination for AI-generated image assets so Canvas history does not rely on client-side filtering.

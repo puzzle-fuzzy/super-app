@@ -749,6 +749,14 @@ function EditorViewInner({
     return result
   }
 
+  function handleAddGeneratedAsset(asset: AssetDto) {
+    const position = screenToFlowPosition({
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+    })
+    addNodeFromAsset({ ...asset, title: generatedAssetPrompt(asset) }, position)
+  }
+
   return (
     <main className="flex h-screen flex-col bg-[#141414] text-[#e5e5e5]">
       {/* Editor Toolbar */}
@@ -895,7 +903,7 @@ function EditorViewInner({
 
       {/* ModeToolbar 使用 fixed 定位，不受容器影响 */}
       <ModeToolbar userName={user.name ?? user.email} />
-      <ImageGenerationChat onGenerate={handleGenerateImage} />
+      <ImageGenerationChat onGenerate={handleGenerateImage} onAddAsset={handleAddGeneratedAsset} />
 
       {/* 弹窗 */}
       <GroupNameModal />
@@ -910,9 +918,12 @@ function EditorViewInner({
 
 function ImageGenerationChat({
   onGenerate,
+  onAddAsset,
 }: {
   onGenerate: (prompt: string) => Promise<{ prompt: string; imageUrl: string }>
+  onAddAsset: (asset: AssetDto) => void
 }) {
+  const [activeTab, setActiveTab] = useState<'create' | 'history'>('create')
   const [prompt, setPrompt] = useState('')
   const [messages, setMessages] = useState<
     Array<{
@@ -925,6 +936,34 @@ function ImageGenerationChat({
     }>
   >([])
   const [generating, setGenerating] = useState(false)
+  const [historyItems, setHistoryItems] = useState<AssetDto[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (activeTab !== 'history') return
+
+    let cancelled = false
+    setHistoryLoading(true)
+    setHistoryError(null)
+    assetsApi
+      .list({ kind: 'image', limit: 20 })
+      .then((result) => {
+        if (cancelled) return
+        setHistoryItems(result.items.filter(isGeneratedImageAsset))
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setHistoryError(err instanceof Error ? err.message : '历史加载失败')
+      })
+      .finally(() => {
+        if (!cancelled) setHistoryLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeTab])
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -992,75 +1031,167 @@ function ImageGenerationChat({
       <div className="border-b border-[#2a2a2a] px-4 py-3">
         <p className="m-0 text-[13px] font-semibold text-[#e5e5e5]">对话生成图片</p>
         <p className="m-0 mt-1 text-xs text-[#777777]">输入描述，生成后自动添加到当前画布。</p>
+        <div className="mt-3 grid grid-cols-2 rounded-xl bg-[#141414] p-1">
+          <button
+            type="button"
+            onClick={() => setActiveTab('create')}
+            className={`h-8 cursor-pointer rounded-lg border-0 text-[12px] font-semibold transition-colors ${
+              activeTab === 'create'
+                ? 'bg-[#e5e5e5] text-[#141414]'
+                : 'bg-transparent text-[#888888] hover:text-[#e5e5e5]'
+            }`}
+          >
+            生成
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('history')}
+            className={`h-8 cursor-pointer rounded-lg border-0 text-[12px] font-semibold transition-colors ${
+              activeTab === 'history'
+                ? 'bg-[#e5e5e5] text-[#141414]'
+                : 'bg-transparent text-[#888888] hover:text-[#e5e5e5]'
+            }`}
+          >
+            历史
+          </button>
+        </div>
       </div>
-      <div className="flex max-h-52 flex-col gap-2 overflow-y-auto px-3 py-3">
-        {messages.length === 0 ? (
-          <p className="m-0 rounded-xl bg-[#242424] px-3 py-2 text-[13px] leading-relaxed text-[#999999]">
-            例如：一张电影感海报，雨夜街道，暖色霓虹，高反差光影。
-          </p>
-        ) : (
-          messages.map((message, index) => (
-            <div
-              key={`${message.id}-${index}`}
-              className={`max-w-[88%] rounded-xl px-3 py-2 text-[13px] leading-relaxed ${
-                message.role === 'user'
-                  ? 'ml-auto bg-[#e5e5e5] text-[#141414]'
-                  : message.status === 'error'
-                    ? 'mr-auto border border-[#5a2a27] bg-[#2a1d1b] text-[#ffaaa3]'
-                    : 'mr-auto bg-[#242424] text-[#d4d4d4]'
-              }`}
-            >
-              <p className="m-0">{message.text}</p>
-              {message.retryPrompt ? (
-                <button
-                  type="button"
-                  disabled={generating}
-                  onClick={() =>
-                    runGeneration(message.retryPrompt!, {
-                      appendUser: false,
-                      retryMessageId: message.id,
-                    })
-                  }
-                  className="mt-2 inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#7a3831] bg-[#3a2420] px-3 text-xs font-semibold text-[#ffd4cf] transition-colors hover:border-[#b9564b] hover:bg-[#4a2b25] disabled:cursor-not-allowed disabled:opacity-50"
+      {activeTab === 'create' ? (
+        <>
+          <div className="flex max-h-52 flex-col gap-2 overflow-y-auto px-3 py-3">
+            {messages.length === 0 ? (
+              <p className="m-0 rounded-xl bg-[#242424] px-3 py-2 text-[13px] leading-relaxed text-[#999999]">
+                例如：一张电影感海报，雨夜街道，暖色霓虹，高反差光影。
+              </p>
+            ) : (
+              messages.map((message, index) => (
+                <div
+                  key={`${message.id}-${index}`}
+                  className={`max-w-[88%] rounded-xl px-3 py-2 text-[13px] leading-relaxed ${
+                    message.role === 'user'
+                      ? 'ml-auto bg-[#e5e5e5] text-[#141414]'
+                      : message.status === 'error'
+                        ? 'mr-auto border border-[#5a2a27] bg-[#2a1d1b] text-[#ffaaa3]'
+                        : 'mr-auto bg-[#242424] text-[#d4d4d4]'
+                  }`}
                 >
-                  <RotateCcw size={13} aria-hidden="true" />
-                  重试
+                  <p className="m-0">{message.text}</p>
+                  {message.retryPrompt ? (
+                    <button
+                      type="button"
+                      disabled={generating}
+                      onClick={() =>
+                        runGeneration(message.retryPrompt!, {
+                          appendUser: false,
+                          retryMessageId: message.id,
+                        })
+                      }
+                      className="mt-2 inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#7a3831] bg-[#3a2420] px-3 text-xs font-semibold text-[#ffd4cf] transition-colors hover:border-[#b9564b] hover:bg-[#4a2b25] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <RotateCcw size={13} aria-hidden="true" />
+                      重试
+                    </button>
+                  ) : null}
+                  {message.imageUrl ? (
+                    <img
+                      className="mt-2 aspect-square w-full rounded-lg object-cover"
+                      src={message.imageUrl}
+                      alt="生成结果预览"
+                    />
+                  ) : null}
+                </div>
+              ))
+            )}
+          </div>
+          <form onSubmit={submit} className="grid gap-2 border-t border-[#2a2a2a] p-3">
+            <textarea
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+              placeholder="描述你想生成的图片..."
+              rows={3}
+              className="max-h-28 min-h-20 resize-none rounded-xl border border-[#2a2a2a] bg-[#141414] px-3 py-2.5 text-[13px] leading-relaxed text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] focus:border-[#555555]"
+            />
+            <button
+              type="submit"
+              disabled={!prompt.trim() || generating}
+              className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-[#e5e5e5] px-4 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ImageIcon size={15} aria-hidden="true" />
+              {generating ? '生成中...' : '生成图片'}
+            </button>
+          </form>
+        </>
+      ) : (
+        <div className="flex max-h-80 min-h-56 flex-col gap-2 overflow-y-auto px-3 py-3">
+          {historyLoading ? (
+            <p className="m-0 rounded-xl bg-[#242424] px-3 py-2 text-[13px] text-[#999999]">
+              正在加载生成历史...
+            </p>
+          ) : historyError ? (
+            <p className="m-0 rounded-xl border border-[#5a2a27] bg-[#2a1d1b] px-3 py-2 text-[13px] text-[#ffaaa3]">
+              {historyError}
+            </p>
+          ) : historyItems.length === 0 ? (
+            <p className="m-0 rounded-xl bg-[#242424] px-3 py-2 text-[13px] leading-relaxed text-[#999999]">
+              暂无已保存的生成图片。
+            </p>
+          ) : (
+            historyItems.map((asset) => {
+              const label = generatedAssetPrompt(asset)
+              const imageUrl = asset.files.find((file) => file.role === 'original')?.url
+              return (
+                <button
+                  key={asset.id}
+                  type="button"
+                  aria-label={`添加 ${label}`}
+                  onClick={() => onAddAsset(asset)}
+                  className="grid cursor-pointer grid-cols-[56px_1fr] gap-3 rounded-xl border border-[#2a2a2a] bg-[#202020] p-2 text-left transition-colors hover:border-[#4a4a4a] hover:bg-[#262626]"
+                >
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt=""
+                      className="h-14 w-14 rounded-lg object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <span className="flex h-14 w-14 items-center justify-center rounded-lg bg-[#141414] text-[#777777]">
+                      <ImageIcon size={16} aria-hidden="true" />
+                    </span>
+                  )}
+                  <span className="min-w-0 self-center">
+                    <span className="block truncate text-[13px] font-semibold text-[#e5e5e5]">
+                      {label}
+                    </span>
+                    <span className="mt-1 block text-xs text-[#777777]">点击添加到画布</span>
+                  </span>
                 </button>
-              ) : null}
-              {message.imageUrl ? (
-                <img
-                  className="mt-2 aspect-square w-full rounded-lg object-cover"
-                  src={message.imageUrl}
-                  alt="生成结果预览"
-                />
-              ) : null}
-            </div>
-          ))
-        )}
-      </div>
-      <form onSubmit={submit} className="grid gap-2 border-t border-[#2a2a2a] p-3">
-        <textarea
-          value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
-          placeholder="描述你想生成的图片..."
-          rows={3}
-          className="max-h-28 min-h-20 resize-none rounded-xl border border-[#2a2a2a] bg-[#141414] px-3 py-2.5 text-[13px] leading-relaxed text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] focus:border-[#555555]"
-        />
-        <button
-          type="submit"
-          disabled={!prompt.trim() || generating}
-          className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-[#e5e5e5] px-4 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <ImageIcon size={15} aria-hidden="true" />
-          {generating ? '生成中...' : '生成图片'}
-        </button>
-      </form>
+              )
+            })
+          )}
+        </div>
+      )}
     </aside>
   )
 }
 
 function messageId(): string {
   return `message-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function isGeneratedImageAsset(asset: AssetDto): boolean {
+  return (
+    asset.kind === 'image' &&
+    asset.source === 'ai_generation' &&
+    asset.metadata?.provider === 'dashscope' &&
+    asset.files.some((file) => file.role === 'original' && Boolean(file.url))
+  )
+}
+
+function generatedAssetPrompt(asset: AssetDto): string {
+  return typeof asset.metadata?.prompt === 'string' && asset.metadata.prompt.trim()
+    ? asset.metadata.prompt.trim()
+    : asset.title
 }
 
 /* ---- Helpers ---- */

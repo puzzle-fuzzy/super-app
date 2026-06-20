@@ -118,3 +118,75 @@ test('retries a failed canvas image generation request', async ({ page }) => {
   await expect(page.getByAltText(prompt)).toBeVisible()
   expect(attempts).toBe(2)
 })
+
+test('adds a generated image from persisted history', async ({ page }) => {
+  const email = `e2e-canvas-generate-history-${Date.now()}-${test.info().parallelIndex}@super.test`
+  const password = 'super-e2e-password'
+  const prompt = '历史里的稳定生成图'
+  const historyUrl = 'https://fake-provider.local/history-generated.png'
+
+  await page.route('**/api/assets/?kind=image&limit=20', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        data: {
+          items: [
+            {
+              id: 'asset-history-1',
+              kind: 'image',
+              title: `AI 生成图 - ${prompt}`,
+              tags: [],
+              status: 'active',
+              visibility: 'private',
+              source: 'ai_generation',
+              metadata: {
+                prompt,
+                provider: 'dashscope',
+                model: 'qwen-image-2.0-pro',
+              },
+              files: [
+                {
+                  id: 'file-history-1',
+                  role: 'original',
+                  storageBucket: 'local',
+                  storageKey: 'history/generated.png',
+                  url: historyUrl,
+                  mimeType: 'image/png',
+                  size: 128,
+                  createdAt: new Date().toISOString(),
+                },
+              ],
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+          ],
+          nextCursor: null,
+        },
+      }),
+    })
+  })
+  await page.route(historyUrl, async (route) => {
+    await route.fulfill({ path: samplePng, contentType: 'image/png' })
+  })
+
+  await page.goto(canvasUrl)
+  await page.getByRole('tab', { name: '注册' }).click()
+  await page.getByLabel('名称').fill('Canvas History User')
+  await page.getByLabel('邮箱').fill(email)
+  await page.getByLabel('密码').fill(password)
+  await page.getByRole('button', { name: '创建并进入' }).click()
+
+  await expect(page).toHaveURL(canvasUrl)
+  await page.getByRole('button', { name: '新建画布' }).first().click()
+  await page.getByPlaceholder('输入项目名称').fill('生成历史测试画布')
+  await page.getByRole('button', { name: '创建' }).click()
+  await page.getByText('生成历史测试画布').click()
+
+  await page.getByRole('button', { name: '历史' }).click()
+  await expect(page.getByText(prompt)).toBeVisible()
+  await page.getByRole('button', { name: `添加 ${prompt}` }).click()
+
+  await expect(page.getByAltText(prompt)).toBeVisible()
+})
