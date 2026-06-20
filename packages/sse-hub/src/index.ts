@@ -1,5 +1,5 @@
 /**
- * @super-app/events — 纯事件基础设施
+ * @super-app/sse-hub — 纯事件基础设施
  *
  * 零业务知识：不解析 NOTIFY payload、不知道 task_status 是什么。
  * 只做两件事：内存连接管理（UserEventHub）+ push/pull 桥接（AsyncChannel）。

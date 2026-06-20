@@ -44,7 +44,7 @@ export interface SSENotificationEvent {
  * NOTIFY 'notification' 频道传输载荷（P2-2）
  *
  * db 端 `notifyNotification()` 序列化通知行后通过 `pgClient.notify()` 发送；
- * `@super-app/events` 的 `createNotificationDispatcher` 解析后映射为
+ * `@super-app/sse-hub` 的 `createNotificationDispatcher` 解析后映射为
  * `SSENotificationEvent` 并经 `dispatchToUser` 推送。
  * `accountId` 仅用于 SSE 路由，不下发到前端。
  */

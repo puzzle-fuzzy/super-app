@@ -51,7 +51,7 @@ export const DEFAULT_BOUNDARY_RULES: BoundaryRule[] = [
       'packages/ai-models/src',
       'packages/canvas-engine/src',
       'packages/prompt-engine/src',
-      'packages/events/src',
+      'packages/sse-hub/src',
       'packages/billing/src',
       'packages/runtime/src',
     ],

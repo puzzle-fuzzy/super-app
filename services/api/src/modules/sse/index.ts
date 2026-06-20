@@ -9,8 +9,8 @@
  *   - heartbeat: 心跳保活（30 秒间隔）
  *   - task_status: Task 状态变更（Worker → NOTIFY → LISTEN → dispatch）
  */
-import { createAsyncChannel } from '@super-app/events'
-import type { EventSender } from '@super-app/events'
+import { createAsyncChannel } from '@super-app/sse-hub'
+import type { EventSender } from '@super-app/sse-hub'
 import { Elysia, sse } from 'elysia'
 
 import { authPlugin } from '../../plugins/auth'

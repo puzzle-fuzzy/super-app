@@ -1,5 +1,5 @@
 {
-  "name": "@super-app/events",
+  "name": "@super-app/sse-hub",
   "description": "内存事件总线 / SSE 连接管理 + push/pull 桥接（L2 领域逻辑）",
   "version": "0.1.0",
   "private": true,

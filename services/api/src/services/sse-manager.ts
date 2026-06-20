@@ -10,8 +10,8 @@
  *   Worker 完成任务 → NOTIFY 'task_status' → startSSEListener 接收
  *   → UserEventHub.dispatchToUser → SSE route 中的 AsyncChannel → 客户端
  */
-import { UserEventHub } from '@super-app/events'
-import type { AddConnectionResult, EventSender } from '@super-app/events'
+import { UserEventHub } from '@super-app/sse-hub'
+import type { AddConnectionResult, EventSender } from '@super-app/sse-hub'
 import { sql, TASK_STATUS_CHANNEL, NOTIFICATION_CHANNEL } from '@super-app/db'
 import type { NotificationNotifyPayload, TaskStatusNotifyPayload } from '@super-app/db'
 
