@@ -19,6 +19,7 @@ export * from './domain/dialogue'
 export type { CostDetail } from '@super-app/contracts/billing'
 
 // ── 顶层 DTO（按业务域）──────────────────────────────────
+export * from './canvas'
 export * from './notifications'
 export * from './subtitle'
 export * from './asset-tags'

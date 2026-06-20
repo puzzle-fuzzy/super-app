@@ -14,7 +14,8 @@
     "test": "bun test tests"
   },
   "dependencies": {
-    "@super-app/contracts": "workspace:*"
+    "@super-app/contracts": "workspace:*",
+    "@super-app/error-recovery": "workspace:*"
   },
   "devDependencies": {
     "bun-types": "latest",

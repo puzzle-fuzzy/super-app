@@ -839,6 +839,9 @@ importers:
       '@super-app/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@super-app/error-recovery':
+        specifier: workspace:*
+        version: link:../error-recovery
     devDependencies:
       bun-types:
         specifier: latest
