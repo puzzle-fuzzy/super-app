@@ -8,7 +8,7 @@ import { authPlugin, requireUser } from '../../plugins/auth'
 import { ok } from '../../shared/response'
 import { createTextAsset, deleteTextAsset, getTextAsset, updateTextAsset } from './service'
 
-export const textsModule = new Elysia({ name: 'texts' })
+export const textsModule = new Elysia({ name: 'texts', detail: { tags: ['文本'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded.group('/assets/texts', (texts) =>

@@ -8,7 +8,7 @@ import { authPlugin, requireUser } from '../../plugins/auth'
 import { ok } from '../../shared/response'
 import { createStyleAsset, deleteStyleAsset, getStyleAsset, updateStyleAsset } from './service'
 
-export const stylesModule = new Elysia({ name: 'styles' })
+export const stylesModule = new Elysia({ name: 'styles', detail: { tags: ['风格'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded.group('/assets/styles', (styles) =>

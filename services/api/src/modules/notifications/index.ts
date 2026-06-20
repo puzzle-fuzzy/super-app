@@ -25,7 +25,7 @@ function serialize(row: Record<string, unknown>) {
   }
 }
 
-export const notificationsModule = new Elysia({ name: 'notifications' })
+export const notificationsModule = new Elysia({ name: 'notifications', detail: { tags: ['通知'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded

@@ -43,7 +43,7 @@ function generateResetToken(): { rawToken: string; tokenHash: string } {
   return { rawToken, tokenHash }
 }
 
-export const authModule = new Elysia({ name: 'auth' }).use(authPlugin).group('/auth', (auth) =>
+export const authModule = new Elysia({ name: 'auth', detail: { tags: ['认证'] } }).use(authPlugin).group('/auth', (auth) =>
   auth
     .post(
       '/register',

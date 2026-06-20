@@ -45,7 +45,7 @@ function toDTO(row: UserTaskRow): UserTaskDTO {
   }
 }
 
-export const tasksModule = new Elysia({ name: 'tasks' })
+export const tasksModule = new Elysia({ name: 'tasks', detail: { tags: ['任务中心'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded

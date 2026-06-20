@@ -35,7 +35,7 @@ import { dashScopeChatCompletion, dashScopeChatCompletionStream } from '../../se
 
 const MAX_MESSAGE_CHARS = 100_000
 
-export const gatewayModule = new Elysia({ name: 'gateway' })
+export const gatewayModule = new Elysia({ name: 'gateway', detail: { tags: ['网关'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded

@@ -11,7 +11,7 @@ import { Elysia } from 'elysia'
 import { authPlugin, requireUser } from '../../plugins/auth'
 import { ok } from '../../shared/response'
 
-export const modelsModule = new Elysia({ name: 'models' })
+export const modelsModule = new Elysia({ name: 'models', detail: { tags: ['模型'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded.get('/models', async () => {

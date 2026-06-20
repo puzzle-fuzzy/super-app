@@ -5,7 +5,7 @@ import { authPlugin, requireUser } from '../../plugins/auth'
 import { ok } from '../../shared/response'
 import { createApiKey, listApiKeys, revokeApiKey } from './service'
 
-export const apiKeysModule = new Elysia({ name: 'api-keys' })
+export const apiKeysModule = new Elysia({ name: 'api-keys', detail: { tags: ['API 密钥'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded.group('/api-keys', (keys) =>

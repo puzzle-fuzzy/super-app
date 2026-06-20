@@ -19,7 +19,7 @@ import {
   uploadAsset,
 } from './service'
 
-export const assetsModule = new Elysia({ name: 'assets' })
+export const assetsModule = new Elysia({ name: 'assets', detail: { tags: ['资产'] } })
   .use(authPlugin)
   .use(storagePlugin)
   .group('/assets', (assets) =>

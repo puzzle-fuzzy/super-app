@@ -17,7 +17,7 @@ import { Elysia, t } from 'elysia'
 import { authPlugin, requireUser } from '../../plugins/auth'
 import { ok } from '../../shared/response'
 
-export const billingModule = new Elysia({ name: 'billing' })
+export const billingModule = new Elysia({ name: 'billing', detail: { tags: ['计费'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded

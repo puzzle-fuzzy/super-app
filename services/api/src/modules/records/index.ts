@@ -46,7 +46,7 @@ function serialize(record: GenerationRecord): GenerationRecordDTO {
   }
 }
 
-export const recordsModule = new Elysia({ name: 'records' })
+export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生成记录'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded

@@ -20,7 +20,7 @@ import {
   updateCanvasProject,
 } from './service'
 
-export const canvasModule = new Elysia({ name: 'canvas' })
+export const canvasModule = new Elysia({ name: 'canvas', detail: { tags: ['画布'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded

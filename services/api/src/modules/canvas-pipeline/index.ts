@@ -67,13 +67,13 @@ function makePhaseHandler(phase: CanvasPipelinePhase) {
       return { success: true, data: result }
     },
     params: t.Object({ id: t.String() }),
-    detail: { summary: `触发「${PHASE_LABELS[phase]}」阶段`, tags: ['Canvas Pipeline'] },
+    detail: { summary: `触发「${PHASE_LABELS[phase]}」阶段`, tags: ['视频流水线'] },
   }
 }
 
 // ── Module ────────────────────────────────────────────────
 
-export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix: '/pipeline' })
+export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix: '/pipeline', detail: { tags: ['视频流水线'] } })
   .use(dbPlugin)
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
@@ -97,7 +97,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
           limit: t.Optional(t.Numeric()),
           offset: t.Optional(t.Numeric()),
         }),
-        detail: { summary: '查询 Pipeline 项目列表', tags: ['Canvas Pipeline'] },
+        detail: { summary: '查询 Pipeline 项目列表', tags: ['视频流水线'] },
       })
 
       .post('/projects', async ({ db, user, body }) => {
@@ -114,7 +114,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
           name: t.String({ minLength: 1, maxLength: 200 }),
           storyText: t.String({ minLength: 1 }),
         }),
-        detail: { summary: '创建 Pipeline 项目', tags: ['Canvas Pipeline'] },
+        detail: { summary: '创建 Pipeline 项目', tags: ['视频流水线'] },
       })
 
       .get('/projects/:id', async ({ db, user, params }) => {
@@ -123,7 +123,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         return { success: true, data: project }
       }, {
         params: t.Object({ id: t.String() }),
-        detail: { summary: '查询项目详情', tags: ['Canvas Pipeline'] },
+        detail: { summary: '查询项目详情', tags: ['视频流水线'] },
       })
 
       .delete('/projects/:id', async ({ db, user, params }) => {
@@ -131,7 +131,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         return ok({ message: '项目已删除' })
       }, {
         params: t.Object({ id: t.String() }),
-        detail: { summary: '删除项目', tags: ['Canvas Pipeline'] },
+        detail: { summary: '删除项目', tags: ['视频流水线'] },
       })
 
       .patch('/projects/:id', async ({ db, user, params, body }) => {
@@ -150,7 +150,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
           title: t.Optional(t.String({ minLength: 1, maxLength: 200 })),
           storyText: t.Optional(t.String({ minLength: 1 })),
         }),
-        detail: { summary: '更新项目（重命名/修改故事文本）', tags: ['Canvas Pipeline'] },
+        detail: { summary: '更新项目（重命名/修改故事文本）', tags: ['视频流水线'] },
       })
 
       // ── 12 阶段独立触发端点 ──────────────────────────
@@ -174,7 +174,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         return { success: true, data: result }
       }, {
         params: t.Object({ id: t.String() }),
-        detail: { summary: '取消活跃阶段', tags: ['Canvas Pipeline'] },
+        detail: { summary: '取消活跃阶段', tags: ['视频流水线'] },
       })
 
       .post('/projects/:id/retry', async ({ db, user, params }) => {
@@ -182,7 +182,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         return { success: true, data: result }
       }, {
         params: t.Object({ id: t.String() }),
-        detail: { summary: '重试失败阶段', tags: ['Canvas Pipeline'] },
+        detail: { summary: '重试失败阶段', tags: ['视频流水线'] },
       })
 
       .get('/projects/:id/runs', async ({ db, user, params }) => {
@@ -190,7 +190,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         return { success: true, data: runs }
       }, {
         params: t.Object({ id: t.String() }),
-        detail: { summary: '查询流水线运行记录', tags: ['Canvas Pipeline'] },
+        detail: { summary: '查询流水线运行记录', tags: ['视频流水线'] },
       })
 
       // ── 角色管理 ───────────────────────────────────────
@@ -199,7 +199,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         return { success: true, data: characters }
       }, {
         params: t.Object({ id: t.String() }),
-        detail: { summary: '查询项目角色列表', tags: ['Canvas Pipeline'] },
+        detail: { summary: '查询项目角色列表', tags: ['视频流水线'] },
       })
 
       .patch('/projects/:id/characters/:characterId', async ({ db, user, params, body }) => {
@@ -212,7 +212,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         return { success: true, data: result }
       }, {
         params: t.Object({ id: t.String(), characterId: t.String() }),
-        detail: { summary: '更新角色', tags: ['Canvas Pipeline'] },
+        detail: { summary: '更新角色', tags: ['视频流水线'] },
       })
 
       // ── 场景管理 ───────────────────────────────────────
@@ -221,7 +221,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         return { success: true, data: locations }
       }, {
         params: t.Object({ id: t.String() }),
-        detail: { summary: '查询项目场景列表', tags: ['Canvas Pipeline'] },
+        detail: { summary: '查询项目场景列表', tags: ['视频流水线'] },
       })
 
       .patch('/projects/:id/locations/:locationId', async ({ db, user, params, body }) => {
@@ -234,7 +234,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         return { success: true, data: result }
       }, {
         params: t.Object({ id: t.String(), locationId: t.String() }),
-        detail: { summary: '更新场景', tags: ['Canvas Pipeline'] },
+        detail: { summary: '更新场景', tags: ['视频流水线'] },
       })
 
       // ── 镜头管理 ───────────────────────────────────────
@@ -243,7 +243,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         return { success: true, data: shots }
       }, {
         params: t.Object({ id: t.String() }),
-        detail: { summary: '查询项目镜头列表', tags: ['Canvas Pipeline'] },
+        detail: { summary: '查询项目镜头列表', tags: ['视频流水线'] },
       })
 
       .patch('/projects/:id/shots/:shotId', async ({ db, user, params, body }) => {
@@ -256,7 +256,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         return { success: true, data: result }
       }, {
         params: t.Object({ id: t.String(), shotId: t.String() }),
-        detail: { summary: '更新镜头', tags: ['Canvas Pipeline'] },
+        detail: { summary: '更新镜头', tags: ['视频流水线'] },
       })
 
       // ── 资产管理 ───────────────────────────────────────
@@ -265,7 +265,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         return { success: true, data: assets }
       }, {
         params: t.Object({ id: t.String() }),
-        detail: { summary: '查询项目资产列表', tags: ['Canvas Pipeline'] },
+        detail: { summary: '查询项目资产列表', tags: ['视频流水线'] },
       })
 
       .get('/assets/:assetId', async ({ db, user, params }) => {
@@ -274,7 +274,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         return { success: true, data: asset }
       }, {
         params: t.Object({ assetId: t.String() }),
-        detail: { summary: '查询资产详情', tags: ['Canvas Pipeline'] },
+        detail: { summary: '查询资产详情', tags: ['视频流水线'] },
       }),
   )
 

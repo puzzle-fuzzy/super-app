@@ -23,7 +23,7 @@ function getRequiredUserId(user: { id: string } | null): string {
   return user.id
 }
 
-export const subtitleModule = new Elysia({ name: 'subtitle', prefix: '/subtitle' })
+export const subtitleModule = new Elysia({ name: 'subtitle', prefix: '/subtitle', detail: { tags: ['字幕'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded

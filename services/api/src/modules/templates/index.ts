@@ -13,7 +13,7 @@ import {
   updateTemplateAsset,
 } from './service'
 
-export const templatesModule = new Elysia({ name: 'templates' })
+export const templatesModule = new Elysia({ name: 'templates', detail: { tags: ['模板'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded.group('/assets/templates', (templates) =>

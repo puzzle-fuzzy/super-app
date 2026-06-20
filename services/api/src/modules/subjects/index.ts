@@ -13,7 +13,7 @@ import {
   updateSubjectAsset,
 } from './service'
 
-export const subjectsModule = new Elysia({ name: 'subjects' })
+export const subjectsModule = new Elysia({ name: 'subjects', detail: { tags: ['主体'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded.group('/assets/subjects', (subjects) =>

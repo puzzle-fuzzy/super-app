@@ -22,7 +22,7 @@ interface SignalingMessage {
 
 const socketPeers = new WeakMap<object, string>()
 
-export const transfersModule = new Elysia({ name: 'transfers' })
+export const transfersModule = new Elysia({ name: 'transfers', detail: { tags: ['传输'] } })
   .use(storagePlugin)
   .get(
     '/transfers/:roomId/file-info',

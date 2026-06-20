@@ -43,7 +43,7 @@ async function getAdminOverview(): Promise<AdminOverview> {
 
 // ── Module ────────────────────────────────────────────────
 
-export const adminModule = new Elysia({ name: 'admin', prefix: '/admin' })
+export const adminModule = new Elysia({ name: 'admin', prefix: '/admin', detail: { tags: ['管理后台'] } })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded
