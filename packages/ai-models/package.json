@@ -1,5 +1,5 @@
 {
-  "name": "@super-app/storage",
+  "name": "@super-app/ai-models",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,13 +11,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
-  "dependencies": {
-    "@super-app/env": "workspace:*",
-    "ali-oss": "^6.23.0"
-  },
   "devDependencies": {
-    "@types/ali-oss": "^6.23.3",
-    "bun-types": "latest",
     "typescript": "^5.8.3"
   }
 }

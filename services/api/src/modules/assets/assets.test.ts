@@ -9,6 +9,7 @@ import path from 'node:path'
 import { serverEnv } from '@super-app/env/server'
 
 import { app } from '../../app'
+import { resolveStoragePublicUrl } from './service'
 
 interface TestUser {
   id: string
@@ -262,6 +263,16 @@ describe('assets module', () => {
     expect(disposition).toContain('filename="ChatGPT Image 2026_5_24_ 17_07_16.png"')
     expect(disposition).toContain(`filename*=UTF-8''${encodeURIComponent(fileName)}`)
     expect((await downloadRes.arrayBuffer()).byteLength).toBe(original.size)
+  })
+
+  it('includes the OSS prefix when resolving asset file URLs', async () => {
+    expect(
+      resolveStoragePublicUrl('owner/asset/original/prefixed.png', {
+        baseUrl: 'https://cdn.example.com/',
+        storageDriver: 'oss',
+        ossPrefix: '/super-app/',
+      })
+    ).toBe('https://cdn.example.com/super-app/owner/asset/original/prefixed.png')
   })
 
   it('creates a 3-minute transfer session for an owned asset', async () => {

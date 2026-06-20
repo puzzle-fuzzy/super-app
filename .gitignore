@@ -8,7 +8,8 @@ dist-web/
 coverage/
 test-results/
 playwright-report/
-storage/
+/storage/
+/services/api/storage/
 *.log
 
 .env

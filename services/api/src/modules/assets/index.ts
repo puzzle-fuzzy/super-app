@@ -1,6 +1,5 @@
 import type { AssetKind } from '@super-app/contracts/assets'
 import { Elysia, t } from 'elysia'
-import path from 'node:path'
 
 import { authPlugin, requireUser } from '../../plugins/auth'
 import { storagePlugin } from '../../plugins/storage'
@@ -18,26 +17,24 @@ import {
   parseAllowedMimeTypes,
   uploadAsset,
 } from './service'
-import { serverEnv } from '@super-app/env/server'
 
 export const assetsModule = new Elysia({ name: 'assets' })
   .use(authPlugin)
   .use(storagePlugin)
   .group('/assets', (assets) =>
     assets
-      .get('/shared/:token', async ({ db, params }) => {
+      .get('/shared/:token', async ({ db, storage, params }) => {
         const shared = await loadSharedAssetFile({ db, token: params.token })
-        const filePath = resolveStoragePath(shared.storageKey)
-        const file = Bun.file(filePath)
+        const file = await storage.read(shared.storageKey).catch(() => null)
 
-        if (!(await file.exists())) {
+        if (!file) {
           throw new AppError(404, 'NOT_FOUND', 'Shared asset file not found')
         }
 
-        return new Response(file, {
+        return new Response(new Uint8Array(file.body), {
           headers: {
             'Content-Type': shared.mimeType,
-            'Content-Length': String(shared.size),
+            'Content-Length': String(file.size || shared.size),
             'Content-Disposition': attachmentContentDisposition(shared.title),
           },
         })
@@ -157,13 +154,4 @@ function parseLimit(value: string | undefined): number | undefined {
   }
 
   return limit
-}
-
-function resolveStoragePath(storageKey: string): string {
-  const storageRoot = path.resolve(serverEnv.STORAGE_DIR)
-  const resolved = path.resolve(storageRoot, storageKey)
-  if (resolved !== storageRoot && !resolved.startsWith(storageRoot + path.sep)) {
-    throw new AppError(404, 'NOT_FOUND', 'Shared asset file not found')
-  }
-  return resolved
 }

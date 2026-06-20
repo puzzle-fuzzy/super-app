@@ -1,7 +1,7 @@
 import { mkdir, readFile, rm, stat } from 'node:fs/promises'
 import path from 'node:path'
 
-import type { StorageProvider, StoragePutInput, StoragePutResult } from './types'
+import type { StorageProvider, StoragePutInput, StoragePutResult, StorageReadResult } from './types'
 
 const LOCAL_BUCKET = 'local'
 
@@ -38,8 +38,13 @@ export class LocalStorageProvider implements StorageProvider {
     await rm(this.resolvePath(key), { force: true })
   }
 
-  async read(key: string): Promise<Buffer> {
-    return readFile(this.resolvePath(key))
+  async read(key: string): Promise<StorageReadResult> {
+    const filePath = this.resolvePath(key)
+    const [body, info] = await Promise.all([readFile(filePath), stat(filePath)])
+    return {
+      body,
+      size: info.size,
+    }
   }
 
   urlFor(key: string): string {

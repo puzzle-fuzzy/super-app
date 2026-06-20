@@ -61,22 +61,46 @@ export const UpdateCanvasProjectRequestSchema = z.object({
 export type UpdateCanvasProjectRequest = z.infer<typeof UpdateCanvasProjectRequestSchema>
 
 export const CanvasGenerateImageRequestSchema = z.object({
+  kind: z.enum(['image', 'video']).default('image'),
   prompt: z.string().trim().min(1).max(4000),
   model: z.string().min(1).default('qwen-image-2.0-pro'),
   size: z
-    .enum(['2048*2048', '2368*1728', '1728*2368', '1536*2688', '2688*1536'])
-    .default('2048*2048'),
+    .enum([
+      '2048*2048',
+      '2368*1728',
+      '1728*2368',
+      '1536*2688',
+      '2688*1536',
+      '1664*928',
+      '1472*1104',
+      '1328*1328',
+      '1104*1472',
+      '928*1664',
+    ])
+    .optional(),
+  ratio: z.enum(['16:9', '9:16', '1:1', '4:3', '3:4', '4:5', '5:4', '9:21', '21:9']).optional(),
+  resolution: z.enum(['720P', '1080P']).optional(),
+  duration: z.number().int().min(2).max(15).optional(),
+  negativePrompt: z.string().max(500).optional(),
+  promptExtend: z.boolean().optional(),
+  watermark: z.boolean().optional(),
+  seed: z.number().int().min(0).max(2147483647).optional(),
 })
 
 export type CanvasGenerateImageRequest = z.infer<typeof CanvasGenerateImageRequestSchema>
 
 export const CanvasGenerateImageResponseSchema = z.object({
+  kind: z.enum(['image', 'video']).default('image'),
   prompt: z.string(),
   model: z.string(),
-  imageUrl: z.string().url(),
+  url: z.string().url().optional(),
+  imageUrl: z.string().url().optional(),
+  videoUrl: z.string().url().optional(),
   providerImageUrl: z.string().url().optional(),
+  providerVideoUrl: z.string().url().optional(),
   asset: AssetDtoSchema.optional(),
   requestId: z.string().optional(),
+  taskId: z.string().optional(),
 })
 
 export type CanvasGenerateImageResponse = z.infer<typeof CanvasGenerateImageResponseSchema>

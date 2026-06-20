@@ -375,13 +375,12 @@ export function toAssetDto(
   files: (typeof assetFiles.$inferSelect)[],
   tags: string[] = []
 ): AssetDto {
-  const baseUrl = serverEnv.SUPER_PUBLIC_STORAGE_BASE_URL.replace(/\/$/, '')
   const fileDtos: AssetFileDto[] = files.map((file) => ({
     id: file.id,
     role: file.role,
     storageBucket: file.storageBucket,
     storageKey: file.storageKey,
-    url: `${baseUrl}/${file.storageKey}`,
+    url: resolveStoragePublicUrl(file.storageKey),
     mimeType: file.mimeType ?? undefined,
     size: file.size ?? undefined,
     width: file.width ?? undefined,
@@ -399,13 +398,28 @@ export function toAssetDto(
     status: asset.status,
     visibility: asset.visibility,
     source: asset.source,
-    thumbnailUrl: asset.thumbnailKey ? `${baseUrl}/${asset.thumbnailKey}` : undefined,
-    previewUrl: asset.previewKey ? `${baseUrl}/${asset.previewKey}` : undefined,
+    thumbnailUrl: asset.thumbnailKey ? resolveStoragePublicUrl(asset.thumbnailKey) : undefined,
+    previewUrl: asset.previewKey ? resolveStoragePublicUrl(asset.previewKey) : undefined,
     metadata: asset.metadata,
     files: fileDtos,
     createdAt: asset.createdAt.toISOString(),
     updatedAt: asset.updatedAt.toISOString(),
   }
+}
+
+export function resolveStoragePublicUrl(
+  storageKey: string,
+  config: {
+    baseUrl?: string
+    storageDriver?: 'local' | 'oss'
+    ossPrefix?: string
+  } = {}
+): string {
+  const baseUrl = (config.baseUrl ?? serverEnv.SUPER_PUBLIC_STORAGE_BASE_URL).replace(/\/$/, '')
+  const storageDriver = config.storageDriver ?? serverEnv.STORAGE_DRIVER
+  const ossPrefix = config.ossPrefix ?? serverEnv.OSS_PREFIX
+  const prefix = storageDriver === 'oss' && ossPrefix ? ossPrefix.replace(/^\/+|\/+$/g, '') : ''
+  return `${baseUrl}/${prefix ? `${prefix}/` : ''}${storageKey}`
 }
 
 function toAssetShareLinkDto(share: typeof assetShareLinks.$inferSelect): AssetShareLinkDto {

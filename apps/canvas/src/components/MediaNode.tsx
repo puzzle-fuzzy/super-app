@@ -121,7 +121,7 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
         position={Position.Right}
         style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }}
       />
-      {isVideo ? (
+      {isVideo && data.src ? (
         <div
           style={{
             width: '100%',
@@ -144,7 +144,7 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
             onError={() => setImageError(true)}
           />
         </div>
-      ) : !imageError ? (
+      ) : !imageError && data.src ? (
         <div
           style={{
             width: '100%',
@@ -166,16 +166,18 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
         <div
           style={{
             width: '100%',
-            height: 160,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            overflow: 'hidden',
+            borderRadius: 11,
+            lineHeight: 0,
             background: '#242424',
-            borderRadius: 12,
-            color: '#999999',
           }}
         >
-          <ImageIcon size={32} />
+          <img
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+            src="/images/generation-failed.png"
+            alt="生成失败"
+            loading="lazy"
+          />
         </div>
       )}
 

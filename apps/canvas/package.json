@@ -12,6 +12,7 @@
     "test": "echo \"No tests yet\""
   },
   "dependencies": {
+    "@super-app/ai-models": "workspace:*",
     "@super-app/api-client": "workspace:*",
     "@super-app/auth-client": "workspace:*",
     "@super-app/contracts": "workspace:*",

@@ -11,7 +11,14 @@ export interface StoragePutResult {
   size: number
 }
 
+export interface StorageReadResult {
+  body: Buffer
+  size: number
+}
+
 export interface StorageProvider {
   put(input: StoragePutInput): Promise<StoragePutResult>
+  read(key: string): Promise<StorageReadResult>
   delete(key: string): Promise<void>
+  urlFor(key: string): string
 }

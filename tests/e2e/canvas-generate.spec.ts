@@ -55,14 +55,91 @@ test('generates an image node from the canvas bottom prompt bar', async ({ page 
   await page.getByRole('button', { name: '创建' }).click()
   await page.getByText('生成测试画布').click()
 
-  await page.getByPlaceholder('描述你想生成的图片...').fill(prompt)
+  await page.getByPlaceholder('描述你想生成的图片或视频...').fill(prompt)
   await expect(page.getByRole('button', { name: '高级参数' })).toBeVisible()
   await page.getByRole('button', { name: '生成图片' }).click()
 
   await expect(page.getByText('正在生成图片...')).toBeVisible()
   releaseGeneration()
   await expect(page.getByAltText(prompt)).toBeVisible()
-  expect(requests).toEqual([{ prompt, model: 'qwen-image-2.0-pro', size: '2048*2048' }])
+  expect(requests).toEqual([
+    {
+      kind: 'image',
+      prompt,
+      model: 'qwen-image-2.0-pro',
+      size: '2048*2048',
+      promptExtend: true,
+      watermark: false,
+    },
+  ])
+})
+
+test('generates a video node from a video model', async ({ page }) => {
+  const email = `e2e-canvas-generate-video-${Date.now()}-${test.info().parallelIndex}@super.test`
+  const password = 'super-e2e-password'
+  const prompt = '一段雨夜城市延时摄影'
+  const generatedUrl = 'https://fake-provider.local/generated.mp4'
+  const requests: unknown[] = []
+  let releaseGeneration!: () => void
+  const generationReady = new Promise<void>((resolve) => {
+    releaseGeneration = resolve
+  })
+
+  await page.route('**/api/canvas/generate-image', async (route) => {
+    requests.push(route.request().postDataJSON())
+    await generationReady
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        data: {
+          kind: 'video',
+          prompt,
+          model: 'happyhorse-1.0-t2v',
+          url: generatedUrl,
+          videoUrl: generatedUrl,
+          requestId: 'fake-video-request-id',
+        },
+      }),
+    })
+  })
+
+  await page.goto(canvasUrl)
+  await page.getByRole('tab', { name: '注册' }).click()
+  await page.getByLabel('名称').fill('Canvas Video User')
+  await page.getByLabel('邮箱').fill(email)
+  await page.getByLabel('密码').fill(password)
+  await page.getByRole('button', { name: '创建并进入' }).click()
+
+  await expect(page).toHaveURL(canvasUrl)
+  await page.getByRole('button', { name: '新建画布' }).first().click()
+  await page.getByPlaceholder('输入项目名称').fill('生成视频测试画布')
+  await page.getByRole('button', { name: '创建' }).click()
+  await page.getByText('生成视频测试画布').click()
+
+  await page.getByRole('button', { name: '高级参数' }).click()
+  await page.locator('label').filter({ hasText: '模型' }).getByRole('button').click()
+  await page.getByRole('option', { name: 'HappyHorse 文生视频' }).click()
+  await expect(page.getByRole('button', { name: '生成视频' })).toBeVisible()
+
+  await page.getByPlaceholder('描述你想生成的图片或视频...').fill(prompt)
+  await page.getByRole('button', { name: '生成视频' }).click()
+
+  await expect(page.getByText('正在生成视频...')).toBeVisible()
+  releaseGeneration()
+  await expect(page.locator('video[src="https://fake-provider.local/generated.mp4"]')).toBeVisible()
+  expect(requests).toEqual([
+    {
+      kind: 'video',
+      prompt,
+      model: 'happyhorse-1.0-t2v',
+      ratio: '16:9',
+      resolution: '720P',
+      duration: 5,
+      watermark: false,
+    },
+  ])
 })
 
 test('retries a failed canvas image generation request', async ({ page }) => {
@@ -117,7 +194,7 @@ test('retries a failed canvas image generation request', async ({ page }) => {
   await page.getByRole('button', { name: '创建' }).click()
   await page.getByText('生成重试测试画布').click()
 
-  await page.getByPlaceholder('描述你想生成的图片...').fill(prompt)
+  await page.getByPlaceholder('描述你想生成的图片或视频...').fill(prompt)
   await page.getByRole('button', { name: '生成图片' }).click()
 
   await expect(page.getByText('生成服务暂时不可用')).toBeVisible()
@@ -133,7 +210,7 @@ test('adds a generated image from persisted history', async ({ page }) => {
   const prompt = '历史里的稳定生成图'
   const historyUrl = 'https://fake-provider.local/history-generated.png'
 
-  await page.route('**/api/assets/?kind=image&limit=20', async (route) => {
+  await page.route('**/api/assets/?limit=20', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',

@@ -48,6 +48,20 @@ import { assetsApi, canvasApi } from '@super-app/api-client'
 import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
 import { clientEnv } from '@super-app/env/client'
+import { Select } from '@super-app/ui-react'
+import {
+  DEFAULT_GENERATION_MODEL_ID,
+  GENERATION_MODELS,
+  getGenerationModel,
+  imageSizeToAspectRatio,
+  isImageGenerationModel,
+  isVideoGenerationModel,
+  videoRatioToAspectRatio,
+  type GenerationModelId,
+  type ImageSize,
+  type VideoRatio,
+  type VideoResolution,
+} from '@super-app/ai-models'
 
 // 新模块
 import MediaNode from '../components/MediaNode'
@@ -733,45 +747,44 @@ function EditorViewInner({
   const edgeCount = edges.length
 
   async function handleGenerateImage(input: CanvasGenerateImageRequest) {
-    const dimensions = imageNodeDimensionsFromSize(input.size)
-    const nodeId = `generating-image-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const modelConfig = getGenerationModel(input.model)
+    const isVideo = input.kind === 'video' || (modelConfig ? isVideoGenerationModel(modelConfig) : false)
+    const dimensions = generationNodeDimensions(input)
+    const nodeId = `generating-${isVideo ? 'video' : 'image'}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     const position = screenToFlowPosition({
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,
     })
-    const placeholder: ImageNodeType = {
+    const placeholder: ImageNodeType | VideoNodeType = {
       id: nodeId,
-      type: 'imageNode',
+      type: isVideo ? 'videoNode' : 'imageNode',
       position,
       data: {
         src: '',
         fileName: input.prompt,
         width: dimensions.width,
         height: dimensions.height,
-        uploading: { progress: 0.35, fileName: '正在生成图片...' },
+        uploading: { progress: 0.35, fileName: isVideo ? '正在生成视频...' : '正在生成图片...' },
       },
-    }
+    } as ImageNodeType | VideoNodeType
     setNodes((prev) => [...prev, placeholder])
 
     try {
-      const result = await canvasApi.generateImage({
-        prompt: input.prompt,
-        model: input.model,
-        size: input.size,
-      })
+      const result = await canvasApi.generateImage(input)
+      const mediaUrl = result.url ?? result.imageUrl ?? result.videoUrl ?? ''
       setNodes((prev) =>
         prev.map((node) =>
           node.id === nodeId
             ? ({
                 ...node,
                 data: {
-                  src: result.imageUrl,
+                  src: mediaUrl,
                   fileName: result.prompt,
                   width: dimensions.width,
                   height: dimensions.height,
                   assetId: result.asset?.id,
                 },
-              } as ImageNodeType)
+              } as ImageNodeType | VideoNodeType)
             : node
         )
       )
@@ -787,7 +800,7 @@ function EditorViewInner({
                   uploading: undefined,
                   fileName: '生成失败',
                 },
-              } as ImageNodeType)
+              } as ImageNodeType | VideoNodeType)
             : node
         )
       )
@@ -967,22 +980,55 @@ function EditorViewInner({
 function ImageGenerationPromptBar({
   onGenerate,
 }: {
-  onGenerate: (input: CanvasGenerateImageRequest) => Promise<{ prompt: string; imageUrl: string }>
+  onGenerate: (input: CanvasGenerateImageRequest) => Promise<{ prompt: string; url?: string; imageUrl?: string; videoUrl?: string }>
 }) {
   const [prompt, setPrompt] = useState('')
-  const [model, setModel] = useState('qwen-image-2.0-pro')
-  const [size, setSize] = useState<CanvasGenerateImageRequest['size']>('2048*2048')
+  const [model, setModel] = useState<GenerationModelId>(DEFAULT_GENERATION_MODEL_ID)
+  const modelConfig = getGenerationModel(model) ?? GENERATION_MODELS[0]
+  const [size, setSize] = useState<ImageSize>(
+    isImageGenerationModel(modelConfig) ? modelConfig.defaultSize : '2048*2048'
+  )
+  const [ratio, setRatio] = useState<VideoRatio>('16:9')
+  const [resolution, setResolution] = useState<VideoResolution>('720P')
+  const [duration, setDuration] = useState(5)
+  const [negativePrompt, setNegativePrompt] = useState('')
+  const [promptExtend, setPromptExtend] = useState(true)
+  const [watermark, setWatermark] = useState(false)
+  const [seed, setSeed] = useState('')
   const [advancedOpen, setAdvancedOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [status, setStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [lastInput, setLastInput] = useState<CanvasGenerateImageRequest | null>(null)
+
+  useEffect(() => {
+    if (isImageGenerationModel(modelConfig)) {
+      setSize(modelConfig.defaultSize)
+      return
+    }
+    setRatio(modelConfig.defaultRatio)
+    setResolution(modelConfig.defaultResolution)
+    setDuration(modelConfig.defaultDuration)
+    setPromptExtend(modelConfig.supportsPromptExtend)
+    setWatermark(false)
+  }, [modelConfig])
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const trimmed = prompt.trim()
     if (!trimmed || generating) return
 
-    const input = { prompt: trimmed, model, size }
+    const input = buildGenerationInput({
+      prompt: trimmed,
+      model,
+      size,
+      ratio,
+      resolution,
+      duration,
+      negativePrompt,
+      promptExtend,
+      watermark,
+      seed,
+    })
     setLastInput(input)
     setStatus(null)
     await runGeneration(input)
@@ -999,7 +1045,10 @@ function ImageGenerationPromptBar({
     try {
       await onGenerate(input)
       setPrompt('')
-      setStatus({ type: 'success', text: '图片已生成，并添加到画布。' })
+      setStatus({
+        type: 'success',
+        text: input.kind === 'video' ? '视频已生成，并添加到画布。' : '图片已生成，并添加到画布。',
+      })
     } catch (err) {
       setStatus({
         type: 'error',
@@ -1020,37 +1069,125 @@ function ImageGenerationPromptBar({
           <textarea
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
-            placeholder="描述你想生成的图片..."
+            placeholder="描述你想生成的图片或视频..."
             rows={3}
             className="min-h-24 resize-none rounded-xl border border-[#303030] bg-[#101010] px-4 py-3 text-[14px] leading-relaxed text-[#eeeeee] outline-none transition-colors placeholder:text-[#8a8a8a] focus:border-[#686868]"
           />
 
           {advancedOpen ? (
-            <div className="grid gap-3 rounded-xl border border-[#2a2a2a] bg-[#141414] p-3 sm:grid-cols-[1fr_180px]">
-              <label className="grid gap-1.5">
-                <span className="text-xs font-medium text-[#a3a3a3]">模型</span>
-                <input
-                  value={model}
-                  onChange={(event) => setModel(event.target.value)}
-                  className="h-9 rounded-lg border border-[#303030] bg-[#101010] px-3 text-[13px] text-[#eeeeee] outline-none focus:border-[#686868]"
-                />
-              </label>
-              <label className="grid gap-1.5">
-                <span className="text-xs font-medium text-[#a3a3a3]">尺寸</span>
-                <select
-                  value={size}
-                  onChange={(event) =>
-                    setSize(event.target.value as CanvasGenerateImageRequest['size'])
-                  }
-                  className="h-9 rounded-lg border border-[#303030] bg-[#101010] px-3 text-[13px] text-[#eeeeee] outline-none focus:border-[#686868]"
-                >
-                  <option value="2048*2048">1:1 2048</option>
-                  <option value="2368*1728">4:3 横图</option>
-                  <option value="1728*2368">3:4 竖图</option>
-                  <option value="2688*1536">16:9 横图</option>
-                  <option value="1536*2688">9:16 竖图</option>
-                </select>
-              </label>
+            <div className="grid gap-3 rounded-xl border border-[#2a2a2a] bg-[#141414] p-3">
+              <div className="grid gap-3 sm:grid-cols-[1fr_220px]">
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-medium text-[#a3a3a3]">模型</span>
+                  <Select
+                    value={model}
+                    onChange={setModel}
+                    options={GENERATION_MODELS.map((item) => ({
+                      value: item.id,
+                      label: item.label,
+                    }))}
+                  />
+                  <span className="text-xs text-[#777777]">{modelConfig.description}</span>
+                </label>
+
+                {isImageGenerationModel(modelConfig) ? (
+                  <label className="grid gap-1.5">
+                    <span className="text-xs font-medium text-[#a3a3a3]">图片尺寸</span>
+                    <Select
+                      value={size}
+                      onChange={setSize}
+                      options={modelConfig.sizes.map((item) => ({
+                        value: item,
+                        label: imageSizeLabel(item),
+                      }))}
+                    />
+                  </label>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="grid gap-1.5">
+                      <span className="text-xs font-medium text-[#a3a3a3]">视频比例</span>
+                      <Select
+                        value={ratio}
+                        onChange={setRatio}
+                        options={modelConfig.ratios.map((item) => ({ value: item, label: item }))}
+                      />
+                    </label>
+                    <label className="grid gap-1.5">
+                      <span className="text-xs font-medium text-[#a3a3a3]">清晰度</span>
+                      <Select
+                        value={resolution}
+                        onChange={setResolution}
+                        options={modelConfig.resolutions.map((item) => ({
+                          value: item,
+                          label: item,
+                        }))}
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              {isVideoGenerationModel(modelConfig) ? (
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-medium text-[#a3a3a3]">
+                    时长：{duration} 秒
+                  </span>
+                  <input
+                    type="range"
+                    min={modelConfig.minDuration}
+                    max={modelConfig.maxDuration}
+                    value={duration}
+                    onChange={(event) => setDuration(Number(event.target.value))}
+                    className="accent-[#e5e5e5]"
+                  />
+                </label>
+              ) : null}
+
+              {modelConfig.supportsNegativePrompt ? (
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-medium text-[#a3a3a3]">反向提示词</span>
+                  <input
+                    value={negativePrompt}
+                    onChange={(event) => setNegativePrompt(event.target.value)}
+                    placeholder="不希望出现的内容..."
+                    className="h-9 rounded-lg border border-[#303030] bg-[#101010] px-3 text-[13px] text-[#eeeeee] outline-none placeholder:text-[#777777] focus:border-[#686868]"
+                  />
+                </label>
+              ) : null}
+
+              <div className="flex flex-wrap gap-3 text-[13px] text-[#d4d4d4]">
+                {modelConfig.supportsPromptExtend ? (
+                  <label className="inline-flex cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={promptExtend}
+                      onChange={(event) => setPromptExtend(event.target.checked)}
+                    />
+                    智能扩写
+                  </label>
+                ) : null}
+                {'supportsWatermark' in modelConfig || isImageGenerationModel(modelConfig) ? (
+                  <label className="inline-flex cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={watermark}
+                      onChange={(event) => setWatermark(event.target.checked)}
+                    />
+                    添加水印
+                  </label>
+                ) : null}
+                {modelConfig.supportsSeed ? (
+                  <label className="inline-flex items-center gap-2">
+                    <span className="text-[#a3a3a3]">Seed</span>
+                    <input
+                      value={seed}
+                      onChange={(event) => setSeed(event.target.value.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="随机"
+                      className="h-8 w-28 rounded-lg border border-[#303030] bg-[#101010] px-2 text-[13px] text-[#eeeeee] outline-none placeholder:text-[#777777] focus:border-[#686868]"
+                    />
+                  </label>
+                ) : null}
+              </div>
             </div>
           ) : null}
 
@@ -1097,7 +1234,11 @@ function ImageGenerationPromptBar({
                 className="inline-flex h-10 min-w-28 cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-[#e5e5e5] px-5 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ImageIcon size={15} aria-hidden="true" />
-                {generating ? '生成中...' : '生成图片'}
+                {generating
+                  ? '生成中...'
+                  : isVideoGenerationModel(modelConfig)
+                    ? '生成视频'
+                    : '生成图片'}
               </button>
             </div>
           </div>
@@ -1120,10 +1261,10 @@ function GeneratedImageHistory({ onAddAsset }: { onAddAsset: (asset: AssetDto) =
     setHistoryLoading(true)
     setHistoryError(null)
     assetsApi
-      .list({ kind: 'image', limit: 20 })
+      .list({ limit: 20 })
       .then((result) => {
         if (cancelled) return
-        setHistoryItems(result.items.filter(isGeneratedImageAsset))
+        setHistoryItems(result.items.filter(isGeneratedMediaAsset))
       })
       .catch((err) => {
         if (cancelled) return
@@ -1211,9 +1352,9 @@ function GeneratedImageHistory({ onAddAsset }: { onAddAsset: (asset: AssetDto) =
   )
 }
 
-function isGeneratedImageAsset(asset: AssetDto): boolean {
+function isGeneratedMediaAsset(asset: AssetDto): boolean {
   return (
-    asset.kind === 'image' &&
+    (asset.kind === 'image' || asset.kind === 'video') &&
     asset.source === 'ai_generation' &&
     asset.metadata?.provider === 'dashscope' &&
     asset.files.some((file) => file.role === 'original' && Boolean(file.url))
@@ -1226,17 +1367,65 @@ function generatedAssetPrompt(asset: AssetDto): string {
     : asset.title
 }
 
-function imageNodeDimensionsFromSize(size: CanvasGenerateImageRequest['size']): {
+function buildGenerationInput(input: {
+  prompt: string
+  model: GenerationModelId
+  size: ImageSize
+  ratio: VideoRatio
+  resolution: VideoResolution
+  duration: number
+  negativePrompt: string
+  promptExtend: boolean
+  watermark: boolean
+  seed: string
+}): CanvasGenerateImageRequest {
+  const model = getGenerationModel(input.model) ?? GENERATION_MODELS[0]
+  const seed = input.seed ? Number(input.seed) : undefined
+  const common = {
+    prompt: input.prompt,
+    model: input.model,
+    negativePrompt: input.negativePrompt.trim() || undefined,
+    promptExtend: model.supportsPromptExtend ? input.promptExtend : undefined,
+    watermark: input.watermark,
+    seed,
+  }
+
+  if (isVideoGenerationModel(model)) {
+    return {
+      ...common,
+      kind: 'video',
+      ratio: input.ratio,
+      resolution: input.resolution,
+      duration: Math.min(Math.max(input.duration, model.minDuration), model.maxDuration),
+    }
+  }
+
+  return {
+    ...common,
+    kind: 'image',
+    size: input.size,
+  }
+}
+
+function generationNodeDimensions(input: CanvasGenerateImageRequest): {
   width: number
   height: number
 } {
-  const [rawWidth, rawHeight] = size.split('*').map(Number)
-  const ratio = rawWidth > 0 && rawHeight > 0 ? rawHeight / rawWidth : 1
   const width = 320
+  const ratio =
+    input.kind === 'video'
+      ? videoRatioToAspectRatio(input.ratio ?? '16:9')
+      : imageSizeToAspectRatio((input.size ?? '2048*2048') as ImageSize)
   return {
     width,
     height: Math.round(width * ratio),
   }
+}
+
+function imageSizeLabel(size: ImageSize): string {
+  const [width, height] = size.split('*').map(Number)
+  const ratio = width === height ? '1:1' : width > height ? '横图' : '竖图'
+  return `${ratio} ${size}`
 }
 
 /* ---- Helpers ---- */

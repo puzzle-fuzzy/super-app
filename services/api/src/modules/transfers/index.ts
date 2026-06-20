@@ -1,8 +1,8 @@
 import { Elysia, t } from 'elysia'
-import path from 'node:path'
 
 import { serverEnv } from '@super-app/env/server'
 
+import { storagePlugin } from '../../plugins/storage'
 import { attachmentContentDisposition } from '../../shared/content-disposition'
 import { AppError } from '../../shared/errors'
 import { ok } from '../../shared/response'
@@ -23,6 +23,7 @@ interface SignalingMessage {
 const socketPeers = new WeakMap<object, string>()
 
 export const transfersModule = new Elysia({ name: 'transfers' })
+  .use(storagePlugin)
   .get(
     '/transfers/:roomId/file-info',
     async ({ params }) => {
@@ -44,19 +45,18 @@ export const transfersModule = new Elysia({ name: 'transfers' })
   )
   .get(
     '/transfers/:roomId/file',
-    async ({ params }) => {
+    async ({ storage, params }) => {
       const room = await requireActiveTransferRoom(params.roomId)
-      const filePath = resolveStoragePath(room.storageKey)
-      const file = Bun.file(filePath)
-      if (!(await file.exists())) {
+      const file = await storage.read(room.storageKey).catch(() => null)
+      if (!file) {
         throw new AppError(404, 'NOT_FOUND', 'Transfer file not found')
       }
 
-      return new Response(file, {
+      return new Response(new Uint8Array(file.body), {
         headers: {
           'Cache-Control': 'no-store',
           'Content-Type': room.mimeType,
-          'Content-Length': String(room.size),
+          'Content-Length': String(file.size || room.size),
           'Content-Disposition': attachmentContentDisposition(room.title),
         },
       })
@@ -165,13 +165,4 @@ export async function requireActiveTransferRoom(roomId: string) {
     throw new AppError(404, 'NOT_FOUND', 'Transfer room not found')
   }
   return room
-}
-
-function resolveStoragePath(storageKey: string): string {
-  const storageRoot = path.resolve(serverEnv.STORAGE_DIR)
-  const resolved = path.resolve(storageRoot, storageKey)
-  if (resolved !== storageRoot && !resolved.startsWith(storageRoot + path.sep)) {
-    throw new AppError(404, 'NOT_FOUND', 'Transfer file not found')
-  }
-  return resolved
 }

@@ -30,14 +30,14 @@ export const serverEnvSchema = publicEnvSchema.extend({
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url().optional(),
 
-  S3_ENDPOINT: z.string().url(),
-  S3_REGION: z.string().min(1),
-  S3_ACCESS_KEY_ID: z.string().min(1),
-  S3_SECRET_ACCESS_KEY: z.string().min(1),
-  S3_BUCKET: z.string().min(1),
-  S3_FORCE_PATH_STYLE: booleanString.default('true'),
-
+  STORAGE_DRIVER: z.enum(['local', 'oss']).default('local'),
   STORAGE_DIR: z.string().min(1).default('./storage'),
+  OSS_ENDPOINT: z.string().url().optional(),
+  OSS_REGION: z.string().min(1).optional(),
+  OSS_ACCESS_KEY_ID: z.string().min(1).optional(),
+  OSS_ACCESS_KEY_SECRET: z.string().min(1).optional(),
+  OSS_BUCKET: z.string().min(1).optional(),
+  OSS_PREFIX: z.string().optional(),
 
   ASSETS_MAX_UPLOAD_SIZE_MB: numberString,
   ASSETS_ALLOWED_MIME_TYPES: z.string().min(1),
@@ -61,6 +61,27 @@ export const serverEnvSchema = publicEnvSchema.extend({
   FEATURE_CANVAS_ENABLED: booleanString.default('true'),
   FEATURE_TRANSFER_ENABLED: booleanString.default('false'),
   FEATURE_API_CONSOLE_ENABLED: booleanString.default('false'),
+}).superRefine((env, ctx) => {
+  if (env.STORAGE_DRIVER !== 'oss') {
+    return
+  }
+
+  const requiredOssKeys = [
+    'OSS_REGION',
+    'OSS_ACCESS_KEY_ID',
+    'OSS_ACCESS_KEY_SECRET',
+    'OSS_BUCKET',
+  ] as const
+
+  for (const key of requiredOssKeys) {
+    if (!env[key]) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [key],
+        message: `${key} is required when STORAGE_DRIVER=oss`,
+      })
+    }
+  }
 })
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>
