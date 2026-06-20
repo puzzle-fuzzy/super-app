@@ -6,6 +6,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   base: '/admin/',
   envDir: path.resolve(__dirname, '../..'),
+  envPrefix: 'SUPER_PUBLIC_',
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
