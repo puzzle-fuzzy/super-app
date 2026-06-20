@@ -86,8 +86,16 @@ import { useSelectionToolbar } from '../hooks/useSelectionToolbar'
 import { useGroupToolbar } from '../hooks/useGroupToolbar'
 import { useNodeActions } from '../hooks/useNodeActions'
 import type { AppNode, DocNodeType, ImageNodeType, TextNodeType, VideoNodeType } from '../types'
-import { PipelineList } from './PipelineList'
-import { PipelineEditorRoute } from './PipelineEditor'
+import React from 'react'
+
+// Pipeline 路由 lazy-load — CanvasApp.tsx 主包体不包含 Pipeline 代码，
+// 仅在用户导航到 /pipeline 或 /pipeline/:id 时按需加载。
+const PipelineList = React.lazy(() =>
+  import('./PipelineList').then((m) => ({ default: m.PipelineList }))
+)
+const PipelineEditorRoute = React.lazy(() =>
+  import('./PipelineEditor').then((m) => ({ default: m.PipelineEditorRoute }))
+)
 /* -------------------------------------------------------------------------- */
 /*  Node Types (stable module-level identity)                                  */
 /* -------------------------------------------------------------------------- */
@@ -203,8 +211,22 @@ export function CanvasApp() {
       <Routes>
         <Route path="/" element={<ListView user={user} />} />
         <Route path="/project/:id" element={<EditorRoute user={user} />} />
-        <Route path="/pipeline" element={<PipelineList user={user} />} />
-        <Route path="/pipeline/:id" element={<PipelineEditorRoute user={user} />} />
+        <Route
+          path="/pipeline"
+          element={
+            <React.Suspense fallback={<div className="grid min-h-screen place-items-center bg-[#141414]"><p className="text-[#999999]">加载中…</p></div>}>
+              <PipelineList user={user} />
+            </React.Suspense>
+          }
+        />
+        <Route
+          path="/pipeline/:id"
+          element={
+            <React.Suspense fallback={<div className="grid min-h-screen place-items-center bg-[#141414]"><p className="text-[#999999]">加载中…</p></div>}>
+              <PipelineEditorRoute user={user} />
+            </React.Suspense>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

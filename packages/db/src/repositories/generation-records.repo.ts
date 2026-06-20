@@ -8,10 +8,7 @@ import type { NewGenerationRecord } from '../schema/generation-records'
 // 活跃状态常量真源在 @super-app/runtime（单一来源），本地引入供查询使用，re-export 保持 db 消费方 import 不变
 import { ACTIVE_GENERATION_STATUSES } from '@super-app/runtime'
 export { ACTIVE_GENERATION_STATUSES } from '@super-app/runtime'
-
-function sanitizeErrorMessage(msg: string): string {
-  return msg.length > 2000 ? msg.slice(0, 2000) + '...' : msg
-}
+import { sanitizeErrorMessage } from '@super-app/utils'
 
 /** 创建生成记录 */
 export async function createGenerationRecord(values: NewGenerationRecord) {
@@ -109,7 +106,7 @@ export async function markGenerationSucceeded(
 
 /** 标记为失败 */
 export async function markGenerationFailed(id: string, errorMessage: string) {
-  const sanitized = sanitizeErrorMessage(errorMessage)
+  const sanitized = sanitizeErrorMessage(errorMessage, 2000)
   await db
     .update(generationRecords)
     .set({

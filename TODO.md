@@ -37,11 +37,11 @@
 - [x] Persist Canvas-generated DashScope images into the asset library instead of relying on 24-hour provider URLs.
 - [x] Add Canvas generation retry and explicit failure states for longer-running image workflows.
 - [x] Add a first-class generated-image history panel backed by persisted assets.
-- [ ] Add backend filtering and pagination for AI-generated image assets so Canvas history does not rely on client-side filtering.
+- [x] Add backend filtering and pagination for AI-generated image assets so Canvas history does not rely on client-side filtering.
 - [x] Continue package boundary hardening: move generic error helpers from `@super-app/shared` to `@super-app/utils` and migrate callers directly.
 - [x] Continue package boundary hardening: reconcile `@super-app/shared` API response DTOs with `@super-app/contracts` schemas.
-- [ ] Continue package boundary hardening: plan `createLogger` migration out of `@super-app/shared` into a runtime infrastructure package.
-- [ ] Continue package boundary hardening: audit DB-local error sanitizers before deciding whether they should stay repository-specific or move to `@super-app/utils`.
+- [x] Continue package boundary hardening: plan `createLogger` migration out of `@super-app/shared` into a runtime infrastructure package.
+- [x] Continue package boundary hardening: audit DB-local error sanitizers before deciding whether they should stay repository-specific or move to `@super-app/utils`.
 
 ---
 
@@ -63,13 +63,13 @@
 
 ### 低优先级
 
-- [ ] Worker 端 canvas phase handler 输入 Zod 校验
+- [x] Worker 端 canvas phase handler 输入 Zod 校验
 - [ ] 取消操作增强：支持取消单个 stage (`?phase=analyze`)
 - [ ] Assemble 节点嵌入 project.finalVideoUrl `<video>` 预览
 - [ ] 项目列表卡片缩略图（有 finalVideoUrl 时显示）
 
 ### 技术债务
 
-- [ ] `PipelineEditor.tsx` (~870 行) 拆分: `PipelineFlow.tsx` + `PipelineNode.tsx` + `DetailPanel.tsx`
-- [ ] `PipelineNodeData` 索引签名 `[key: string]: unknown` 替换为 branded type
-- [ ] `CanvasApp.tsx` (~1800 行) 考虑 Pipeline 路由独立或 lazy-load
+- [x] `PipelineEditor.tsx` (~979→766 行) 拆分: `PipelineNode.tsx` + `types.ts` 提取完成
+- [x] `PipelineNodeData` 索引签名 `[key: string]: unknown` 替换为 branded type
+- [x] `CanvasApp.tsx` (~1800 行) Pipeline 路由已 lazy-load（React.lazy + Suspense）

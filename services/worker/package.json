@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@super-app/billing": "workspace:*",
+    "@super-app/canvas-pipeline": "workspace:*",
     "@super-app/canvas-runtime": "workspace:*",
     "@super-app/db": "workspace:*",
     "@super-app/env": "workspace:*",
@@ -25,9 +26,9 @@
     "@super-app/subtitle": "workspace:*",
     "@super-app/task-engine": "workspace:*",
     "@super-app/types": "workspace:*",
-    "@super-app/canvas-pipeline": "workspace:*",
     "drizzle-orm": "^0.44.2",
-    "elysia": "^1.3.0"
+    "elysia": "^1.3.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "bun-types": "latest",

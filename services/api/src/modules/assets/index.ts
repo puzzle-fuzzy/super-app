@@ -1,4 +1,5 @@
-import type { AssetKind } from '@super-app/contracts/assets'
+import type { AssetKind, AssetSource } from '@super-app/contracts/assets'
+import { AssetSourceSchema } from '@super-app/contracts/assets'
 import { buildContentDisposition } from '@super-app/utils'
 import { Elysia, t } from 'elysia'
 
@@ -87,6 +88,7 @@ export const assetsModule = new Elysia({ name: 'assets' })
               db,
               owner: user!,
               kind: parsedQuery.kind,
+              source: parsedQuery.source,
               limit: parsedQuery.limit,
               cursor: parsedQuery.cursor,
             })
@@ -124,10 +126,11 @@ const assetKinds = new Set<AssetKind>([
 
 function parseAssetListQuery(query: Record<string, string | undefined>) {
   const kind = parseKind(query.kind)
+  const source = parseSource(query.source)
   const limit = parseLimit(query.limit)
   const cursor = query.cursor || undefined
 
-  return { kind, limit, cursor }
+  return { kind, source, limit, cursor }
 }
 
 function parseKind(value: string | undefined): AssetKind | undefined {
@@ -140,6 +143,20 @@ function parseKind(value: string | undefined): AssetKind | undefined {
   }
 
   return value as AssetKind
+}
+
+const assetSources = new Set<AssetSource>(AssetSourceSchema.options)
+
+function parseSource(value: string | undefined): AssetSource | undefined {
+  if (!value) {
+    return undefined
+  }
+
+  if (!assetSources.has(value as AssetSource)) {
+    throw new AppError(400, 'VALIDATION_ERROR', 'Invalid asset source')
+  }
+
+  return value as AssetSource
 }
 
 function parseLimit(value: string | undefined): number | undefined {

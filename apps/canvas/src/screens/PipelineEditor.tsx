@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
-  Loader2,
-  Play,
-  RefreshCw,
   XCircle,
 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -15,7 +12,6 @@ import {
   useReactFlow,
   type Node,
   type Edge,
-  type NodeProps,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -24,223 +20,14 @@ import type { ProjectDTO, CharacterDTO, LocationDTO, ShotDTO } from '@super-app/
 import { assetsApi } from '@super-app/api-client'
 import type { AssetDto, AssetKind } from '@super-app/contracts/assets'
 
+import { PipelineNode } from '../components/PipelineNode'
+import type { NodeStatus, PhaseKey, PipelineNodeData } from '../pipeline/types'
+import { PHASE_LABEL } from '../pipeline/types'
+
 // ── Helpers ─────────────────────────────────────────────────────────
 
 function getAssetUrl(asset: AssetDto): string {
   return asset.files?.[0]?.url ?? asset.thumbnailUrl ?? ''
-}
-
-// ── Phase Metadata ─────────────────────────────────────────────────
-
-type PhaseKey = 'analyze' | 'characters' | 'locations' | 'characterRefs' | 'locationRefs'
-  | 'storyboard' | 'continuity' | 'rebuild' | 'dialogue' | 'videos' | 'bgm' | 'assemble'
-
-const PHASE_LABEL: Record<PhaseKey, string> = {
-  analyze: '分析故事',
-  characters: '生成角色',
-  locations: '生成场景',
-  characterRefs: '角色参考图',
-  locationRefs: '场景参考图',
-  storyboard: '生成分镜',
-  continuity: '连续性检查',
-  rebuild: '重建 Prompt',
-  dialogue: '对白层',
-  videos: '生成视频',
-  bgm: '生成配乐',
-  assemble: '合成成片',
-}
-
-type NodeStatus = 'pending' | 'running' | 'succeeded' | 'failed'
-
-interface PipelineNodeData {
-  [key: string]: unknown
-  label: string
-  phase: PhaseKey | 'storyInput' | 'analysis' | 'character' | 'location' | 'shot' | 'bgm' | 'assemble'
-  status: NodeStatus
-  entityId?: string
-  entityData?: CharacterDTO | LocationDTO | ShotDTO | null
-  storyText?: string
-  analysis?: Record<string, unknown> | null
-  onTrigger?: () => void
-  onRetry?: () => void
-  errorMessage?: string
-}
-
-// ── Pipeline Node Component ────────────────────────────────────────
-
-function PipelineNode({ data }: NodeProps) {
-  const d = data as unknown as PipelineNodeData
-  const statusColors: Record<NodeStatus, string> = {
-    pending: 'border-[#3a3a3a] bg-[#1c1c1c]',
-    running: 'border-blue-500 bg-[#1a1f35] animate-pulse',
-    succeeded: 'border-green-600 bg-[#1a221a]',
-    failed: 'border-red-500 bg-[#221a1a]',
-  }
-
-  const statusIndicator: Record<NodeStatus, { color: string; label: string }> = {
-    pending: { color: '#666666', label: '待执行' },
-    running: { color: '#3b82f6', label: '生成中…' },
-    succeeded: { color: '#22c55e', label: '已完成' },
-    failed: { color: '#ef4444', label: '失败' },
-  }
-
-  const indicator = statusIndicator[d.status]
-
-  const isCharacterNode = d.phase === 'character'
-  const isLocationNode = d.phase === 'location'
-  const isShotNode = d.phase === 'shot'
-  const isStoryInput = d.phase === 'storyInput'
-  const isAnalysis = d.phase === 'analysis'
-  const isBgm = d.phase === 'bgm'
-  const isAssemble = d.phase === 'assemble'
-
-  const showImage = isCharacterNode && (d.entityData as CharacterDTO)?.referenceImageUrl
-  const showVideo = isShotNode && (d.entityData as ShotDTO)?.videoUrl
-
-  return (
-    <div
-      className={`relative min-w-[260px] max-w-[320px] rounded-xl border-2 p-4 ${statusColors[d.status]} transition-all`}
-    >
-      {/* Header */}
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-[13px] font-semibold text-[#e5e5e5]">{d.label}</span>
-        <span className="text-[11px] font-medium" style={{ color: indicator.color }}>
-          {indicator.label}
-        </span>
-      </div>
-
-      {/* Content */}
-      {isStoryInput && d.storyText && (
-        <p className="m-0 line-clamp-3 text-[12px] leading-relaxed text-[#888888]">
-          {d.storyText.slice(0, 120)}{d.storyText.length > 120 ? '…' : ''}
-        </p>
-      )}
-
-      {isAnalysis && d.analysis && (
-        <div className="text-[12px] text-[#888888]">
-          <p className="m-0 line-clamp-2">{(d.analysis as Record<string, unknown>).summary as string ?? '分析完成'}</p>
-        </div>
-      )}
-
-      {isCharacterNode && d.entityData && (
-        <div className="flex items-start gap-3">
-          {showImage && (
-            <img
-              src={showImage as string}
-              alt={(d.entityData as CharacterDTO).name}
-              className="h-14 w-14 shrink-0 rounded-lg object-cover"
-            />
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="m-0 text-[13px] font-medium text-[#e5e5e5]">
-              {(d.entityData as CharacterDTO).name}
-            </p>
-            <p className="m-0 mt-0.5 text-[11px] text-[#888888] line-clamp-2">
-              {(d.entityData as CharacterDTO).description ?? (d.entityData as CharacterDTO).role}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {isLocationNode && d.entityData && (
-        <div className="flex items-start gap-3">
-          {((d.entityData as LocationDTO).referenceImageUrl) && (
-            <img
-              src={(d.entityData as LocationDTO).referenceImageUrl!}
-              alt={(d.entityData as LocationDTO).name}
-              className="h-14 w-14 shrink-0 rounded-lg object-cover"
-            />
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="m-0 text-[13px] font-medium text-[#e5e5e5]">
-              {(d.entityData as LocationDTO).name}
-            </p>
-            <p className="m-0 mt-0.5 text-[11px] text-[#888888]">
-              {(d.entityData as LocationDTO).type}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {isShotNode && d.entityData && (
-        <div>
-          {showVideo && (
-            <video
-              src={showVideo as string}
-              className="mb-2 w-full rounded-lg"
-              controls
-              muted
-              preload="metadata"
-            />
-          )}
-          <p className="m-0 text-[12px] font-medium text-[#e5e5e5]">
-            镜头 #{(d.entityData as ShotDTO).shotIndex + 1}
-          </p>
-          <p className="m-0 mt-0.5 text-[11px] text-[#888888] line-clamp-2">
-            {(d.entityData as ShotDTO).narrative?.slice(0, 80)}
-          </p>
-        </div>
-      )}
-
-      {isBgm && (
-        <p className="m-0 text-[12px] text-[#888888]">
-          {d.status === 'succeeded' ? '配乐已生成' : '生成背景音乐'}
-        </p>
-      )}
-
-      {isAssemble && (
-        <div>
-          {d.status === 'succeeded' && (
-            <p className="m-0 text-[12px] text-[#22c55e]">成片已合成</p>
-          )}
-          {d.status !== 'succeeded' && (
-            <p className="m-0 text-[12px] text-[#888888]">将镜头和配乐合成为最终视频</p>
-          )}
-        </div>
-      )}
-
-      {/* Error message */}
-      {d.status === 'failed' && d.errorMessage && (
-        <p className="mt-2 text-[11px] text-red-400 line-clamp-2">{d.errorMessage}</p>
-      )}
-
-      {/* Action buttons */}
-      <div className="mt-3 flex gap-2">
-        {d.status === 'pending' && d.onTrigger && (
-          <button
-            type="button"
-            className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[#e5e5e5] px-3 text-[11px] font-semibold text-[#141414] transition-colors hover:bg-white"
-            onClick={(e) => {
-              e.stopPropagation()
-              d.onTrigger?.()
-            }}
-          >
-            <Play size={12} />
-            开始
-          </button>
-        )}
-        {d.status === 'failed' && d.onRetry && (
-          <button
-            type="button"
-            className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[#f87171] px-3 text-[11px] font-semibold text-white transition-colors hover:bg-[#ef4444]"
-            onClick={(e) => {
-              e.stopPropagation()
-              d.onRetry?.()
-            }}
-          >
-            <RefreshCw size={12} />
-            重试
-          </button>
-        )}
-        {d.status === 'running' && (
-          <span className="inline-flex items-center gap-1 text-[11px] text-blue-400">
-            <Loader2 size={12} className="animate-spin" />
-            执行中…
-          </span>
-        )}
-      </div>
-    </div>
-  )
 }
 
 // ── Node Types ──────────────────────────────────────────────────────

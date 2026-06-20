@@ -23,6 +23,7 @@
     "@super-app/env": "workspace:*",
     "@super-app/runtime": "workspace:*",
     "@super-app/types": "workspace:*",
+    "@super-app/utils": "workspace:*",
     "drizzle-orm": "^0.44.2",
     "postgres": "^3.4.7"
   },

@@ -6,6 +6,7 @@ import { tasks } from '../schema/tasks'
 import { generationRecords } from '../schema/generation-records'
 
 import { db } from '../client'
+import { sanitizeErrorMessage } from '@super-app/utils'
 
 // ---- 用户任务视图类型（由 API 层映射为 contract DTO） ----
 
@@ -57,14 +58,6 @@ function mapRowToTask(row: Record<string, unknown>): Task {
     mapped[SNAKE_TO_CAMEL.get(snakeKey) ?? snakeKey] = val
   }
   return mapped as Task
-}
-
-/** sanitize 错误信息 — 去掉换行/控制字符，截断超长文案（移植自 @excuse/shared）。 */
-function sanitizeErrorMessage(message: string): string {
-  return message
-    .replace(/[\r\n\t]+/g, ' ')
-    .trim()
-    .slice(0, 1000)
 }
 
 // ===== CRUD =====
@@ -179,7 +172,7 @@ export async function markTaskFailed(
   errorInfo?: TaskErrorInfo,
   errorMessage?: string
 ): Promise<Task | null> {
-  const sanitized = errorMessage ? sanitizeErrorMessage(errorMessage) : undefined
+  const sanitized = errorMessage ? sanitizeErrorMessage(errorMessage, 1000) : undefined
   const [updated] = await db
     .update(tasks)
     .set({

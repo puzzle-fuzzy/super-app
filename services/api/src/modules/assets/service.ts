@@ -138,18 +138,22 @@ export interface ListAssetsInput {
   db: Db
   owner: CurrentUser
   kind?: AssetKind
+  source?: AssetSource
   limit?: number
   cursor?: string | null
 }
 
 export async function listAssets(input: ListAssetsInput): Promise<AssetListResponse> {
-  const { db, owner, kind, limit, cursor } = input
+  const { db, owner, kind, source, limit, cursor } = input
   const effectiveLimit = Math.min(Math.max(limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT)
   const cursorTuple = decodeCursor(cursor)
 
   const conditions: SQL[] = [eq(assets.ownerId, owner.id), eq(assets.status, 'active')]
   if (kind) {
     conditions.push(eq(assets.kind, kind))
+  }
+  if (source) {
+    conditions.push(eq(assets.source, source))
   }
   if (cursorTuple) {
     const [cursorCreatedAt, cursorId] = cursorTuple
