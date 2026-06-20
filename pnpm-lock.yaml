@@ -466,6 +466,9 @@ importers:
       '@super-app/auth-client':
         specifier: workspace:*
         version: link:../../packages/auth-client
+      '@super-app/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@super-app/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens

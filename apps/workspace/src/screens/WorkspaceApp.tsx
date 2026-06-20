@@ -5,6 +5,8 @@ import { assetsApi, canvasApi } from '@super-app/api-client'
 import { clientEnv } from '@super-app/env/client'
 import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
+import type { AssetDto } from '@super-app/contracts/assets'
+import type { CanvasProjectDto } from '@super-app/contracts/canvas'
 
 /* -------------------------------------------------------------------------- */
 /*  Constants                                                                 */
@@ -16,6 +18,13 @@ interface Shortcut {
   href: string
   status: string
   icon: typeof Box
+}
+
+/** Recent item shape rendered by the workspace overview cards. */
+interface RecentItem {
+  id: string
+  title: string
+  updatedAt: string
 }
 
 const SHORTCUTS: Shortcut[] = [
@@ -56,6 +65,24 @@ const NAV_ITEMS = [
   { label: 'API', href: clientEnv.SUPER_PUBLIC_CONSOLE_APP_URL },
 ]
 
+/** Converts a full asset DTO into the compact workspace recent-item view. */
+function toRecentAsset(asset: AssetDto): RecentItem {
+  return {
+    id: asset.id,
+    title: asset.title,
+    updatedAt: asset.updatedAt,
+  }
+}
+
+/** Converts a canvas project DTO into the compact workspace recent-item view. */
+function toRecentProject(project: CanvasProjectDto): RecentItem {
+  return {
+    id: project.id,
+    title: project.title,
+    updatedAt: project.updatedAt,
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /*  WorkspaceApp                                                              */
 /* -------------------------------------------------------------------------- */
@@ -63,12 +90,8 @@ const NAV_ITEMS = [
 export function WorkspaceApp() {
   const { user, isLoading, error } = useRequireAuth()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [recentAssets, setRecentAssets] = useState<
-    { id: string; title: string; updatedAt: string }[]
-  >([])
-  const [recentProjects, setRecentProjects] = useState<
-    { id: string; title: string; updatedAt: string }[]
-  >([])
+  const [recentAssets, setRecentAssets] = useState<RecentItem[]>([])
+  const [recentProjects, setRecentProjects] = useState<RecentItem[]>([])
   const [dataLoaded, setDataLoaded] = useState(false)
 
   useEffect(() => {
@@ -108,12 +131,10 @@ export function WorkspaceApp() {
         if (cancelled) return
 
         if (assetsResult.status === 'fulfilled') {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setRecentAssets((assetsResult.value as any).items ?? [])
+          setRecentAssets(assetsResult.value.items.map(toRecentAsset))
         }
         if (projectsResult.status === 'fulfilled') {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setRecentProjects((projectsResult.value as any).items ?? [])
+          setRecentProjects(projectsResult.value.items.map(toRecentProject))
         }
       } catch {
         // Silently ignore — sections will show empty states

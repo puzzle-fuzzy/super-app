@@ -5,7 +5,7 @@
  * 使用: bun scripts/collect-frontends.ts
  */
 
-import { cp, mkdir, readFile, rm } from 'node:fs/promises'
+import { cp, mkdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 
 const ROOT = join(import.meta.dirname, '..')
@@ -22,6 +22,11 @@ const APPS: { dir: string; base: string }[] = [
   { dir: 'apps/console', base: '/api-console/' },
 ]
 
+/** Narrows caught filesystem errors enough to branch on Node's errno code. */
+function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && 'code' in error
+}
+
 async function main() {
   // 清空目标
   await rm(DST, { recursive: true, force: true })
@@ -34,8 +39,8 @@ async function main() {
     try {
       await cp(src, dst, { recursive: true })
       console.log(`✓ ${dir} → dist-web${base}`)
-    } catch (err: any) {
-      if (err.code === 'ENOENT') {
+    } catch (err) {
+      if (isErrnoException(err) && err.code === 'ENOENT') {
         console.error(`✗ ${dir}: dist 目录不存在，请先 pnpm build:frontends`)
       } else {
         throw err

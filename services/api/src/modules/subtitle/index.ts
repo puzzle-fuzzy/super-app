@@ -66,7 +66,7 @@ export const subtitleModule = new Elysia({ name: 'subtitle', prefix: '/subtitle'
 
       // ── 更新字幕句子 ──────────────────────────────────
       .patch('/projects/:id/sentences', async ({ params, body, user }) => {
-        const project = await svc.updateSentences(params.id, getRequiredUserId(user), body as any)
+        const project = await svc.updateSentences(params.id, getRequiredUserId(user), body)
         return { success: true, data: project }
       }, {
         params: t.Object({ id: t.String() }),
@@ -84,7 +84,7 @@ export const subtitleModule = new Elysia({ name: 'subtitle', prefix: '/subtitle'
 
       // ── 更新字幕样式 ──────────────────────────────────
       .patch('/projects/:id/style', async ({ params, body, user }) => {
-        const project = await svc.updateStyle(params.id, getRequiredUserId(user), body as any)
+        const project = await svc.updateStyle(params.id, getRequiredUserId(user), body)
         return { success: true, data: project }
       }, {
         params: t.Object({ id: t.String() }),

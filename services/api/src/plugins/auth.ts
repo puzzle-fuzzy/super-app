@@ -26,13 +26,17 @@ export const authPlugin = new Elysia({ name: 'auth' })
  * Apply by wrapping a group:
  * `.guard({ beforeHandle: requireUser }, (g) => g.group('/assets', ...))`
  *
- * The context is typed loosely because Elysia's `beforeHandle` type inference
- * does not carry sibling-plugin `derive`d values (`user`) into the guard's
- * scope, so any precise `{ user, set }` signature is rejected at the call site.
- * `user` is present at runtime via `authPlugin`'s derive (verified by tests).
+ * Elysia injects `user` through `authPlugin.derive`; optional typing keeps this
+ * guard honest for unauthenticated routes while preserving the runtime contract.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function requireUser({ user, set }: any) {
+interface AuthGuardContext {
+  user?: CurrentUser | null
+  set: {
+    status?: number | string
+  }
+}
+
+export function requireUser({ user, set }: AuthGuardContext) {
   if (!user) {
     set.status = 401
     return fail('UNAUTHORIZED', 'Unauthorized')
