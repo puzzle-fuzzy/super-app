@@ -1,10 +1,44 @@
 import type { TaskErrorInfo, TaskOutput } from '../domain-types'
 import type { NewTask, Task } from '../schema/tasks'
-import { and, eq, getTableColumns, inArray, sql } from 'drizzle-orm'
+import { and, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm'
 
 import { tasks } from '../schema/tasks'
+import { generationRecords } from '../schema/generation-records'
 
 import { db } from '../client'
+
+// ---- 用户任务视图类型（由 API 层映射为 contract DTO） ----
+
+type UserTaskStatus = 'queued' | 'running' | 'retrying' | 'succeeded' | 'failed' | 'cancelled'
+type UserTaskDomain = 'generate' | 'canvas' | 'subtitle' | 'gateway'
+
+export interface UserTaskRow {
+  id: string
+  source: 'task' | 'generation_record'
+  domain: UserTaskDomain
+  type: string
+  status: UserTaskStatus
+  title: string
+  description: string
+  progress: number | null
+  currentStep: string | null
+  createdAt: Date
+  updatedAt: Date
+  finishedAt: Date | null
+  canRetry: boolean
+  canCancel: boolean
+  /** 关联的生成记录（若存在） */
+  generationRecordId: string | null
+  errorCode: string | null
+  errorMessage: string | null
+}
+
+export interface UserTaskListQuery {
+  status?: UserTaskStatus
+  domain?: UserTaskDomain
+  limit?: number
+  offset?: number
+}
 
 // 构建反向映射：snake_case 列名 → camelCase 属性名（raw SQL claim/sweep 返回 snake_case）
 function buildSnakeToCamelMap() {
@@ -216,6 +250,194 @@ export async function sweepOrphanTasks(timeoutMinutes = 5): Promise<number> {
       AND locked_until < now() - (${timeoutMinutes} || ' minutes')::interval
   `)) as unknown as { count: number }
   return result.count
+}
+
+// ===== 用户任务中心（合并 tasks + generation_records） =====
+
+const ACTIVE_TASK_STATUSES: Task['status'][] = ['queued', 'running', 'retrying']
+
+function taskStatusToUser(status: Task['status']): UserTaskStatus {
+  return status
+}
+
+function mapTaskDomain(domain: string): UserTaskDomain {
+  if (domain === 'generate' || domain === 'canvas' || domain === 'subtitle' || domain === 'gateway') {
+    return domain
+  }
+  return 'generate'
+}
+
+function generationStatusToUser(
+  status: (typeof generationRecords.$inferSelect)['status']
+): UserTaskStatus {
+  switch (status) {
+    case 'pending':
+      return 'queued'
+    case 'submitting':
+    case 'processing':
+    case 'saving_output':
+      return 'running'
+    case 'succeeded':
+      return 'succeeded'
+    case 'failed':
+      return 'failed'
+    case 'cancelled':
+      return 'cancelled'
+    default:
+      return 'running'
+  }
+}
+
+function taskTitle(domain: string, type: string): string {
+  const titles: Record<string, string> = {
+    'generate.image': '图片生成',
+    'generate.video': '视频生成',
+  }
+  return titles[type] ?? `${domain} / ${type}`
+}
+
+function serialiseTaskRow(row: Task): UserTaskRow {
+  const status = taskStatusToUser(row.status)
+  return {
+    id: row.id,
+    source: 'task',
+    domain: mapTaskDomain(row.domain),
+    type: row.type,
+    status,
+    title: taskTitle(row.domain, row.type),
+    description: row.errorMessage ?? `${row.domain} / ${row.type}`,
+    progress: status === 'succeeded' ? 100 : null,
+    currentStep: status === 'running' ? row.type : null,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    finishedAt: row.finishedAt,
+    canRetry: status === 'failed' || status === 'retrying',
+    canCancel: ACTIVE_TASK_STATUSES.includes(row.status),
+    generationRecordId: row.generationRecordId,
+    errorCode: row.errorJson?.code ?? null,
+    errorMessage: row.errorMessage,
+  }
+}
+
+function serialiseGenerationRow(
+  row: typeof generationRecords.$inferSelect
+): UserTaskRow {
+  const status = generationStatusToUser(row.status)
+  let domain: UserTaskDomain = 'generate'
+  if (row.category === 'subtitle') domain = 'subtitle'
+
+  return {
+    id: row.id,
+    source: 'generation_record',
+    domain,
+    type: row.category,
+    status,
+    title: `${row.model} ${row.category}`,
+    description: row.errorMessage ?? `使用 ${row.model} 创建 ${row.category} 内容`,
+    progress: status === 'succeeded' ? 100 : null,
+    currentStep: status === 'running' ? row.status : null,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    finishedAt: status === 'succeeded' || status === 'failed' || status === 'cancelled'
+      ? row.updatedAt : null,
+    canRetry: status === 'failed' || status === 'cancelled',
+    canCancel: ['queued', 'running'].includes(status),
+    generationRecordId: row.id,
+    errorCode: null,
+    errorMessage: row.errorMessage,
+  }
+}
+
+/** 合并 tasks + generation_records 的统一用户任务列表 */
+export async function listUserTasks(
+  ownerId: string,
+  query: UserTaskListQuery = {}
+): Promise<{ items: UserTaskRow[]; total: number }> {
+  const limit = Math.max(1, Math.min(query.limit ?? 40, 100))
+  const offset = Math.max(0, query.offset ?? 0)
+  const candidateLimit = Math.min(limit + offset + 40, 200)
+
+  // 并行查询 tasks 和 generation_records
+  const taskWhere = [
+    eq(tasks.ownerId, ownerId),
+    query.domain ? eq(tasks.domain, query.domain) : undefined,
+    query.status ? eq(tasks.status, query.status) : undefined,
+  ].filter(Boolean)
+
+  const [taskRows, genRows] = await Promise.all([
+    db
+      .select()
+      .from(tasks)
+      .where(and(...taskWhere))
+      .orderBy(desc(tasks.updatedAt))
+      .limit(candidateLimit),
+    ownerId
+      ? db
+          .select()
+          .from(generationRecords)
+          .where(
+            and(
+              eq(generationRecords.ownerId, ownerId),
+              query.domain === 'generate' || !query.domain
+                ? undefined
+                : undefined // 仅 generate domain 显示 generation_records
+            )
+          )
+          .orderBy(desc(generationRecords.updatedAt))
+          .limit(candidateLimit)
+      : Promise.resolve([]),
+  ])
+
+  // 构建 tasks 已关联的 generationRecordId 集合（去重）
+  const linkedGenIds = new Set(
+    taskRows.filter((t) => t.generationRecordId).map((t) => t.generationRecordId!)
+  )
+
+  // 序列化并合并
+  const taskItems: UserTaskRow[] = taskRows.map(serialiseTaskRow)
+  const genItems: UserTaskRow[] = genRows
+    .filter((r) => !linkedGenIds.has(r.id))
+    .map(serialiseGenerationRow)
+
+  // domain 过滤器（后置，处理 generation_records 的 domain 映射）
+  const allItems = [...taskItems, ...genItems]
+    .filter((item) => {
+      if (query.domain && item.domain !== query.domain) return false
+      if (query.status && item.status !== query.status) return false
+      return true
+    })
+    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+
+  const total = allItems.length
+  const paged = allItems.slice(offset, offset + limit)
+
+  return { items: paged, total }
+}
+
+/** 按 ID 查找用户任务（先查 task，再查 generation_record） */
+export async function getUserTaskById(
+  ownerId: string,
+  id: string
+): Promise<UserTaskRow | null> {
+  // 先查 task 表
+  const [task] = await db
+    .select()
+    .from(tasks)
+    .where(and(eq(tasks.id, id), eq(tasks.ownerId, ownerId)))
+    .limit(1)
+
+  if (task) return serialiseTaskRow(task)
+
+  // 再查 generation_records
+  const [record] = await db
+    .select()
+    .from(generationRecords)
+    .where(and(eq(generationRecords.id, id), eq(generationRecords.ownerId, ownerId)))
+    .limit(1)
+
+  if (record) return serialiseGenerationRow(record)
+
+  return null
 }
 
 // ===== SSE 通知（5a stub，5b 实现 LISTEN/NOTIFY） =====

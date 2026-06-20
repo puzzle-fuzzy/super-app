@@ -229,3 +229,34 @@ export async function getCostRecords(
     )
     .orderBy(desc(generationRecords.createdAt))
 }
+
+export interface ListGenerationRecordsFilter {
+  ownerId?: string
+  category?: string
+  status?: string
+  limit?: number
+  offset?: number
+}
+
+/** 列出用户的生成记录（支持 category/status 过滤，按更新时间倒序） */
+export async function listGenerationRecords(filter: ListGenerationRecordsFilter = {}) {
+  const limit = Math.max(1, Math.min(filter.limit ?? 50, 100))
+  const offset = Math.max(0, filter.offset ?? 0)
+
+  const conditions = [
+    filter.ownerId ? eq(generationRecords.ownerId, filter.ownerId) : undefined,
+    filter.category ? sql`${generationRecords.category} = ${filter.category}` : undefined,
+    filter.status ? sql`${generationRecords.status} = ${filter.status}` : undefined,
+  ].filter(Boolean)
+
+  const rows = await db
+    .select()
+    .from(generationRecords)
+    .where(and(...conditions))
+    .orderBy(desc(generationRecords.updatedAt))
+    .limit(limit)
+    .offset(offset)
+
+  // 计数（简化：用返回行数代替总数）
+  return { items: rows, total: rows.length }
+}

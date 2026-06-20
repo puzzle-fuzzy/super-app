@@ -15,7 +15,9 @@ import { templatesModule } from './modules/templates'
 import { systemModule } from './modules/system'
 import { textsModule } from './modules/texts'
 import { transfersModule } from './modules/transfers'
+import { recordsModule } from './modules/records'
 import { sseModule } from './modules/sse'
+import { tasksModule } from './modules/tasks'
 import { billingModule } from './modules/billing'
 import { corsPlugin } from './plugins/cors'
 import { errorHandler } from './middlewares/error-handler'
@@ -63,6 +65,8 @@ const baseApp = new Elysia()
           { name: 'api-keys', description: 'API 密钥管理' },
           { name: 'transfers', description: 'P2P 文件传输' },
           { name: 'billing', description: '计费与余额' },
+          { name: 'tasks', description: '用户任务中心' },
+          { name: 'records', description: '生成记录管理' },
         ],
       },
     })
@@ -81,6 +85,8 @@ const baseApp = new Elysia()
       .use(canvasModule)
       .use(apiKeysModule)
       .use(transfersModule)
+      .use(tasksModule)
+      .use(recordsModule)
       .use(sseModule)
       .use(billingModule)
   )
