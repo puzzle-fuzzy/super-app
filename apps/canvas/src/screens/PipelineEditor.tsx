@@ -533,8 +533,53 @@ function PipelineEditor({
       },
     })
 
-    // 6. Shots
-    const shotStartY = locStartY + 520
+    // 6. Continuity
+    result.push({
+      id: 'continuity',
+      type: 'pipelineNode',
+      position: { x: 100, y: locStartY + 520 },
+      data: {
+        label: PHASE_LABEL.continuity,
+        phase: 'continuity' as const,
+        status: phaseStatus('continuity'),
+        onTrigger: phaseStatus('continuity') !== 'succeeded' ? () => handleTriggerPhase('continuity') : undefined,
+        onRetry: phaseStatus('continuity') === 'failed' ? () => handleTriggerPhase('continuity') : undefined,
+        errorMessage: runError('continuity'),
+      },
+    })
+
+    // 7. Rebuild
+    result.push({
+      id: 'rebuild',
+      type: 'pipelineNode',
+      position: { x: 100, y: locStartY + 780 },
+      data: {
+        label: PHASE_LABEL.rebuild,
+        phase: 'rebuild' as const,
+        status: phaseStatus('rebuild'),
+        onTrigger: phaseStatus('rebuild') !== 'succeeded' ? () => handleTriggerPhase('rebuild') : undefined,
+        onRetry: phaseStatus('rebuild') === 'failed' ? () => handleTriggerPhase('rebuild') : undefined,
+        errorMessage: runError('rebuild'),
+      },
+    })
+
+    // 8. Dialogue
+    result.push({
+      id: 'dialogue',
+      type: 'pipelineNode',
+      position: { x: 100, y: locStartY + 1040 },
+      data: {
+        label: PHASE_LABEL.dialogue,
+        phase: 'dialogue' as const,
+        status: phaseStatus('dialogue'),
+        onTrigger: phaseStatus('dialogue') !== 'succeeded' ? () => handleTriggerPhase('dialogue') : undefined,
+        onRetry: phaseStatus('dialogue') === 'failed' ? () => handleTriggerPhase('dialogue') : undefined,
+        errorMessage: runError('dialogue'),
+      },
+    })
+
+    // 9. Shots (videos)
+    const shotStartY = locStartY + 1300
     if (project.shots.length > 0) {
       project.shots.slice(0, 6).forEach((s: ShotDTO, i: number) => {
         const statusMap: Record<string, NodeStatus> = {
@@ -574,7 +619,7 @@ function PipelineEditor({
       })
     }
 
-    // 7. BGM
+    // 10. BGM
     const bgmY = shotStartY + Math.ceil((project.shots.length || 1) / 3) * 280 + 40
     result.push({
       id: 'bgm',
@@ -634,7 +679,11 @@ function PipelineEditor({
     }
 
     result.push({ id: 'e-analysis-storyboard', source: 'analysis', target: 'storyboard', animated: true, style: { stroke: '#3a3a3a' } })
-    result.push({ id: 'e-storyboard-shots', source: 'storyboard', target: project.shots[0] ? `shot-${project.shots[0].id}` : 'shots-placeholder', animated: true, style: { stroke: '#3a3a3a' } })
+    // Storyboard → Continuity → Rebuild → Dialogue → Shots
+    result.push({ id: 'e-storyboard-continuity', source: 'storyboard', target: 'continuity', animated: true, style: { stroke: '#3a3a3a' } })
+    result.push({ id: 'e-continuity-rebuild', source: 'continuity', target: 'rebuild', animated: true, style: { stroke: '#3a3a3a' } })
+    result.push({ id: 'e-rebuild-dialogue', source: 'rebuild', target: 'dialogue', animated: true, style: { stroke: '#3a3a3a' } })
+    result.push({ id: 'e-dialogue-shots', source: 'dialogue', target: project.shots[0] ? `shot-${project.shots[0].id}` : 'shots-placeholder', animated: true, style: { stroke: '#3a3a3a' } })
     result.push({ id: 'e-shots-bgm', source: project.shots[0] ? `shot-${project.shots[0].id}` : 'shots-placeholder', target: 'bgm', animated: true, style: { stroke: '#3a3a3a' } })
     result.push({ id: 'e-bgm-assemble', source: 'bgm', target: 'assemble', animated: true, style: { stroke: '#3a3a3a' } })
 

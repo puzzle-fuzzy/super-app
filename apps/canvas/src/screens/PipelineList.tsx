@@ -96,10 +96,15 @@ export function PipelineList({
 
   async function handleRename() {
     if (!renameId || !renameTitle.trim()) return
-    // Note: pipeline rename is not yet implemented on the API side
-    setRenameOpen(false)
-    setRenameId(null)
-    setRenameTitle('')
+    try {
+      await pipelineApi.update(renameId, { title: renameTitle.trim() })
+      setRenameOpen(false)
+      setRenameId(null)
+      setRenameTitle('')
+      await loadProjects()
+    } catch {
+      /* Silent */
+    }
   }
 
   async function handleDelete(id: string) {

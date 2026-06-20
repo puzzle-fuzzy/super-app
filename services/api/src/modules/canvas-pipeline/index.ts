@@ -35,6 +35,7 @@ import {
   triggerPhase,
   updateCharacter,
   updateLocation,
+  updateProject,
   updateShot,
 } from './service'
 
@@ -101,6 +102,25 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
       }, {
         params: t.Object({ id: t.String() }),
         detail: { summary: '删除项目', tags: ['Canvas Pipeline'] },
+      })
+
+      .patch('/projects/:id', async ({ db, user, params, body }) => {
+        const { title, storyText } = body as Record<string, unknown>
+        const result = await updateProject({
+          db,
+          owner: user!,
+          id: params.id,
+          title: title as string | undefined,
+          storyText: storyText as string | undefined,
+        })
+        return { success: true, data: result }
+      }, {
+        params: t.Object({ id: t.String() }),
+        body: t.Object({
+          title: t.Optional(t.String({ minLength: 1, maxLength: 200 })),
+          storyText: t.Optional(t.String({ minLength: 1 })),
+        }),
+        detail: { summary: '更新项目（重命名/修改故事文本）', tags: ['Canvas Pipeline'] },
       })
 
       // ── 12 阶段独立触发端点 ──────────────────────────

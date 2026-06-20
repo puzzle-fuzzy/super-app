@@ -351,6 +351,13 @@ export const pipelineApi = {
     return apiFetch<{ message: string }>(`/pipeline/projects/${id}`, { method: 'DELETE' })
   },
 
+  update(id: string, input: { title?: string; storyText?: string }) {
+    return apiFetch<PipelineProjectSummary>(`/pipeline/projects/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    })
+  },
+
   // Phase triggers — 每个阶段一个 POST
   analyze(id: string) {
     return apiFetch<TriggerPhaseResult>(`/pipeline/projects/${id}/analyze`, { method: 'POST' })

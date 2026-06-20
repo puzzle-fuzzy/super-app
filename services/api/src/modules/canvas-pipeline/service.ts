@@ -41,6 +41,7 @@ import {
   softDeleteCanvasProject,
   updateCanvasCharacter,
   updateCanvasLocation,
+  updateCanvasProject,
   updateCanvasShot,
 } from '@super-app/db'
 
@@ -110,6 +111,28 @@ export async function deleteProject({ owner, id }: DeleteProjectInput): Promise<
   await softDeleteCanvasProject(id)
 }
 
+export interface UpdateProjectInput {
+  db: Db
+  owner: CurrentUser
+  id: string
+  title?: string
+  storyText?: string
+}
+
+export async function updateProject({ owner, id, title, storyText }: UpdateProjectInput) {
+  const owned = await getCanvasProjectByIdForOwner(id, owner.id)
+  if (!owned) throw new NotFoundError('项目不存在')
+
+  const updates: Record<string, unknown> = {}
+  if (title !== undefined) updates.title = title
+  if (storyText !== undefined) updates.storyText = storyText
+  if (Object.keys(updates).length === 0) return toProjectSummary(owned)
+
+  const updated = await updateCanvasProject(id, updates as Parameters<typeof updateCanvasProject>[1])
+  if (!updated) throw new NotFoundError('项目不存在')
+  return toProjectSummary(updated)
+}
+
 // ── Phase Triggers ──────────────────────────────────────────────
 
 export interface TriggerPhaseInput {
@@ -142,9 +165,25 @@ export async function triggerPhase({
   const owned = await getCanvasProjectByIdForOwner(projectId, owner.id)
   if (!owned) throw new NotFoundError('项目不存在')
 
+  // 并发守卫
   const activeRun = await findActiveRunForPhase(projectId, phase)
   if (activeRun) {
     throw new AppError(409, 'CONFLICT', `阶段 "${phase}" 已有活跃执行，请等待完成或取消后再试`)
+  }
+
+  // 前置阶段依赖校验 — 必须前一个阶段已成功才能触发
+  const predecessor = getPredecessorPhase(phase)
+  if (predecessor) {
+    const predRun = await findActiveRunForPhase(projectId, predecessor)
+    if (predRun && (predRun.status === 'pending' || predRun.status === 'running')) {
+      throw new AppError(409, 'CONFLICT', `前置阶段 "${predecessor}" 尚未完成，请先执行该阶段`)
+    }
+    // Check if predecessor has ever succeeded
+    const allRuns = await listPipelineRunsByProject(projectId)
+    const predSucceeded = allRuns.some((r) => r.phase === predecessor && r.status === 'succeeded')
+    if (!predSucceeded) {
+      throw new AppError(409, 'CONFLICT', `前置阶段 "${predecessor}" 尚未成功执行，请先完成该阶段`)
+    }
   }
 
   const result = await createNextCanvasPipelineTask({
@@ -494,4 +533,23 @@ function toISO(v: unknown): string {
   if (v instanceof Date) return v.toISOString()
   if (typeof v === 'string') return v
   return ''
+}
+
+/** 阶段前置依赖映射 — 阶段 N 的前驱是 N-1（或并行分支的父阶段） */
+const PHASE_PREDECESSOR: Partial<Record<CanvasPipelinePhase, CanvasPipelinePhase>> = {
+  characters: 'analyze',
+  locations: 'analyze',
+  characterRefs: 'characters',
+  locationRefs: 'locations',
+  storyboard: 'locationRefs',
+  continuity: 'storyboard',
+  rebuild: 'continuity',
+  dialogue: 'rebuild',
+  videos: 'dialogue',
+  bgm: 'videos',
+  assemble: 'bgm',
+}
+
+function getPredecessorPhase(phase: CanvasPipelinePhase): CanvasPipelinePhase | null {
+  return PHASE_PREDECESSOR[phase] ?? null
 }
