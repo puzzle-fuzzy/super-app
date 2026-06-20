@@ -16,15 +16,19 @@ export const apiKeysModule = new Elysia({ name: 'api-keys', detail: { tags: ['AP
             const result = await createApiKey({ db, owner: user!, input: body })
             return ok(result)
           },
-          { body: CreateApiKeyRequestSchema }
+          { body: CreateApiKeyRequestSchema, detail: { summary: '创建 API 密钥', tags: ['API 密钥'] } }
         )
         .get('/', async ({ user, db }) => {
           const items = await listApiKeys({ db, owner: user! })
           return ok({ items })
+        }, {
+          detail: { summary: '获取 API 密钥列表', tags: ['API 密钥'] },
         })
         .delete('/:id', async ({ user, db, params }) => {
           await revokeApiKey({ db, owner: user!, id: params.id })
           return ok({ deleted: true })
+        }, {
+          detail: { summary: '撤销 API 密钥', tags: ['API 密钥'] },
         })
     )
   )

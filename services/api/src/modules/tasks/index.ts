@@ -72,6 +72,7 @@ export const tasksModule = new Elysia({ name: 'tasks', detail: { tags: ['任务�
             limit: t.Optional(t.Numeric()),
             offset: t.Optional(t.Numeric()),
           }),
+          detail: { summary: '获取任务列表', tags: ['任务中心'] },
         }
       )
       .get('/tasks/:id', async ({ user, params }) => {
@@ -80,5 +81,7 @@ export const tasksModule = new Elysia({ name: 'tasks', detail: { tags: ['任务�
           throw new AppError(404, 'NOT_FOUND', '任务不存在')
         }
         return ok(toDTO(row))
+      }, {
+        detail: { summary: '获取任务详情', tags: ['任务中心'] },
       })
   )

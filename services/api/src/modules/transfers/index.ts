@@ -41,6 +41,7 @@ export const transfersModule = new Elysia({ name: 'transfers', detail: { tags: [
       params: t.Object({
         roomId: t.String(),
       }),
+      detail: { summary: '获取传输文件信息', tags: ['传输'] },
     }
   )
   .get(
@@ -65,9 +66,11 @@ export const transfersModule = new Elysia({ name: 'transfers', detail: { tags: [
       params: t.Object({
         roomId: t.String(),
       }),
+      detail: { summary: '下载传输文件', tags: ['传输'] },
     }
   )
   .ws('/transfers/:roomId/ws', {
+    detail: { summary: '传输房间 WebSocket 连接', tags: ['传输'] },
     params: t.Object({
       roomId: t.String(),
     }),

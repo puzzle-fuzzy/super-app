@@ -109,7 +109,7 @@ export const canvasModule = new Elysia({ name: 'canvas', detail: { tags: ['画�
             status: 'queued',
           })
         },
-        { body: CanvasGenerateImageRequestSchema }
+        { body: CanvasGenerateImageRequestSchema, detail: { summary: '提交图片/视频生成任务', tags: ['画布'] } }
       )
       .group('/canvas/projects', (projects) =>
         projects
@@ -119,7 +119,7 @@ export const canvasModule = new Elysia({ name: 'canvas', detail: { tags: ['画�
               const project = await createCanvasProject({ db, owner: user!, input: body })
               return ok(project)
             },
-            { body: CreateCanvasProjectRequestSchema }
+            { body: CreateCanvasProjectRequestSchema, detail: { summary: '创建画布项目', tags: ['画布'] } }
           )
           .get('/', async ({ user, db, query }) => {
             const result = await listCanvasProjects({
@@ -129,10 +129,14 @@ export const canvasModule = new Elysia({ name: 'canvas', detail: { tags: ['画�
               cursor: query.cursor,
             })
             return ok(result)
+          }, {
+            detail: { summary: '获取画布项目列表', tags: ['画布'] },
           })
           .get('/:id', async ({ user, db, params }) => {
             const project = await getCanvasProject({ db, owner: user!, id: params.id })
             return ok(project)
+          }, {
+            detail: { summary: '获取画布项目详情', tags: ['画布'] },
           })
           .patch(
             '/:id',
@@ -145,11 +149,13 @@ export const canvasModule = new Elysia({ name: 'canvas', detail: { tags: ['画�
               })
               return ok(project)
             },
-            { body: UpdateCanvasProjectRequestSchema }
+            { body: UpdateCanvasProjectRequestSchema, detail: { summary: '更新画布项目', tags: ['画布'] } }
           )
           .delete('/:id', async ({ user, db, params }) => {
             await deleteCanvasProject({ db, owner: user!, id: params.id })
             return ok({ deleted: true })
+          }, {
+            detail: { summary: '删除画布项目', tags: ['画布'] },
           })
       )
   )

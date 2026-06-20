@@ -41,6 +41,8 @@ export const billingModule = new Elysia({ name: 'billing', detail: { tags: ['计
         )
 
         return ok(stats)
+      }, {
+        detail: { summary: '获取近 30 天计费统计', tags: ['计费'] },
       })
       .get('/billing/balance', async ({ user }) => {
         const balance = await creditBalance(user!.id)
@@ -49,6 +51,8 @@ export const billingModule = new Elysia({ name: 'billing', detail: { tags: ['计
           frozenCents: balance.frozenCents,
           totalCents: Number(balance.availableCents) + Number(balance.frozenCents),
         })
+      }, {
+        detail: { summary: '获取账户余额', tags: ['计费'] },
       })
       .get(
         '/billing/transactions',
@@ -63,6 +67,7 @@ export const billingModule = new Elysia({ name: 'billing', detail: { tags: ['计
             limit: t.Optional(t.Numeric()),
             offset: t.Optional(t.Numeric()),
           }),
+          detail: { summary: '获取交易记录列表', tags: ['计费'] },
         }
       )
   )

@@ -19,11 +19,13 @@ export const stylesModule = new Elysia({ name: 'styles', detail: { tags: ['风�
             const asset = await createStyleAsset({ db, owner: user!, input: body })
             return ok(asset)
           },
-          { body: CreateStyleAssetRequestSchema }
+          { body: CreateStyleAssetRequestSchema, detail: { summary: '创建风格资产', tags: ['风格'] } }
         )
         .get('/:id', async ({ user, db, params }) => {
           const asset = await getStyleAsset({ db, owner: user!, id: params.id })
           return ok(asset)
+        }, {
+          detail: { summary: '获取风格资产详情', tags: ['风格'] },
         })
         .patch(
           '/:id',
@@ -31,11 +33,13 @@ export const stylesModule = new Elysia({ name: 'styles', detail: { tags: ['风�
             const asset = await updateStyleAsset({ db, owner: user!, id: params.id, input: body })
             return ok(asset)
           },
-          { body: UpdateStyleAssetRequestSchema }
+          { body: UpdateStyleAssetRequestSchema, detail: { summary: '更新风格资产', tags: ['风格'] } }
         )
         .delete('/:id', async ({ user, db, params }) => {
           await deleteStyleAsset({ db, owner: user!, id: params.id })
           return ok({ deleted: true })
+        }, {
+          detail: { summary: '删除风格资产', tags: ['风格'] },
         })
     )
   )

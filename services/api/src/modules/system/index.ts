@@ -7,5 +7,8 @@ export const systemModule = new Elysia({ name: 'system', detail: { tags: ['系�
     service: 'super-api',
     status: 'ok',
     timestamp: new Date().toISOString(),
-  })
+  }),
+  {
+    detail: { summary: '系统健康检查', tags: ['系统'] },
+  }
 )

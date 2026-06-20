@@ -73,6 +73,8 @@ export const modelsModule = new Elysia({ name: 'models', detail: { tags: ['模�
       return ok({
         models: [...textModels, ...mediaModels],
       })
+    }, {
+      detail: { summary: '获取 AI 模型列表', tags: ['模型'] },
     })
   )
 

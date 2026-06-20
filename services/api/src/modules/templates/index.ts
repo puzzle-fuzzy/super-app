@@ -24,11 +24,13 @@ export const templatesModule = new Elysia({ name: 'templates', detail: { tags: [
             const asset = await createTemplateAsset({ db, owner: user!, input: body })
             return ok(asset)
           },
-          { body: CreateTemplateAssetRequestSchema }
+          { body: CreateTemplateAssetRequestSchema, detail: { summary: '创建模板资产', tags: ['模板'] } }
         )
         .get('/:id', async ({ user, db, params }) => {
           const asset = await getTemplateAsset({ db, owner: user!, id: params.id })
           return ok(asset)
+        }, {
+          detail: { summary: '获取模板资产详情', tags: ['模板'] },
         })
         .patch(
           '/:id',
@@ -41,11 +43,13 @@ export const templatesModule = new Elysia({ name: 'templates', detail: { tags: [
             })
             return ok(asset)
           },
-          { body: UpdateTemplateAssetRequestSchema }
+          { body: UpdateTemplateAssetRequestSchema, detail: { summary: '更新模板资产', tags: ['模板'] } }
         )
         .delete('/:id', async ({ user, db, params }) => {
           await deleteTemplateAsset({ db, owner: user!, id: params.id })
           return ok({ deleted: true })
+        }, {
+          detail: { summary: '删除模板资产', tags: ['模板'] },
         })
     )
   )

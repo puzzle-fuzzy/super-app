@@ -132,6 +132,8 @@ export const app =
         }
         set.headers['Content-Type'] = mimeTypeForExt(path.extname(resolved))
         return createReadStream(resolved) as unknown as ReadableStream
+      }, {
+        detail: { summary: '本地存储静态文件服务（仅开发环境）', tags: ['系统'] },
       })
 
 export type App = typeof app

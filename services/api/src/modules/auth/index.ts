@@ -57,6 +57,7 @@ export const authModule = new Elysia({ name: 'auth', detail: { tags: ['认证'] 
       },
       {
         body: RegisterRequestSchema,
+        detail: { summary: '用户注册', tags: ['认证'] },
       }
     )
     .post(
@@ -71,6 +72,7 @@ export const authModule = new Elysia({ name: 'auth', detail: { tags: ['认证'] 
       },
       {
         body: LoginRequestSchema,
+        detail: { summary: '用户登录', tags: ['认证'] },
       }
     )
     .post('/logout', async ({ db, headers, set }) => {
@@ -79,6 +81,8 @@ export const authModule = new Elysia({ name: 'auth', detail: { tags: ['认证'] 
       set.headers['Set-Cookie'] = createExpiredSessionCookie()
 
       return ok({ loggedOut: true })
+    }, {
+      detail: { summary: '用户登出', tags: ['认证'] },
     })
     .get('/me', async ({ user, set }) => {
       if (!user) {
@@ -87,6 +91,8 @@ export const authModule = new Elysia({ name: 'auth', detail: { tags: ['认证'] 
       }
 
       return ok(user)
+    }, {
+      detail: { summary: '获取当前用户信息', tags: ['认证'] },
     })
     .post(
       '/forgot-password',
@@ -124,7 +130,7 @@ export const authModule = new Elysia({ name: 'auth', detail: { tags: ['认证'] 
 
         return ok({ success: true })
       },
-      { body: ForgotPasswordRequestSchema }
+      { body: ForgotPasswordRequestSchema, detail: { summary: '忘记密码', tags: ['认证'] } }
     )
     .post(
       '/reset-password',
@@ -151,6 +157,6 @@ export const authModule = new Elysia({ name: 'auth', detail: { tags: ['认证'] 
 
         return ok({ success: true })
       },
-      { body: ResetPasswordRequestSchema }
+      { body: ResetPasswordRequestSchema, detail: { summary: '重置密码', tags: ['认证'] } }
     )
 )

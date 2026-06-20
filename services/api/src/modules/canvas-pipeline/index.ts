@@ -60,12 +60,16 @@ const PHASE_LABELS: Record<CanvasPipelinePhase, string> = {
   assemble: '合成成片',
 }
 
-function makePhaseHandler(phase: CanvasPipelinePhase) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function makePhaseHandler(phase: CanvasPipelinePhase): (ctx: any) => Promise<{ success: boolean; data: unknown }> {
+  return async (ctx: any) => {
+    const result = await triggerPhase({ db: ctx.db, owner: ctx.user!, projectId: ctx.params.id, phase })
+    return { success: true, data: result }
+  }
+}
+
+function phaseDetail(phase: CanvasPipelinePhase) {
   return {
-    handler: async ({ db, user, params }: { db: Db; user: CurrentUser; params: { id: string } }) => {
-      const result = await triggerPhase({ db, owner: user, projectId: params.id, phase })
-      return { success: true, data: result }
-    },
     params: t.Object({ id: t.String() }),
     detail: { summary: `触发「${PHASE_LABELS[phase]}」阶段`, tags: ['视频流水线'] },
   }
@@ -155,18 +159,18 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
 
       // ── 12 阶段独立触发端点 ──────────────────────────
 
-      .post('/projects/:id/analyze', makePhaseHandler('analyze'))
-      .post('/projects/:id/characters', makePhaseHandler('characters'))
-      .post('/projects/:id/locations', makePhaseHandler('locations'))
-      .post('/projects/:id/character-refs', makePhaseHandler('characterRefs'))
-      .post('/projects/:id/location-refs', makePhaseHandler('locationRefs'))
-      .post('/projects/:id/storyboard', makePhaseHandler('storyboard'))
-      .post('/projects/:id/continuity', makePhaseHandler('continuity'))
-      .post('/projects/:id/rebuild', makePhaseHandler('rebuild'))
-      .post('/projects/:id/dialogue', makePhaseHandler('dialogue'))
-      .post('/projects/:id/videos', makePhaseHandler('videos'))
-      .post('/projects/:id/bgm', makePhaseHandler('bgm'))
-      .post('/projects/:id/assemble', makePhaseHandler('assemble'))
+      .post('/projects/:id/analyze', makePhaseHandler('analyze'), phaseDetail('analyze'))
+      .post('/projects/:id/characters', makePhaseHandler('characters'), phaseDetail('characters'))
+      .post('/projects/:id/locations', makePhaseHandler('locations'), phaseDetail('locations'))
+      .post('/projects/:id/character-refs', makePhaseHandler('characterRefs'), phaseDetail('characterRefs'))
+      .post('/projects/:id/location-refs', makePhaseHandler('locationRefs'), phaseDetail('locationRefs'))
+      .post('/projects/:id/storyboard', makePhaseHandler('storyboard'), phaseDetail('storyboard'))
+      .post('/projects/:id/continuity', makePhaseHandler('continuity'), phaseDetail('continuity'))
+      .post('/projects/:id/rebuild', makePhaseHandler('rebuild'), phaseDetail('rebuild'))
+      .post('/projects/:id/dialogue', makePhaseHandler('dialogue'), phaseDetail('dialogue'))
+      .post('/projects/:id/videos', makePhaseHandler('videos'), phaseDetail('videos'))
+      .post('/projects/:id/bgm', makePhaseHandler('bgm'), phaseDetail('bgm'))
+      .post('/projects/:id/assemble', makePhaseHandler('assemble'), phaseDetail('assemble'))
 
       // ── Pipeline 控制 ─────────────────────────────────
       .post('/projects/:id/cancel', async ({ db, user, params }) => {

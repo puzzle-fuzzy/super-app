@@ -24,11 +24,13 @@ export const subjectsModule = new Elysia({ name: 'subjects', detail: { tags: ['�
             const asset = await createSubjectAsset({ db, owner: user!, input: body })
             return ok(asset)
           },
-          { body: CreateSubjectAssetRequestSchema }
+          { body: CreateSubjectAssetRequestSchema, detail: { summary: '创建主体资产', tags: ['主体'] } }
         )
         .get('/:id', async ({ user, db, params }) => {
           const asset = await getSubjectAsset({ db, owner: user!, id: params.id })
           return ok(asset)
+        }, {
+          detail: { summary: '获取主体资产详情', tags: ['主体'] },
         })
         .patch(
           '/:id',
@@ -41,11 +43,13 @@ export const subjectsModule = new Elysia({ name: 'subjects', detail: { tags: ['�
             })
             return ok(asset)
           },
-          { body: UpdateSubjectAssetRequestSchema }
+          { body: UpdateSubjectAssetRequestSchema, detail: { summary: '更新主体资产', tags: ['主体'] } }
         )
         .delete('/:id', async ({ user, db, params }) => {
           await deleteSubjectAsset({ db, owner: user!, id: params.id })
           return ok({ deleted: true })
+        }, {
+          detail: { summary: '删除主体资产', tags: ['主体'] },
         })
     )
   )

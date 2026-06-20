@@ -183,9 +183,12 @@ export const gatewayModule = new Elysia({ name: 'gateway', detail: { tags: ['网
         stream: t.Optional(t.Boolean()),
         n: t.Optional(t.Number()),
       }),
+      detail: { summary: '聊天补全（OpenAI 兼容）', tags: ['网关'] },
     }
   )
       .get('/v1/models', async () => {
         return createModelsResponse(GATEWAY_TEXT_MODELS)
+      }, {
+        detail: { summary: '获取模型列表（OpenAI 兼容）', tags: ['网关'] },
       })
   )

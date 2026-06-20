@@ -39,6 +39,8 @@ export const assetsModule = new Elysia({ name: 'assets', detail: { tags: ['资�
             'Content-Disposition': buildContentDisposition(shared.title),
           },
         })
+      }, {
+        detail: { summary: '通过分享令牌下载资产', tags: ['资产'] },
       })
       .guard({ beforeHandle: requireUser }, (guarded) =>
         guarded
@@ -80,6 +82,7 @@ export const assetsModule = new Elysia({ name: 'assets', detail: { tags: ['资�
               body: t.Object({
                 file: t.File(),
               }),
+              detail: { summary: '上传资产文件', tags: ['资产'] },
             }
           )
           .get('/', async ({ user, db, query }) => {
@@ -93,22 +96,32 @@ export const assetsModule = new Elysia({ name: 'assets', detail: { tags: ['资�
               cursor: parsedQuery.cursor,
             })
             return ok(result)
+          }, {
+            detail: { summary: '获取资产列表', tags: ['资产'] },
           })
           .get('/:id', async ({ user, db, params }) => {
             const asset = await getAsset({ db, owner: user!, id: params.id })
             return ok(asset)
+          }, {
+            detail: { summary: '获取资产详情', tags: ['资产'] },
           })
           .post('/:id/share-link', async ({ user, db, params }) => {
             const share = await createAssetShareLink({ db, owner: user!, id: params.id })
             return ok(share)
+          }, {
+            detail: { summary: '创建资产分享链接', tags: ['资产'] },
           })
           .post('/:id/transfer-session', async ({ user, db, params }) => {
             const session = await createAssetTransferSession({ db, owner: user!, id: params.id })
             return ok(session)
+          }, {
+            detail: { summary: '创建资产传输会话', tags: ['资产'] },
           })
           .delete('/:id', async ({ user, db, params }) => {
             await deleteAsset({ db, owner: user!, id: params.id })
             return ok({ deleted: true })
+          }, {
+            detail: { summary: '删除资产', tags: ['资产'] },
           })
       )
   )

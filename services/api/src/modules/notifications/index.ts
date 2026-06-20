@@ -42,19 +42,26 @@ export const notificationsModule = new Elysia({ name: 'notifications', detail: {
             limit: t.Optional(t.Numeric()),
             offset: t.Optional(t.Numeric()),
           }),
+          detail: { summary: '获取通知列表', tags: ['通知'] },
         }
       )
       .get('/notifications/unread', async ({ user }) => {
         const count = await getUnreadCount(user!.id)
         return ok({ count })
+      }, {
+        detail: { summary: '获取未读通知数', tags: ['通知'] },
       })
       .patch('/notifications/:id/read', async ({ user, params }) => {
         const ok_ = await markNotificationRead(params.id, user!.id)
         if (!ok_) throw new AppError(404, 'NOT_FOUND', '通知不存在')
         return ok({ read: true })
+      }, {
+        detail: { summary: '标记通知已读', tags: ['通知'] },
       })
       .post('/notifications/read-all', async ({ user }) => {
         const count = await markAllNotificationsRead(user!.id)
         return ok({ count })
+      }, {
+        detail: { summary: '全部标记已读', tags: ['通知'] },
       })
   )

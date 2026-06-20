@@ -73,6 +73,7 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
             limit: t.Optional(t.Numeric()),
             offset: t.Optional(t.Numeric()),
           }),
+          detail: { summary: '获取生成记录列表', tags: ['生成记录'] },
         }
       )
       // 详情
@@ -82,6 +83,8 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
           throw new AppError(404, 'NOT_FOUND', '生成记录不存在')
         }
         return ok(serialize(record))
+      }, {
+        detail: { summary: '获取生成记录详情', tags: ['生成记录'] },
       })
       // 隐藏（软删除）
       .delete('/records/:id', async ({ user, params }) => {
@@ -91,6 +94,8 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
         }
         await hideGenerationRecord(params.id)
         return ok({ deleted: true })
+      }, {
+        detail: { summary: '隐藏生成记录', tags: ['生成记录'] },
       })
       // 重试
       .post('/records/:id/retry', async ({ user, params }) => {
@@ -133,6 +138,8 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
           taskId: task.id,
           status: 'queued',
         })
+      }, {
+        detail: { summary: '重试生成记录', tags: ['生成记录'] },
       })
       // 取消
       .post('/records/:id/cancel', async ({ user, params }) => {
@@ -159,5 +166,7 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
 
         const updated = await getGenerationRecordByIdForOwner(params.id, user!.id)
         return ok(serialize(updated!))
+      }, {
+        detail: { summary: '取消生成记录', tags: ['生成记录'] },
       })
   )
