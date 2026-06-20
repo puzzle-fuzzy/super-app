@@ -43,24 +43,24 @@ const sidebar = [
       <section class="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16
         max-[920px]:px-[18px] max-[920px]:py-6
         max-[620px]:px-3.5 max-[620px]:py-5">
-        <div class="flex gap-0 min-h-[calc(100vh-128px)]">
-          <aside class="w-[240px] min-w-[240px] pr-8 border-r border-[#2a2a2a]
+        <div class="flex gap-12 min-h-[calc(100vh-128px)]">
+          <aside class="w-[240px] min-w-[240px] border-r border-[#2a2a2a]
             max-[920px]:hidden">
             <a href="/docs/" class="block text-lg font-bold text-[#e5e5e5] no-underline mb-7 tracking-[-0.02em]">
               Super 文档
             </a>
             <nav>
               {sidebar.map((group) => (
-                <div class="mb-6">
-                  <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-[#666666] mb-2">
+                <div class="mb-8">
+                  <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-[#666666] mb-3">
                     {group.label}
                   </p>
                   <ul class="list-none m-0 p-0">
                     {group.items.map((item) => (
-                      <li class="m-0">
+                      <li class="my-1">
                         <a
                           href={item.href}
-                          class={`block py-[6px] px-[10px] rounded-md text-sm no-underline transition-colors
+                          class={`block py-[6px] px-3 rounded-md text-sm no-underline transition-colors
                             ${Astro.url.pathname === item.href
                               ? 'text-[#e5e5e5] bg-[#1c1c1c] font-medium'
                               : 'text-[#999999] hover:text-[#e5e5e5] hover:bg-[#1c1c1c]'
@@ -76,7 +76,7 @@ const sidebar = [
             </nav>
           </aside>
 
-          <article class="flex-1 min-w-0 max-[920px]:max-w-none">
+          <article class="flex-1 min-w-0 px-8 max-[920px]:px-0 max-[920px]:max-w-none">
             <slot />
           </article>
         </div>
