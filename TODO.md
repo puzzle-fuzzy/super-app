@@ -33,25 +33,13 @@
 - `user!` 仍保留（Elysia 1.x guard 类型不传播，属框架限制）
 - 剩余待做：contract 测试（属于 P3 #9）
 
-### 4. Canvas Worker 与 runtime 之间存在大量 `any` 桥接
+### 4. ~~Canvas Worker 与 runtime 之间存在大量 `any` 桥接~~ ✅ `b9e6612`
 
-**问题**
-
-- `services/worker/src/canvas-*.ts`、`services/worker/src/pipeline-stepper.ts`、`services/worker/src/canvas-adapter-factory.ts` 中有大量 `as any`。
-- 根目录 `eslint.config.mjs` 对 `packages/canvas-runtime/src/phases/**/*.ts`、`services/worker/src/canvas-*.ts`、`services/worker/src/pipeline-stepper.ts` 临时关闭了 `@typescript-eslint/no-explicit-any`。
-- 这些断言集中在长链路 pipeline/worker/runtime 交界处，最容易把 DB shape、runtime adapter shape、task input shape 的不一致拖到运行时才爆。
-
-**解决办法**
-
-- 为 worker 到 `@super-app/canvas-runtime` 的 adapter 建立明确接口：LLM client、storage adapter、repo adapter、phase input/output。
-- 将 DB row 转 runtime entity 的映射集中到 `services/worker/src/canvas-mappers.ts` 或 runtime normalize 层，并用 Zod/类型守卫校验 JSON 字段。
-- 分阶段移除 `as any`：先 adapter factory，再各 phase handler，最后取消 ESLint override。
-- 给关键 phase 增加单元测试：analysis、characters、locations、storyboard、videos、assemble 的输入解析与失败路径。
-
-**完成标准**
-
-- worker/canvas runtime 相关 ESLint override 删除。
-- `rg "\\bas any\\b" services/worker packages/canvas-runtime` 不再命中关键链路。
+- 33 处 `as any` 降至 3 处必要边界（adapter 宽类型→具体类型/notify shape 差异），均已加 eslint-disable 注释
+- 新增 `canvas-mappers.ts` 集中处理 DB→runtime 类型转换
+- 删除 `eslint.config.mjs` 中 canvas-*.ts / pipeline-stepper.ts / canvas-runtime 的 `no-explicit-any` 临时关闭
+- `rg "\bas any\b" services/worker packages/canvas-runtime` 仅命中 3 处必要边界
+- 剩余 TODO：给关键 phase 增加单元测试（属于 P3 #9/#10）
 
 ## P2 - 文件单一职责与前端可维护性
 
