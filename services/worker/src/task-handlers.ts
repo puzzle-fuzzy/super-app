@@ -1,6 +1,10 @@
 import type { Task, TaskOutput } from '@super-app/db'
 import { serverEnv } from '@super-app/env/server'
-import { createTaskHandlerRegistry, TaskInputError, type TaskDefinition } from '@super-app/task-engine'
+import {
+  createTaskHandlerRegistry,
+  TaskInputError,
+  type TaskDefinition,
+} from '@super-app/task-engine'
 
 import { generateVideoHandler } from './handlers/generate-video'
 
@@ -18,7 +22,9 @@ export interface WorkerTaskContext {
   workerId: string
 }
 
-export const taskHandlers = createTaskHandlerRegistry<Task, WorkerTaskContext, TaskOutput>(definitions)
+export const taskHandlers = createTaskHandlerRegistry<Task, WorkerTaskContext, TaskOutput>(
+  definitions
+)
 
 /**
  * 校验 worker 运行环境 — 返回缺失依赖的警告列表（不阻断启动）。

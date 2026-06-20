@@ -9,10 +9,8 @@ import {
   createTask,
   extendTaskLock,
   getTaskById,
-  markTaskFailed,
   markTaskRetrying,
   markTaskSucceeded,
-  releaseTaskLock,
   sweepOrphanTasks,
 } from '../src/repositories/tasks'
 
@@ -70,7 +68,9 @@ describe('tasks.repo', () => {
     expect(claimed!.attempts).toBe(1)
     expect(claimed!.lockedUntil).toBeTruthy()
     // 确认 claim 到的是我们刚创建的高优先级任务（或至少是 running 状态）
-    expect(claimed!.lockedUntil! instanceof Date || typeof claimed!.lockedUntil === 'string').toBe(true)
+    expect(claimed!.lockedUntil! instanceof Date || typeof claimed!.lockedUntil === 'string').toBe(
+      true
+    )
 
     // 第二次 claim（无新 eligible，因为该 task 已 running；除非有其他 queued）
     // 注意：可能 claim 到其他 test 的 task，所以只验证不重复 claim 同一个 running task

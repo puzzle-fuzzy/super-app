@@ -16,7 +16,8 @@
     "@super-app/env": "workspace:*",
     "@super-app/error-recovery": "workspace:*",
     "@super-app/storage": "workspace:*",
-    "@super-app/task-engine": "workspace:*"
+    "@super-app/task-engine": "workspace:*",
+    "drizzle-orm": "^0.44.2"
   },
   "devDependencies": {
     "bun-types": "latest",

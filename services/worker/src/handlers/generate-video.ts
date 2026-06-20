@@ -35,7 +35,9 @@ interface GenerateVideoTaskInput {
  * 完整的 asset 创建（写 assets 表 + asset_files）留给 5e，那时 generate-image
  * 端点会改造成「提交 → 立即返回 processing → 写 generate.video task」的完整链路。
  */
-export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskOutput> = async (task) => {
+export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskOutput> = async (
+  task
+) => {
   const input = task.input as unknown as GenerateVideoTaskInput
   if (!input?.providerTaskId || !input?.ownerId) {
     throw new AppError('Task input missing providerTaskId or ownerId')
@@ -116,6 +118,8 @@ async function downloadVideo(url: string): Promise<{ body: Buffer; mimeType: str
 
 function dashScopeBaseUrl(): string {
   return (
-    process.env.DASHSCOPE_BASE_URL || serverEnv.DASHSCOPE_BASE_URL || DEFAULT_DASHSCOPE_BASE_URL
+    process.env.DASHSCOPE_BASE_URL ||
+    serverEnv.DASHSCOPE_BASE_URL ||
+    DEFAULT_DASHSCOPE_BASE_URL
   ).replace(/\/+$/, '')
 }

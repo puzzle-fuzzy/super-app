@@ -2,7 +2,7 @@ export type TaskErrorCategory = 'provider_error' | 'timeout' | 'validation' | 's
 
 export type TaskHandler<TTask, TContext, TOutput = Record<string, unknown> | undefined> = (
   task: TTask,
-  context: TContext,
+  context: TContext
 ) => Promise<TOutput> | TOutput
 
 export interface TaskErrorDecision {
@@ -19,9 +19,9 @@ export interface TaskErrorInfo {
   message: string
 }
 
-export type TaskFailureAction
-  = | { action: 'retry', decision: TaskErrorDecision, delayMs: number }
-    | { action: 'fail', decision: TaskErrorDecision }
+export type TaskFailureAction =
+  | { action: 'retry'; decision: TaskErrorDecision; delayMs: number }
+  | { action: 'fail'; decision: TaskErrorDecision }
 
 export interface TaskRetryCandidate {
   type: string
@@ -100,12 +100,18 @@ export interface TaskDefinition<TTask, TContext, TOutput = Record<string, unknow
   handler: TaskHandler<TTask, TContext, TOutput>
 }
 
-export interface TaskCompletionAdapter<TTask extends { id: string }, TOutput = Record<string, unknown> | undefined> {
+export interface TaskCompletionAdapter<
+  TTask extends { id: string },
+  TOutput = Record<string, unknown> | undefined,
+> {
   markTaskSucceeded: (id: string, output?: TOutput) => Promise<TTask | null> | TTask | null
   notifyTaskStatusChange: (task: TTask) => Promise<unknown> | unknown
 }
 
-export interface CompleteTaskWithAdapterInput<TTask extends { id: string }, TOutput = Record<string, unknown> | undefined> {
+export interface CompleteTaskWithAdapterInput<
+  TTask extends { id: string },
+  TOutput = Record<string, unknown> | undefined,
+> {
   task: TTask
   output?: TOutput
   adapter: TaskCompletionAdapter<TTask, TOutput>
@@ -131,7 +137,11 @@ export interface SweepOrphanTasksWithAdapterInput {
 }
 
 export interface TaskHeartbeatAdapter<TTask> {
-  extendTaskLock: (id: string, workerId: string, claimTtlMs: number) => Promise<TTask | null> | TTask | null
+  extendTaskLock: (
+    id: string,
+    workerId: string,
+    claimTtlMs: number
+  ) => Promise<TTask | null> | TTask | null
 }
 
 export interface ExtendTaskLockWithAdapterInput<TTask> {
@@ -152,21 +162,31 @@ export interface CancelTaskWithAdapterInput<TTask> {
 
 export interface TaskFailureAdapter {
   markTaskRetrying: (id: string, nextRunAt: Date) => Promise<unknown> | unknown
-  markTaskFailed: (id: string, errorInfo?: TaskErrorInfo, errorMessage?: string) => Promise<unknown> | unknown
+  markTaskFailed: (
+    id: string,
+    errorInfo?: TaskErrorInfo,
+    errorMessage?: string
+  ) => Promise<unknown> | unknown
 }
 
-export interface ApplyTaskFailureWithAdapterInput<TTask extends TaskRetryCandidate & { id: string }> {
+export interface ApplyTaskFailureWithAdapterInput<
+  TTask extends TaskRetryCandidate & { id: string },
+> {
   task: TTask
   error: unknown
   adapter: TaskFailureAdapter
   now?: () => number
 }
 
-export type ApplyTaskFailureWithAdapterResult
-  = | { action: 'retry', decision: TaskErrorDecision, delayMs: number, nextRunAt: Date }
-    | { action: 'fail', decision: TaskErrorDecision, errorInfo: TaskErrorInfo, errorMessage: string }
+export type ApplyTaskFailureWithAdapterResult =
+  | { action: 'retry'; decision: TaskErrorDecision; delayMs: number; nextRunAt: Date }
+  | { action: 'fail'; decision: TaskErrorDecision; errorInfo: TaskErrorInfo; errorMessage: string }
 
-export class TaskHandlerRegistry<TTask extends { type: string }, TContext, TOutput = Record<string, unknown> | undefined> {
+export class TaskHandlerRegistry<
+  TTask extends { type: string },
+  TContext,
+  TOutput = Record<string, unknown> | undefined,
+> {
   private readonly handlers = new Map<string, TaskHandler<TTask, TContext, TOutput>>()
 
   register(definition: TaskDefinition<TTask, TContext, TOutput>): this {
@@ -195,8 +215,7 @@ export class TaskHandlerRegistry<TTask extends { type: string }, TContext, TOutp
 
   async handle(task: TTask, context: TContext): Promise<TOutput> {
     const handler = this.get(task.type)
-    if (!handler)
-      throw new TaskNotImplementedError(task.type)
+    if (!handler) throw new TaskNotImplementedError(task.type)
     return handler(task, context)
   }
 }
@@ -237,8 +256,12 @@ export class TaskLockLostError extends Error {
   code: string
 }
 
-export function createTaskHandlerRegistry<TTask extends { type: string }, TContext, TOutput = Record<string, unknown> | undefined>(
-  definitions: Array<TaskDefinition<TTask, TContext, TOutput>> = [],
+export function createTaskHandlerRegistry<
+  TTask extends { type: string },
+  TContext,
+  TOutput = Record<string, unknown> | undefined,
+>(
+  definitions: Array<TaskDefinition<TTask, TContext, TOutput>> = []
 ): TaskHandlerRegistry<TTask, TContext, TOutput> {
   return new TaskHandlerRegistry<TTask, TContext, TOutput>().registerMany(definitions)
 }
@@ -255,21 +278,19 @@ export function createTaskHandlerRegistry<TTask extends { type: string }, TConte
  */
 export function getTaskPriority(
   input: TaskPriorityInput,
-  policy: TaskPriorityPolicy = DEFAULT_PRIORITY_POLICY,
+  policy: TaskPriorityPolicy = DEFAULT_PRIORITY_POLICY
 ): number {
-  if (input.type in policy.typeOverrides)
-    return policy.typeOverrides[input.type]!
-  if (input.domain in policy.domainFallbacks)
-    return policy.domainFallbacks[input.domain]!
+  if (input.type in policy.typeOverrides) return policy.typeOverrides[input.type]!
+  if (input.domain in policy.domainFallbacks) return policy.domainFallbacks[input.domain]!
   return policy.default
 }
 
-export async function completeTaskWithAdapter<TTask extends { id: string }, TOutput = Record<string, unknown> | undefined>(
-  input: CompleteTaskWithAdapterInput<TTask, TOutput>,
-): Promise<TTask | null> {
+export async function completeTaskWithAdapter<
+  TTask extends { id: string },
+  TOutput = Record<string, unknown> | undefined,
+>(input: CompleteTaskWithAdapterInput<TTask, TOutput>): Promise<TTask | null> {
   const updatedTask = await input.adapter.markTaskSucceeded(input.task.id, input.output)
-  if (updatedTask)
-    await input.adapter.notifyTaskStatusChange(updatedTask)
+  if (updatedTask) await input.adapter.notifyTaskStatusChange(updatedTask)
   return updatedTask
 }
 
@@ -279,7 +300,7 @@ export async function completeTaskWithAdapter<TTask extends { id: string }, TOut
  * @returns 被 claim 的 task，或 null（无 eligible task）
  */
 export async function claimNextTaskWithAdapter<TTask>(
-  input: ClaimNextTaskWithAdapterInput<TTask>,
+  input: ClaimNextTaskWithAdapterInput<TTask>
 ): Promise<TTask | null> {
   return input.adapter.claimNextTask(input.workerId, input.claimTtlMs)
 }
@@ -292,7 +313,7 @@ export async function claimNextTaskWithAdapter<TTask>(
  * @returns 恢复的任务数量
  */
 export async function sweepOrphanTasksWithAdapter(
-  input: SweepOrphanTasksWithAdapterInput,
+  input: SweepOrphanTasksWithAdapterInput
 ): Promise<number> {
   return input.adapter.sweepOrphanTasks(input.timeoutMinutes)
 }
@@ -303,7 +324,7 @@ export async function sweepOrphanTasksWithAdapter(
  * @returns 续锁后的 task；adapter 返回 null 表示任务已不再 running（被 sweep/cancel）
  */
 export async function extendTaskLockWithAdapter<TTask>(
-  input: ExtendTaskLockWithAdapterInput<TTask>,
+  input: ExtendTaskLockWithAdapterInput<TTask>
 ): Promise<TTask | null> {
   return input.adapter.extendTaskLock(input.taskId, input.workerId, input.claimTtlMs)
 }
@@ -317,14 +338,14 @@ export async function extendTaskLockWithAdapter<TTask>(
  * @returns 被取消的 task；null 表示任务已不在可取消状态
  */
 export async function cancelTaskWithAdapter<TTask>(
-  input: CancelTaskWithAdapterInput<TTask>,
+  input: CancelTaskWithAdapterInput<TTask>
 ): Promise<TTask | null> {
   return input.adapter.cancelTask(input.taskId)
 }
 
-export async function applyTaskFailureWithAdapter<TTask extends TaskRetryCandidate & { id: string }>(
-  input: ApplyTaskFailureWithAdapterInput<TTask>,
-): Promise<ApplyTaskFailureWithAdapterResult> {
+export async function applyTaskFailureWithAdapter<
+  TTask extends TaskRetryCandidate & { id: string },
+>(input: ApplyTaskFailureWithAdapterInput<TTask>): Promise<ApplyTaskFailureWithAdapterResult> {
   const failureAction = decideTaskFailureAction(input.task, input.error)
   if (failureAction.action === 'retry') {
     const nextRunAt = new Date((input.now?.() ?? Date.now()) + failureAction.delayMs)
@@ -406,15 +427,14 @@ export function classifyTaskError(error: unknown): TaskErrorDecision {
   }
 }
 
-export function shouldRetryTask(
-  error: unknown,
-  attempts: number,
-  maxAttempts: number,
-): boolean {
+export function shouldRetryTask(error: unknown, attempts: number, maxAttempts: number): boolean {
   return classifyTaskError(error).retriable && attempts < maxAttempts
 }
 
-export function decideTaskFailureAction(task: TaskRetryCandidate, error: unknown): TaskFailureAction {
+export function decideTaskFailureAction(
+  task: TaskRetryCandidate,
+  error: unknown
+): TaskFailureAction {
   const decision = classifyTaskError(error)
   if (decision.retriable && task.attempts < task.maxAttempts) {
     return {
@@ -441,11 +461,10 @@ export function decideTaskFailureAction(task: TaskRetryCandidate, error: unknown
 export function computeRetryDelay(
   taskType: string,
   attempts: number,
-  policy: TaskBackoffPolicy = DEFAULT_BACKOFF_POLICY,
+  policy: TaskBackoffPolicy = DEFAULT_BACKOFF_POLICY
 ): number {
   // 轮询型 task：固定间隔重新 poll
-  if (taskType in policy.fixedInterval)
-    return policy.fixedInterval[taskType]!
+  if (taskType in policy.fixedInterval) return policy.fixedInterval[taskType]!
 
   // 指数退避：base × 2^(attempts-1)，封顶 exponent 3（即 8× base）
   if (taskType in policy.exponentialBase) {
@@ -457,13 +476,11 @@ export function computeRetryDelay(
 }
 
 export function extractErrorCode(error: unknown): string | undefined {
-  if (!(error instanceof Error))
-    return undefined
+  if (!(error instanceof Error)) return undefined
   // provider guard 抛出的 ModelDegradedError 把 code 放在 error 自身（非 cause），
   // 此处一并识别，让降级快速失败被分类为可重试的 provider_error。
   const ownCode = (error as { code?: string }).code
-  if (ownCode)
-    return ownCode
+  if (ownCode) return ownCode
   const cause = error.cause as { code?: string } | undefined
   return cause?.code
 }
@@ -476,7 +493,7 @@ export function extractErrorCode(error: unknown): string | undefined {
  *   - 此表负责 task lifecycle 决策（retry vs fail）
  *   - error-recovery 表负责 user-facing recovery 映射（suggestion / diagnostics）
  */
-const ERROR_CODE_REGISTRY: Record<string, { category: TaskErrorCategory, retriable: boolean }> = {
+const ERROR_CODE_REGISTRY: Record<string, { category: TaskErrorCategory; retriable: boolean }> = {
   ECONNREFUSED: { category: 'timeout', retriable: true },
   ETIMEDOUT: { category: 'timeout', retriable: true },
   TIMEOUT: { category: 'timeout', retriable: true },

@@ -111,16 +111,32 @@ const DOMAIN_ACTION: Record<FailureDomain, RecoveryAction> = {
 /** 错误码前缀/全等匹配，按优先级排序。 */
 const CODE_RULES: Array<{ match: RegExp; domain: FailureDomain; action?: RecoveryAction }> = [
   // 余额/配额
-  { match: /^(insufficient_balance|insufficient_quota|arrearage|allocationquota|api_key_quota_exceeded)$/i, domain: 'balance' },
+  {
+    match:
+      /^(insufficient_balance|insufficient_quota|arrearage|allocationquota|api_key_quota_exceeded)$/i,
+    domain: 'balance',
+  },
   // 内容审核
   { match: /^(datainspection|ipinfringement|blocked|content.blocked)$/i, domain: 'content' },
   // 模型不可用/降级/不兼容
-  { match: /^(model_not_found|invalid_model|model_degraded)$/i, domain: 'provider', action: 'change_model' },
+  {
+    match: /^(model_not_found|invalid_model|model_degraded)$/i,
+    domain: 'provider',
+    action: 'change_model',
+  },
   { match: /^(throttling)$/i, domain: 'provider', action: 'wait' },
   // 网络/超时
-  { match: /^(econnrefused|etimedout|econnreset|timeout|requesttimeout|responsetimeout|invalidurl)$/i, domain: 'network' },
+  {
+    match:
+      /^(econnrefused|etimedout|econnreset|timeout|requesttimeout|responsetimeout|invalidurl)$/i,
+    domain: 'network',
+  },
   // 参数
-  { match: /^(invalid_parameters|invalidparameter|missing_user_message|invalid_model_parameters|api_key_scope_not_allowed)$/i, domain: 'validation' },
+  {
+    match:
+      /^(invalid_parameters|invalidparameter|missing_user_message|invalid_model_parameters|api_key_scope_not_allowed)$/i,
+    domain: 'validation',
+  },
   // 生成失败（provider 内部） → provider 域
   { match: /^(generation_failed)$/i, domain: 'provider' },
   // 取消

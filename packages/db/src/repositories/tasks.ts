@@ -27,7 +27,10 @@ function mapRowToTask(row: Record<string, unknown>): Task {
 
 /** sanitize 错误信息 — 去掉换行/控制字符，截断超长文案（移植自 @excuse/shared）。 */
 function sanitizeErrorMessage(message: string): string {
-  return message.replace(/[\r\n\t]+/g, ' ').trim().slice(0, 1000)
+  return message
+    .replace(/[\r\n\t]+/g, ' ')
+    .trim()
+    .slice(0, 1000)
 }
 
 // ===== CRUD =====
@@ -46,11 +49,7 @@ export async function getTaskById(id: string): Promise<Task | null> {
 
 /** 按 owner 查任务（基础列表，5c 引入完整 generation_records 关联后扩展） */
 export async function listTasksByOwner(ownerId: string, limit = 50): Promise<Task[]> {
-  return db
-    .select()
-    .from(tasks)
-    .where(eq(tasks.ownerId, ownerId))
-    .limit(limit)
+  return db.select().from(tasks).where(eq(tasks.ownerId, ownerId)).limit(limit)
 }
 
 // ===== Claim / Lock =====

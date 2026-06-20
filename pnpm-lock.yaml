@@ -508,6 +508,15 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
+  packages/error-recovery:
+    devDependencies:
+      bun-types:
+        specifier: latest
+        version: 1.3.14
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+
   packages/eslint-config:
     dependencies:
       '@eslint/js':
@@ -532,6 +541,15 @@ importers:
       '@types/ali-oss':
         specifier: ^6.23.3
         version: 6.23.3
+      bun-types:
+        specifier: latest
+        version: 1.3.14
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+
+  packages/task-engine:
+    devDependencies:
       bun-types:
         specifier: latest
         version: 1.3.14
@@ -611,6 +629,34 @@ importers:
       sharp:
         specifier: ^0.34.2
         version: 0.34.5
+    devDependencies:
+      bun-types:
+        specifier: latest
+        version: 1.3.14
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+
+  services/worker:
+    dependencies:
+      '@super-app/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@super-app/env':
+        specifier: workspace:*
+        version: link:../../packages/env
+      '@super-app/error-recovery':
+        specifier: workspace:*
+        version: link:../../packages/error-recovery
+      '@super-app/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
+      '@super-app/task-engine':
+        specifier: workspace:*
+        version: link:../../packages/task-engine
+      drizzle-orm:
+        specifier: ^0.44.2
+        version: 0.44.7(bun-types@1.3.14)(postgres@3.4.9)
     devDependencies:
       bun-types:
         specifier: latest

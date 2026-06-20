@@ -19,8 +19,8 @@ Assets are the platform's core: any generated or uploaded result settles into th
 | ---------------------- | ---- | --------------- | ----------------------------------------------- |
 | `@super-app/auth`      | 5100 | `/auth/`        | SSO login / register center                     |
 | `@super-app/workspace` | 5103 | `/workspace/`   | Post-login dashboard (recent assets + projects) |
-| `@super-app/assets`    | 5105 | `/assets/`      | Asset library: upload, list, edit, delete       |
-| `@super-app/canvas`    | 5104 | `/canvas/`      | Canvas editor (project CRUD, `@xyflow/react`)   |
+| `@super-app/assets`    | 5105 | `/assets/`      | Asset library: 8-kind CRUD, upload, multi-file   |
+| `@super-app/canvas`    | 5104 | `/canvas/`      | Canvas editor: `@xyflow/react`, asset sidebar + drag-to-canvas, AI image/video generation (百炼/DashScope) |
 | `@super-app/transfer`  | 5106 | `/transfer/`    | Device-to-device transfer rooms                 |
 | `@super-app/console`   | 5107 | `/api-console/` | API key management                              |
 | `@super-app/site`      | 5101 | `/`             | Public marketing landing page                   |
@@ -35,7 +35,9 @@ Assets are the platform's core: any generated or uploaded result settles into th
 | `assets`    | `/api/assets/...`                      | Upload (multipart, probe + thumbnail), list (cursor paginated), detail, delete (soft), share links, transfer sessions |
 | `texts`     | `/api/assets/texts/...`                | Text asset CRUD (prompts, notes, scripts, …)                                                                          |
 | `subjects`  | `/api/assets/subjects/...`             | Subject asset CRUD (reusable creation objects)                                                                        |
-| `canvas`    | `/api/canvas/projects/...`             | Canvas project CRUD + versioning                                                                                      |
+| `styles`    | `/api/assets/styles/...`               | Style asset CRUD (reusable generation styles)                                                                         |
+| `templates` | `/api/assets/templates/...`            | Template asset CRUD (reusable structures)                                                                             |
+| `canvas`    | `/api/canvas/generate-image` + `/api/canvas/projects/...` | AI image/video generation (百炼/DashScope, results saved as assets) + project CRUD + versioning     |
 | `transfers` | `/api/transfers/...` + WS              | Transfer rooms (WebSocket signaling, persisted with expiry)                                                           |
 | `api-keys`  | `/api/api-keys/...`                    | API key issuance + management                                                                                         |
 
@@ -47,18 +49,18 @@ Assets use a **unified main table + per-type extension tables** pattern. The mai
 
 - **`asset_kind`** — 8 values: `subject, image, video, audio, text, file, style, template`.
 - Upload-class (`image/video/audio/file`) files live in `assets.asset_files` (one asset → many files, with a `role`). Phase 0 uploads use local-disk storage via the `@super-app/storage` abstraction (swappable for object storage later); media dimensions are probed (sharp / ffprobe) and thumbnails generated.
-- Creation-class assets (`text`, `subject`) have extension tables (`text_assets`, `subject_assets`) storing structured content directly in Postgres.
-- `style` and `template` types are scaffolded in the enum but not yet implemented.
+- Creation-class assets (`text`, `subject`, `style`, `template`) have extension tables (`text_assets`, `subject_assets`, `style_assets`, `template_assets`) storing structured content directly in Postgres.
+- All 8 asset kinds are implemented end to end (CRUD + frontend editor + E2E). The canvas editor can also drag any asset from its sidebar onto the canvas as a typed node, and generate images/videos via the 百炼 (DashScope) integration which settle generated results back into the asset center.
 
 ### Shared packages
 
 | Package                    | Purpose                                                                                                                   |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `@super-app/contracts`     | Zod DTO / request schemas (api, assets, auth, canvas, api-keys, text-assets, subject-assets)                              |
-| `@super-app/db`            | Drizzle schema (identity, assets, text/subject assets, asset_files, canvas, api_keys, transfer_rooms), client, migrations |
+| `@super-app/contracts`     | Zod DTO / request schemas (api, assets, auth, canvas, api-keys, text/subject/style/template-assets)                       |
+| `@super-app/db`            | Drizzle schema (identity, assets, text/subject/style/template assets, asset_files, canvas, api_keys, transfer_rooms)      |
 | `@super-app/env`           | Public/client/server env validation (Zod)                                                                                 |
 | `@super-app/auth-client`   | Session state + `useRequireAuth` React hook                                                                               |
-| `@super-app/api-client`    | Typed API client (`authApi`, `assetsApi`, `textsApi`, `subjectsApi`, …)                                                   |
+| `@super-app/api-client`    | Typed API client (`authApi`, `assetsApi`, `textsApi`, `subjectsApi`, `stylesApi`, `templatesApi`, `canvasApi`, …)         |
 | `@super-app/storage`       | `StorageProvider` interface + local-disk implementation                                                                   |
 | `@super-app/design-tokens` | Design tokens (CSS)                                                                                                       |
 | `@super-app/ui-react`      | Shared React components (Modal, Select)                                                                                   |

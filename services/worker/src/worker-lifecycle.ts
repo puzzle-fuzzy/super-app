@@ -67,7 +67,12 @@ export function setupLifecycle(config: WorkerConfig): WorkerLifecycle {
       console.log(`[worker] task ${task.id} succeeded`)
     } catch (err) {
       const result = await applyTaskFailureWithAdapter({
-        task: { id: task.id, type: task.type, attempts: task.attempts, maxAttempts: task.maxAttempts },
+        task: {
+          id: task.id,
+          type: task.type,
+          attempts: task.attempts,
+          maxAttempts: task.maxAttempts,
+        },
         error: err,
         adapter: repoAdapter,
       })
@@ -95,7 +100,9 @@ export function setupLifecycle(config: WorkerConfig): WorkerLifecycle {
         adapter: repoAdapter,
       })
       if (task) {
-        console.log(`[worker] claimed task ${task.id} (type=${task.type}, attempt=${task.attempts})`)
+        console.log(
+          `[worker] claimed task ${task.id} (type=${task.type}, attempt=${task.attempts})`
+        )
         await processTask(task)
       }
     } catch (err) {

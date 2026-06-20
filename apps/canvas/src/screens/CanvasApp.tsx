@@ -1063,14 +1063,14 @@ function ImageGenerationPromptBar({
     <section className="pointer-events-none fixed right-6 bottom-6 left-6 z-40 flex justify-center">
       <form
         onSubmit={submit}
-        className="pointer-events-auto w-full max-w-[860px] overflow-hidden rounded-2xl border border-[#343434] bg-[#191919] shadow-[0_14px_42px_rgba(0,0,0,0.36)]"
+        className="pointer-events-auto w-full max-w-[860px] overflow-hidden rounded-4xl border border-[#343434] bg-[#191919] shadow-[0_14px_42px_rgba(0,0,0,0.36)]"
       >
         <div className="grid gap-3 p-3">
           <textarea
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
             placeholder="描述你想生成的图片或视频..."
-            rows={3}
+            rows={5}
             className="min-h-24 resize-none rounded-xl border border-[#303030] bg-[#101010] px-4 py-3 text-[14px] leading-relaxed text-[#eeeeee] outline-none transition-colors placeholder:text-[#8a8a8a] focus:border-[#686868]"
           />
 

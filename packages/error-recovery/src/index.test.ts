@@ -47,9 +47,13 @@ describe('classifyRecovery', () => {
   })
 
   it('recharges=true only for retry-like actions under credit-ledger', () => {
-    expect(classifyRecovery({ code: 'ETIMEDOUT', billingMode: 'credit-ledger' }).recharges).toBe(true)
+    expect(classifyRecovery({ code: 'ETIMEDOUT', billingMode: 'credit-ledger' }).recharges).toBe(
+      true
+    )
     expect(classifyRecovery({ code: 'ETIMEDOUT', billingMode: 'free' }).recharges).toBe(false)
-    expect(classifyRecovery({ status: 'cancelled', billingMode: 'credit-ledger' }).recharges).toBe(false)
+    expect(classifyRecovery({ status: 'cancelled', billingMode: 'credit-ledger' }).recharges).toBe(
+      false
+    )
   })
 
   it('diagnostics includes traceId and code', () => {
