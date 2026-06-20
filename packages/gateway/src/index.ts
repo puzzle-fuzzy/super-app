@@ -1,4 +1,4 @@
-export { resolveModelAlias, GATEWAY_TEXT_MODELS, MODEL_ALIASES } from './aliases'
+export { GATEWAY_TEXT_MODELS, isTextModelSupported } from './aliases'
 export {
   OpenAIGatewayError,
   modelNotFoundError,

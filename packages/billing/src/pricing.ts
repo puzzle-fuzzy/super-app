@@ -10,6 +10,23 @@ import type { ModelPricing } from './types'
  */
 
 export const MODEL_PRICING: Record<string, ModelPricing> = {
+  // === 文本生成（每百万 token） ===
+  'qwen-max': {
+    unit: 'token',
+    inputPriceCents: 240,
+    outputPriceCents: 960,
+  },
+  'qwen-plus': {
+    unit: 'token',
+    inputPriceCents: 80,
+    outputPriceCents: 200,
+  },
+  'qwen-turbo': {
+    unit: 'token',
+    inputPriceCents: 30,
+    outputPriceCents: 60,
+  },
+
   // === 图片生成 ===
   'qwen-image-2.0-pro': {
     unit: 'image',

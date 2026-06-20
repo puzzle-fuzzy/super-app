@@ -12,10 +12,10 @@ import {
   createModelsResponse,
   createStreamChunk,
   extractGatewayBillingParams,
+  isTextModelSupported,
   missingUserMessageError,
   modelNotFoundError,
   normalizeChatRequest,
-  resolveModelAlias,
   serializeSSEChunk,
   SSE_DONE,
   insufficientBalanceError,
@@ -44,18 +44,17 @@ export const gatewayModule = new Elysia({ name: 'gateway' })
     async ({ user, body, set }) => {
       const owner = user!
 
-      // 1. 解析模型
-      const resolvedModel = resolveModelAlias(body.model)
-      const pricing = getModelPricing(resolvedModel)
-      if (!pricing) {
+      // 1. 校验模型（必须使用 DashScope 真实模型名）
+      if (!isTextModelSupported(body.model)) {
         throw modelNotFoundError(body.model)
       }
-      if (pricing.unit !== 'token') {
-        throw modelNotFoundError(body.model) // 非文本模型
+      const pricing = getModelPricing(body.model)
+      if (!pricing || pricing.unit !== 'token') {
+        throw modelNotFoundError(body.model)
       }
 
       // 2. 归一化 + 验证
-      const normalized = normalizeChatRequest(body as OpenAIChatRequest, resolvedModel)
+      const normalized = normalizeChatRequest(body as OpenAIChatRequest, body.model)
       if (normalized.messages.every((m: { role: string; content: string }) => m.role !== 'user')) {
         throw missingUserMessageError()
       }
@@ -117,7 +116,7 @@ export const gatewayModule = new Elysia({ name: 'gateway' })
                     estimatedCost,
                     result: {
                       id: recordId,
-                      model: resolvedModel,
+                      model: body.model,
                       text: fullText,
                       usage: lastUsage,
                     },
