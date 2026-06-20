@@ -5,29 +5,10 @@
  * 不含 DB、FFmpeg 或存储操作。
  */
 
-/** 单条字幕语句：文本 + 时间区间 + 可选说话人。时间单位为毫秒。 */
-export interface SubtitleSentence {
-  id: string
-  text: string
-  /** 开始时间（毫秒） */
-  beginTime: number
-  /** 结束时间（毫秒） */
-  endTime: number
-  /** 说话人编号（ASR 多说话人识别时提供） */
-  speakerId?: number
-}
-
-/** 字幕样式配置，与 ASS Style 行一一映射。 */
-export interface SubtitleStyleConfig {
-  templateId: string
-  fontSize: number
-  fontColor: string
-  outlineColor: string
-  outlineWidth: number
-  position: 'top' | 'center' | 'bottom'
-  marginV: number
-  bold: boolean
-}
+// SubtitleSentence / SubtitleStyleConfig 真源在 @super-app/types（单一真源），
+// 此处 re-export 保持 subtitle-engine 消费方 import 路径不变，消除重复定义漂移。
+import type { SubtitleSentence, SubtitleStyleConfig } from '@super-app/types'
+export type { SubtitleSentence, SubtitleStyleConfig } from '@super-app/types'
 
 /** 字幕样式预设：包含元信息（name/description）与具体样式配置。 */
 export interface SubtitleStylePreset {

@@ -13,6 +13,9 @@
     "lint:fix": "eslint . --fix",
     "test": "bun test tests"
   },
+  "dependencies": {
+    "@super-app/types": "workspace:*"
+  },
   "devDependencies": {
     "bun-types": "latest",
     "typescript": "^5.8.3"
