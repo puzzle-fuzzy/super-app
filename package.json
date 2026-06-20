@@ -28,7 +28,7 @@
     "test": "turbo test",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:db": "pnpm --filter @super-app/db test",
+    "test:db": "turbo test --filter=@super-app/db",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
     "check:boundaries": "bun scripts/check-package-boundaries.ts",
