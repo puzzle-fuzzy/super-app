@@ -174,7 +174,7 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
         >
           <img
             style={{ width: '100%', height: 'auto', display: 'block' }}
-            src="/images/generation-failed.png"
+            src={`${import.meta.env.BASE_URL}images/generation-failed.png`}
             alt="生成失败"
             loading="lazy"
           />
