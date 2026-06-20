@@ -1,4 +1,5 @@
-import type { CostDetail, GenerationInputParams, OutputResult } from '../domain-types'
+import type { GenerationInputParams, OutputResult } from '@super-app/types'
+import type { CostDetail } from '@super-app/contracts/billing'
 import {
   index,
   integer,

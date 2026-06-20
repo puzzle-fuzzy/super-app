@@ -1,4 +1,4 @@
-import type { CanvasAssetOutput } from '@super-app/db'
+import type { CanvasAssetOutput } from '@super-app/types'
 import { runCanvasAssetStep, runContinuityPhase } from '@super-app/canvas-runtime'
 import { updateCanvasProject } from '@super-app/db'
 import { createWorkerRepoAdapter } from './canvas-adapter-factory'

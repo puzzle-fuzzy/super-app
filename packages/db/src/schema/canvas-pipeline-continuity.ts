@@ -1,4 +1,4 @@
-import type { ContinuityIssue } from '../domain-types'
+import type { ContinuityIssue } from '@super-app/types'
 import { jsonb, pgTable, uuid } from 'drizzle-orm/pg-core'
 
 import { createdAtColumn } from './common'

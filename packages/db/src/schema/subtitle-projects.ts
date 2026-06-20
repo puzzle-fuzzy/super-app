@@ -1,4 +1,4 @@
-import type { SubtitleSentence, SubtitleStyleConfig } from '../domain-types'
+import type { SubtitleSentence, SubtitleStyleConfig } from '@super-app/types'
 import { index, integer, jsonb, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core'
 
 import { createdAtColumn, updatedAtColumn } from './common'

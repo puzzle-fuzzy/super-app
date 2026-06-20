@@ -1,4 +1,5 @@
-import type { CostDetail, OutputResult } from '../domain-types'
+import type { OutputResult } from '@super-app/types'
+import type { CostDetail } from '@super-app/contracts/billing'
 import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 
 import { db } from '../client'

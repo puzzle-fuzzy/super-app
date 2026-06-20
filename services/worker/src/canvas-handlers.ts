@@ -4,7 +4,8 @@
  * 每个 handler 负责：获取项目 → 执行 phase → 返回结果。
  * Pipeline run 状态管理由 task-handlers 层的 repo adapter 处理。
  */
-import type { Task, TaskOutput } from '@super-app/db'
+import type { Task } from '@super-app/db'
+import type { TaskOutput } from '@super-app/types'
 import type { WorkerTaskContext } from './task-handlers'
 import { createLogger } from '@super-app/runtime'
 

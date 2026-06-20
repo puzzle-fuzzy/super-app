@@ -18,13 +18,12 @@ import {
   markGenerationFailed,
   markGenerationSucceeded,
   refundCredit,
-  type CostDetail as DbCostDetail,
 } from '@super-app/db'
 
 import { reserveAndTrack } from './billing-ledger'
 
-function asDbCost(c: CostDetail): DbCostDetail {
-  return c as unknown as DbCostDetail
+function asDbCost(c: CostDetail): CostDetail {
+  return c
 }
 
 // ---- Setup ----

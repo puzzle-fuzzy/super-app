@@ -1,4 +1,4 @@
-import type { TaskErrorInfo, TaskInput, TaskOutput } from '../domain-types'
+import type { TaskErrorInfo, TaskInput, TaskOutput } from '@super-app/types'
 import {
   index,
   integer,

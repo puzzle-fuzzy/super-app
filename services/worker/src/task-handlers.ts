@@ -1,4 +1,5 @@
-import type { Task, TaskOutput } from '@super-app/db'
+import type { Task } from '@super-app/db'
+import type { TaskOutput } from '@super-app/types'
 import { serverEnv } from '@super-app/env/server'
 import {
   createTaskHandlerRegistry,

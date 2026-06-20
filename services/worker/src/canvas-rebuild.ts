@@ -1,4 +1,4 @@
-import type { CanvasAssetOutput } from '@super-app/db'
+import type { CanvasAssetOutput } from '@super-app/types'
 import { buildShotVideoPromptEntity, resolveShotVideoReferences, runCanvasAssetStep, toPromptReferenceEntries } from '@super-app/canvas-runtime'
 import {
   updateCanvasProject,

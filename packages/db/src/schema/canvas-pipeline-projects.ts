@@ -1,4 +1,4 @@
-import type { CanvasLayoutDto, CanvasModelPreferences, NovelAnalysis } from '../domain-types'
+import type { CanvasLayoutDto, CanvasModelPreferences, NovelAnalysis } from '@super-app/types'
 import { boolean, index, jsonb, pgEnum, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core'
 
 import { createdAtColumn, updatedAtColumn } from './common'

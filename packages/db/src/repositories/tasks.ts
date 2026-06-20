@@ -1,4 +1,4 @@
-import type { TaskErrorInfo, TaskOutput } from '../domain-types'
+import type { TaskErrorInfo, TaskOutput } from '@super-app/types'
 import type { NewTask, Task } from '../schema/tasks'
 import { and, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm'
 

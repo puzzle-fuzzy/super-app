@@ -1,4 +1,5 @@
-import type { CanvasAssetOutput, CostDetail } from '../domain-types'
+import type { CanvasAssetOutput } from '@super-app/types'
+import type { CostDetail } from '@super-app/contracts/billing'
 import type { NewCanvasPipelineAsset } from '../schema/canvas-pipeline-assets'
 import { and, desc, eq, gte, inArray, isNull, lte, ne, sql } from 'drizzle-orm'
 import { db } from '../client'

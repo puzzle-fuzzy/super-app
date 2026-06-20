@@ -1,4 +1,5 @@
-import type { CanvasAssetOutput, CostDetail } from '../domain-types'
+import type { CanvasAssetOutput } from '@super-app/types'
+import type { CostDetail } from '@super-app/contracts/billing'
 import {
   boolean,
   index,

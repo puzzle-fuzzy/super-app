@@ -1,4 +1,4 @@
-import type { CharacterProfile } from '../domain-types'
+import type { CharacterProfile } from '@super-app/types'
 import { boolean, index, jsonb, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core'
 
 import { createdAtColumn, updatedAtColumn } from './common'

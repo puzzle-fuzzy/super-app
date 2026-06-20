@@ -1,4 +1,4 @@
-import type { CanvasAssetOutput } from '@super-app/db'
+import type { CanvasAssetOutput } from '@super-app/types'
 import type { DashScopeClient } from '@super-app/provider'
 import type { CanvasRuntimeLlmClient, CanvasRuntimeStorageAdapter } from '@super-app/canvas-runtime'
 import { runCanvasAssetStep, runStoryboardPhase } from '@super-app/canvas-runtime'

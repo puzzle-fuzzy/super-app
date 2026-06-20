@@ -1,4 +1,4 @@
-import type { LocationProfile } from '../domain-types'
+import type { LocationProfile } from '@super-app/types'
 import { boolean, index, jsonb, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core'
 
 import { createdAtColumn, updatedAtColumn } from './common'

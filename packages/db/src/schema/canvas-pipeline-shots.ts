@@ -6,7 +6,7 @@ import type {
   ShotContinuity,
   ShotEnvironment,
   ShotTimelineEntry,
-} from '../domain-types'
+} from '@super-app/types'
 import { sql } from 'drizzle-orm'
 import {
   index,
