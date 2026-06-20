@@ -1,9 +1,8 @@
-import type { DashScopeClient } from '@super-app/provider'
 import type { CanvasRuntimeLlmClient, CanvasRuntimeStorageAdapter } from '@super-app/canvas-runtime'
-import type { StorageProvider as AssetStorage } from '@super-app/storage'
 import { runBgmPhase } from '@super-app/canvas-runtime'
 import { getCanvasProjectDetail, updateCanvasProject } from '@super-app/db'
 import { createWorkerProviderAdapter } from './canvas-adapter-factory'
+import { toRuntimeDetail } from './canvas-mappers'
 
 export interface CanvasBgmResult extends Record<string, unknown> {
   phase: 'bgm'
@@ -20,15 +19,15 @@ export interface CanvasBgmResult extends Record<string, unknown> {
  */
 export async function executeCanvasBgm(
   projectId: string,
-  client: DashScopeClient,
-  storage: AssetStorage,
+  client: CanvasRuntimeLlmClient,
+  storage: CanvasRuntimeStorageAdapter,
 ): Promise<CanvasBgmResult> {
   const detail = await getCanvasProjectDetail(projectId)
   if (!detail)
     throw new Error('项目不存在')
 
   const provider = createWorkerProviderAdapter()
-  const result = await runBgmPhase({ projectId, detail: detail as any, client: client as any, storage: storage as any, provider })
+  const result = await runBgmPhase({ projectId, detail: toRuntimeDetail(detail), client, storage, provider })
   await updateCanvasProject(projectId, { bgmUrl: result.audioUrl })
 
   return {

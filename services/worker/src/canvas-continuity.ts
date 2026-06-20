@@ -3,6 +3,7 @@ import { runCanvasAssetStep, runContinuityPhase } from '@super-app/canvas-runtim
 import { updateCanvasProject } from '@super-app/db'
 import { createWorkerRepoAdapter } from './canvas-adapter-factory'
 import { loadRunnableCanvasProject } from './canvas-execution'
+import { toRuntimeDetail } from './canvas-mappers'
 
 export interface CanvasContinuityResult extends Record<string, unknown> {
   phase: 'continuity'
@@ -25,7 +26,7 @@ export async function executeCanvasContinuity(projectId: string, runId?: string)
       pipelineRunId: runId ?? undefined,
     },
     execute: async () => {
-      const { issues } = await runContinuityPhase({ projectId, detail: detail as any, repo })
+      const { issues } = await runContinuityPhase({ projectId, detail: toRuntimeDetail(detail), repo })
 
       const outputJson: CanvasAssetOutput = { type: 'json', data: { issuesCount: issues.length, issues } }
       return {

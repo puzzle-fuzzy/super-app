@@ -10,12 +10,12 @@
 import { z } from 'zod'
 import type { Task } from '@super-app/db'
 import type { TaskOutput } from '@super-app/types'
-import type { DashScopeClient } from '@super-app/provider'
-import type { StorageProvider } from '@super-app/storage'
 import type { TaskHandler } from '@super-app/task-engine'
+import type { CanvasRuntimeLlmClient, CanvasRuntimeStorageAdapter } from '@super-app/canvas-runtime'
 import type { WorkerTaskContext } from './task-handlers'
 import { TaskInputError } from '@super-app/task-engine'
 import { createLogger } from '@super-app/runtime'
+import { createWorkerLlmAdapter, createWorkerStorageAdapter } from './canvas-adapter-factory'
 
 import { executeCanvasAnalysis } from './canvas-analysis'
 import { executeCanvasAssemble } from './canvas-assemble'
@@ -34,8 +34,6 @@ const logger = createLogger('canvas-handlers')
 
 // ── Input Validation ────────────────────────────────────────────────
 
-const ProjectIdSchema = z.string().uuid()
-
 const CanvasTaskInputSchema = z.object({
   id: z.string().min(1),
   projectId: z.string().uuid(),
@@ -44,9 +42,12 @@ const CanvasTaskInputSchema = z.object({
 })
 
 type CanvasHandler = TaskHandler<Task, WorkerTaskContext, TaskOutput>
+
 interface CanvasPhaseRuntime {
-  client: DashScopeClient
-  storage: StorageProvider
+  /** DashScopeClient 已经过 createWorkerLlmAdapter 适配为 CanvasRuntimeLlmClient */
+  client: CanvasRuntimeLlmClient
+  /** StorageProvider 已经过 createWorkerStorageAdapter 适配 */
+  storage: CanvasRuntimeStorageAdapter
   storageRoot: string
 }
 
@@ -59,15 +60,15 @@ type CanvasPhaseExecutor = (
 function validateCanvasTask(task: Task, phaseName: string): string {
   const parsed = CanvasTaskInputSchema.safeParse(task)
   if (!parsed.success) {
-    const issues = parsed.error.issues.map(
+    const errors = parsed.error.issues.map(
       (issue) => `${issue.path.join('.')}: ${issue.message}`
     ).join('; ')
-    throw new Error(`Canvas task ${task.id} validation failed for phase ${phaseName}: ${issues}`)
+    throw new Error(`Canvas task ${task.id} validation failed for phase ${phaseName}: ${errors}`)
   }
   return parsed.data.projectId
 }
 
-/** Ensures canvas phase handlers receive the runtime dependencies they need. */
+/** Ensures canvas phase handlers receive adapted runtime dependencies. */
 function requireCanvasRuntime(ctx: WorkerTaskContext, phaseName: string): CanvasPhaseRuntime {
   if (!ctx.llmClient) {
     throw new TaskInputError(`Canvas phase ${phaseName}: missing DashScope client`)
@@ -79,8 +80,8 @@ function requireCanvasRuntime(ctx: WorkerTaskContext, phaseName: string): Canvas
     throw new TaskInputError(`Canvas phase ${phaseName}: missing worker config`)
   }
   return {
-    client: ctx.llmClient,
-    storage: ctx.storage,
+    client: createWorkerLlmAdapter(ctx.llmClient),
+    storage: createWorkerStorageAdapter(ctx.storage),
     storageRoot: ctx.config.storageRoot,
   }
 }

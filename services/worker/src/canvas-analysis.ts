@@ -1,6 +1,5 @@
 import type { CanvasAssetOutput } from '@super-app/types'
-import type { DashScopeClient } from '@super-app/provider'
-import type { CanvasRuntimeLlmClient, CanvasRuntimeStorageAdapter } from '@super-app/canvas-runtime'
+import type { CanvasRuntimeLlmClient } from '@super-app/canvas-runtime'
 import type { NovelAnalysis } from '@super-app/types'
 import { runAnalysisPhase, runCanvasAssetStep } from '@super-app/canvas-runtime'
 import { getCanvasProjectById } from '@super-app/db'
@@ -17,7 +16,7 @@ export interface CanvasAnalysisResult extends Record<string, unknown> {
 
 export async function executeCanvasAnalysis(
   projectId: string,
-  client: DashScopeClient,
+  client: CanvasRuntimeLlmClient,
   runId?: string,
 ): Promise<CanvasAnalysisResult> {
   const project = await getCanvasProjectById(projectId)
@@ -43,7 +42,7 @@ export async function executeCanvasAnalysis(
         projectId,
         storyText: project.storyText,
         isReanalysis: project.status !== 'draft',
-        client: client as any,
+        client: client,
         textModel,
         repo,
         textLlmDeps: provider,

@@ -1,9 +1,9 @@
-import type { DashScopeClient } from '@super-app/provider'
-import type { CanvasRuntimeLlmClient, CanvasRuntimeStorageAdapter } from '@super-app/canvas-runtime'
+import type { CanvasRuntimeLlmClient } from '@super-app/canvas-runtime'
 import { runDialoguePhase } from '@super-app/canvas-runtime'
 import { getCanvasProjectDetail, updateCanvasShot } from '@super-app/db'
 import { createWorkerProviderAdapter } from './canvas-adapter-factory'
 import { getTextModel } from './canvas-execution'
+import { toRuntimeDetail } from './canvas-mappers'
 
 export interface CanvasDialogueResult extends Record<string, unknown> {
   phase: 'dialogue'
@@ -19,7 +19,7 @@ export interface CanvasDialogueResult extends Record<string, unknown> {
  */
 export async function executeCanvasDialogue(
   projectId: string,
-  client: DashScopeClient,
+  client: CanvasRuntimeLlmClient,
 ): Promise<CanvasDialogueResult> {
   const detail = await getCanvasProjectDetail(projectId)
   if (!detail)
@@ -27,7 +27,7 @@ export async function executeCanvasDialogue(
 
   const textModel = getTextModel(detail.project.modelPreferencesJson)
   const provider = createWorkerProviderAdapter()
-  const { results } = await runDialoguePhase({ projectId, detail: detail as any, client: client as any, textModel, provider })
+  const { results } = await runDialoguePhase({ projectId, detail: toRuntimeDetail(detail), client, textModel, provider })
 
   for (const result of results) {
     if (result.dialoguePrompt === null && result.dialogueJson === null && result.referenceMedia.length === 0)

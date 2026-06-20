@@ -1,6 +1,4 @@
-import type { DashScopeClient } from '@super-app/provider'
 import type { CanvasRuntimeLlmClient, CanvasRuntimeStorageAdapter } from '@super-app/canvas-runtime'
-import type { StorageProvider as AssetStorage } from '@super-app/storage'
 import { buildLocationRefPrompt, generateLocationRefAsset } from '@super-app/canvas-runtime'
 import {
   createCanvasAsset,
@@ -26,8 +24,8 @@ export interface CanvasLocationRefsResult extends Record<string, unknown> {
 
 export async function executeCanvasLocationRefs(
   projectId: string,
-  client: DashScopeClient,
-  storage: AssetStorage,
+  client: CanvasRuntimeLlmClient,
+  storage: CanvasRuntimeStorageAdapter,
   runId?: string,
 ): Promise<CanvasLocationRefsResult> {
   const detail = await loadRunnableCanvasProject(projectId)
@@ -68,13 +66,14 @@ export async function executeCanvasLocationRefs(
     try {
       await markCanvasAssetRunning(refAsset.id)
 
+      // DB 窄类型（LocationProfile）→ runtime 宽类型（Record<string, unknown>）
       const { refUrl } = await generateLocationRefAsset({
-        location: location as any,
+        location: location as unknown as Parameters<typeof generateLocationRefAsset>[0]['location'],
         refAssetId: refAsset.id,
         imageModel,
         imageModelConfig,
-        client: client as any,
-        storage: storage as any,
+        client,
+        storage,
         repo,
         provider,
       })

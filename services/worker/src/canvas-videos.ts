@@ -1,5 +1,4 @@
-import type { DashScopeClient } from '@super-app/provider'
-import type { CanvasRuntimeLlmClient, CanvasRuntimeStorageAdapter } from '@super-app/canvas-runtime'
+import type { CanvasRuntimeLlmClient } from '@super-app/canvas-runtime'
 import { submitShotVideoEntity } from '@super-app/canvas-runtime'
 import {
   createCanvasAsset,
@@ -26,7 +25,7 @@ export interface CanvasVideosResult extends Record<string, unknown> {
 
 export async function executeCanvasVideos(
   projectId: string,
-  client: DashScopeClient,
+  client: CanvasRuntimeLlmClient,
   runId?: string,
   workerTaskId?: string,
 ): Promise<CanvasVideosResult> {
@@ -81,11 +80,13 @@ export async function executeCanvasVideos(
         accountId: accountId,
         shotId: shot.id,
         assetId: shotVideoAsset.id,
-        shot: shot as any,
-        characters: detail.characters as any,
-        locations: detail.locations as any,
+        // DB 窄类型（ShotCamera/CharacterProfile）→ runtime 宽类型（Record<string, unknown>）
+        // 窄→宽在无 index signature 的 interface 上 TS 报错，经 unknown 中转
+        shot: shot as unknown as Parameters<typeof submitShotVideoEntity>[0]['shot'],
+        characters: detail.characters as unknown as Parameters<typeof submitShotVideoEntity>[0]['characters'],
+        locations: detail.locations as unknown as Parameters<typeof submitShotVideoEntity>[0]['locations'],
         modelPreferences: project.modelPreferencesJson,
-        client: client as any,
+        client,
         repo,
         provider,
         billing,
@@ -102,13 +103,15 @@ export async function executeCanvasVideos(
       const errorMessage = error instanceof Error ? error.message : String(error)
       await updateCanvasShot(shot.id, { status: 'failed', errorMessage })
       await markCanvasAssetFailed(shotVideoAsset.id, errorMessage).catch(() => {})
-      // 通知：镜头视频提交失败（P2-2） — 提交阶段失败不会进入 task-processor 轮询，需在此显式通知
+      // 通知：镜头视频提交失败 — 提交阶段失败不会进入 task-processor 轮询，需在此显式通知
       await notifyNotification({
         accountId: accountId,
         type: 'task_failed',
         title: '镜头视频提交失败',
         body: errorMessage,
         meta: { projectId, assetId: shotVideoAsset.id, category: 'video' },
+        // notifyNotification 期望 ownerId，worker 上下文用 accountId
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any).catch(() => {})
       shotsFailed += 1
     }

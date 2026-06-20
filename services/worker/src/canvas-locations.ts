@@ -1,6 +1,5 @@
 import type { CanvasAssetOutput } from '@super-app/types'
-import type { DashScopeClient } from '@super-app/provider'
-import type { CanvasRuntimeLlmClient, CanvasRuntimeStorageAdapter } from '@super-app/canvas-runtime'
+import type { CanvasRuntimeLlmClient } from '@super-app/canvas-runtime'
 import { generateLocationEntity, runCanvasAssetStep } from '@super-app/canvas-runtime'
 import {
   deleteCanvasLocationsByProject,
@@ -23,7 +22,7 @@ export interface CanvasLocationsResult extends Record<string, unknown> {
 
 export async function executeCanvasLocations(
   projectId: string,
-  client: DashScopeClient,
+  client: CanvasRuntimeLlmClient,
   runId?: string,
 ): Promise<CanvasLocationsResult> {
   const project = await getCanvasProjectById(projectId)
@@ -55,7 +54,7 @@ export async function executeCanvasLocations(
           model: textModel,
         },
         execute: async () => {
-          const result = await generateLocationEntity({ projectId, storyText: project.storyText, analysis, name, client: client as any, textModel, repo, textLlmDeps: provider })
+          const result = await generateLocationEntity({ projectId, storyText: project.storyText, analysis, name, client, textModel, repo, textLlmDeps: provider })
           const output: CanvasAssetOutput = { type: 'json', data: { ...result.profile } }
           return {
             result: undefined,

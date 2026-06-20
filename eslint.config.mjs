@@ -2,24 +2,9 @@ import base from './packages/eslint-config/base.mjs'
 
 export default [
   ...base,
-  {
-    files: [
-      'packages/canvas-runtime/src/phases/**/*.ts',
-      'services/worker/src/canvas-*.ts',
-      'services/worker/src/pipeline-stepper.ts',
-    ],
-    rules: {
-      // TODO: tighten after the Excuse canvas runtime/worker adapters are fully typed.
-      '@typescript-eslint/no-explicit-any': 'off',
-    },
-  },
-  {
-    files: ['services/worker/src/canvas-*.ts'],
-    rules: {
-      // TODO: remove once these staged canvas handlers are wired to concrete runtime adapters.
-      '@typescript-eslint/no-unused-vars': 'off',
-    },
-  },
+  // NOTE: canvas-*.ts 和 canvas-runtime phases 中少数残留的 as any
+  // 已是必要的结构类型边界（窄→宽 index signature 限制 / notify shape 差异）。
+  // 各调用处已标 eslint-disable-next-line 注释。
   {
     files: [
       'services/api/src/modules/admin/index.ts',

@@ -45,6 +45,8 @@ export interface ShotVideoEntityResult {
 
 export async function submitShotVideoEntity(input: ShotVideoEntityInput): Promise<ShotVideoEntityResult> {
   const references = resolveShotVideoReferences({
+    // referenceAssetsJson 类型来自 adapter 宽类型
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     shot: input.shot as { characterIdsJson: string[]; locationId: string | null; referenceAssetsJson?: any[] | null },
     characters: input.characters,
     locations: input.locations,

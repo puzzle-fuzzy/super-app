@@ -6,6 +6,10 @@ import {
 } from '@super-app/db'
 import { createWorkerRepoAdapter } from './canvas-adapter-factory'
 import { loadRunnableCanvasProject } from './canvas-execution'
+import type { CanvasRuntimeRepoAdapter } from '@super-app/canvas-runtime'
+
+/** Runtime 实体类型（Record<string, unknown> JSONB 字段） */
+type RuntimeDetail = NonNullable<Awaited<ReturnType<CanvasRuntimeRepoAdapter['getCanvasProjectDetail']>>>
 
 export interface CanvasRebuildResult extends Record<string, unknown> {
   phase: 'rebuild'
@@ -18,8 +22,8 @@ export async function executeCanvasRebuild(projectId: string, runId?: string): P
 
   const accountId = detail.project.ownerId
   const repo = createWorkerRepoAdapter()
-  const characterMap = new Map(detail.characters.map(character => [character.id, character]))
-  const locationMap = new Map(detail.locations.map(location => [location.id, location]))
+  const characterMap = new Map(detail.characters.map(c => [c.id, c]))
+  const locationMap = new Map(detail.locations.map(l => [l.id, l]))
   let promptsBuilt = 0
 
   for (const shot of detail.shots) {
@@ -42,28 +46,34 @@ export async function executeCanvasRebuild(projectId: string, runId?: string): P
       },
       execute: async () => {
         // 解析 R2V 参考图（与 submit 用同一纯函数），把角色/场景指代烘焙成 [Image N]。
-        const references = resolveShotVideoReferences({ shot, characters: detail.characters as any, locations: detail.locations as any } as any)
+        // DB 窄类型（ShotCamera/CharacterProfile）→ runtime 宽类型（Record<string, unknown>）
+        // 窄→宽对无 index signature 的 interface 需经 unknown 中转
+        const references = resolveShotVideoReferences({
+          shot: { ...shot, characterIdsJson: shot.characterIdsJson ?? [] } as Parameters<typeof resolveShotVideoReferences>[0]['shot'],
+          characters: detail.characters as unknown as RuntimeDetail['characters'],
+          locations: detail.locations as unknown as RuntimeDetail['locations'],
+        })
         const { videoPrompt, negativePrompt } = buildShotVideoPromptEntity({
-          shot,
-          characters: shotCharacters,
-          location: shotLocation,
+          shot: shot as unknown as RuntimeDetail['shots'][number],
+          characters: shotCharacters as unknown as RuntimeDetail['characters'],
+          location: shotLocation as unknown as RuntimeDetail['locations'][number],
           references: toPromptReferenceEntries(references),
-        } as any)
+        })
 
         await updateCanvasShot(shot.id, {
           videoPrompt,
           negativePrompt,
           status: 'ready',
-        } as any)
+        })
 
         const outputJson: CanvasAssetOutput = { type: 'text', text: videoPrompt }
         promptsBuilt += 1
         return { result: undefined, output: outputJson }
       },
       repo,
-    } as any)
+    })
   }
 
-  await updateCanvasProject(projectId, { status: 'prompts_ready' } as any)
+  await updateCanvasProject(projectId, { status: 'prompts_ready' })
   return { phase: 'rebuild', projectId, promptsBuilt }
 }

@@ -6,7 +6,7 @@
  */
 
 import type { DialogueInput } from '@super-app/prompt-engine'
-import type { R2VReferenceMedia } from '@super-app/types'
+import type { CanvasShotReferenceAsset, R2VReferenceMedia } from '@super-app/types'
 import type { CanvasRuntimeLlmClient, CanvasRuntimeProviderAdapter } from '../adapter-types'
 import type { CanvasProjectDetail } from '../normalize'
 import { buildDialogueSystemPrompt, buildDialogueUserPrompt } from '@super-app/prompt-engine'
@@ -46,7 +46,7 @@ export async function runDialoguePhase(input: DialoguePhaseInput): Promise<Dialo
       shot: {
         characterIdsJson: shot.characterIdsJson ?? [],
         locationId: shot.locationId,
-        referenceAssetsJson: shot.referenceAssetsJson as any,
+        referenceAssetsJson: shot.referenceAssetsJson as unknown as CanvasShotReferenceAsset[] | null | undefined,
       },
       characters: input.detail.characters,
       locations: input.detail.locations,
@@ -65,11 +65,13 @@ export async function runDialoguePhase(input: DialoguePhaseInput): Promise<Dialo
 
     const dialogueInput: DialogueInput = {
       narrative: shot.narrative,
-      characters: resolveShotCharacters(shot.characterIdsJson ?? [], input.detail.characters as any) as any,
+      // adapter 宽类型→DialogueInput 窄类型边界
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      characters: resolveShotCharacters(shot.characterIdsJson ?? [], input.detail.characters) as any,
       location: (shot.locationId
-        ? resolveSceneLocation(shot.locationId, input.detail.locations as any)
-        : null) as any,
-      environment: shot.environmentJson as any,
+        ? resolveSceneLocation(shot.locationId, input.detail.locations)
+        : null) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      environment: shot.environmentJson,
     }
 
     const system = buildDialogueSystemPrompt()

@@ -1,6 +1,5 @@
 import type { CanvasAssetOutput } from '@super-app/types'
-import type { DashScopeClient } from '@super-app/provider'
-import type { CanvasRuntimeLlmClient, CanvasRuntimeStorageAdapter } from '@super-app/canvas-runtime'
+import type { CanvasRuntimeLlmClient } from '@super-app/canvas-runtime'
 import { runCanvasAssetStep, runStoryboardPhase } from '@super-app/canvas-runtime'
 import { updateCanvasProject } from '@super-app/db'
 import { createWorkerProviderAdapter, createWorkerRepoAdapter } from './canvas-adapter-factory'
@@ -17,7 +16,7 @@ export interface CanvasStoryboardResult extends Record<string, unknown> {
 
 export async function executeCanvasStoryboard(
   projectId: string,
-  client: DashScopeClient,
+  client: CanvasRuntimeLlmClient,
   runId?: string,
 ): Promise<CanvasStoryboardResult> {
   const detail = await loadRunnableCanvasProject(projectId)
@@ -55,7 +54,7 @@ export async function executeCanvasStoryboard(
           name: location.name,
           scenePrompt: location.scenePrompt || '',
         })),
-        client: client as any,
+        client,
         textModel,
         repo,
         textLlmDeps: provider,

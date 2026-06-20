@@ -53,7 +53,7 @@ export async function advancePipelineAfterTaskSuccess(
   _workerConfig: WorkerConfig,
 ): Promise<string | null> {
   // CanvasTaskRef 期望 accountId，Super App Task 用 ownerId — 桥接
-  const taskRef = { ...task, accountId: task.ownerId } as any
+  const taskRef = { ...task, accountId: task.ownerId }
   const preflight = decideCanvasAutoAdvance(taskRef, true)
   if (!preflight.currentPhase || !preflight.nextPhase)
     return null
@@ -99,7 +99,17 @@ export async function advancePipelineAfterTaskSuccess(
       traceId: task.traceId,
       adapter: {
         createPipelineRun,
-        createTask: createTask as any,
+        createTask: (input: { accountId: string; type: `canvas.${CanvasPipelinePhase}`; domain: 'canvas'; priority: number; projectId: string; targetType: 'pipeline_run'; targetId: string; traceId?: string | null }) =>
+          createTask({
+            ownerId: input.accountId,
+            type: input.type,
+            domain: input.domain,
+            priority: input.priority,
+            projectId: input.projectId,
+            targetType: input.targetType,
+            targetId: input.targetId,
+            ...(input.traceId ? { traceId: input.traceId } : {}),
+          }),
         linkPipelineRunToTask,
       },
     })

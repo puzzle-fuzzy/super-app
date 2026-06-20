@@ -1,6 +1,4 @@
-import type { DashScopeClient } from '@super-app/provider'
 import type { CanvasRuntimeLlmClient, CanvasRuntimeStorageAdapter } from '@super-app/canvas-runtime'
-import type { StorageProvider as AssetStorage } from '@super-app/storage'
 import {
   buildCharacterPortraitPrompt,
   buildCharacterTurnaroundPrompt,
@@ -31,8 +29,8 @@ export interface CanvasCharacterRefsResult extends Record<string, unknown> {
 
 export async function executeCanvasCharacterRefs(
   projectId: string,
-  client: DashScopeClient,
-  storage: AssetStorage,
+  client: CanvasRuntimeLlmClient,
+  storage: CanvasRuntimeStorageAdapter,
   runId?: string,
 ): Promise<CanvasCharacterRefsResult> {
   const detail = await loadRunnableCanvasProject(projectId)
@@ -88,14 +86,16 @@ export async function executeCanvasCharacterRefs(
       await markCanvasAssetRunning(portraitAsset.id)
       await markCanvasAssetRunning(turnaroundAsset.id)
 
+      // DB 窄类型（CharacterProfile）→ runtime 宽类型（Record<string, unknown>）
+      // 窄→宽对无 index signature 的 interface 需经 unknown 中转
       const { portraitUrl, turnaroundUrl } = await generateCharacterRefAssets({
-        character: character as any,
+        character: character as unknown as Parameters<typeof generateCharacterRefAssets>[0]['character'],
         portraitAssetId: portraitAsset.id,
         turnaroundAssetId: turnaroundAsset.id,
         imageModel,
         imageModelConfig,
-        client: client as any,
-        storage: storage as any,
+        client,
+        storage,
         repo,
         provider,
       })

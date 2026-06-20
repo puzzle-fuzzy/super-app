@@ -1,8 +1,9 @@
-import type { StorageProvider as AssetStorage } from '@super-app/storage'
+import type { CanvasRuntimeStorageAdapter } from '@super-app/canvas-runtime'
 import { runAssemblePhase } from '@super-app/canvas-runtime'
 import { getCanvasProjectDetail, updateCanvasProject } from '@super-app/db'
 import { createWorkerFfmpegAdapter } from './canvas-adapter-factory'
 import { checkTaskOwnership } from './task-ownership'
+import { toRuntimeDetail } from './canvas-mappers'
 
 export interface CanvasAssembleResult extends Record<string, unknown> {
   phase: 'assemble'
@@ -23,7 +24,7 @@ export interface CanvasAssembleResult extends Record<string, unknown> {
  */
 export async function executeCanvasAssemble(
   projectId: string,
-  storage: AssetStorage,
+  storage: CanvasRuntimeStorageAdapter,
   storageRoot: string,
 ): Promise<CanvasAssembleResult> {
   const detail = await getCanvasProjectDetail(projectId)
@@ -33,8 +34,8 @@ export async function executeCanvasAssemble(
   const ffmpeg = createWorkerFfmpegAdapter()
   const result = await runAssemblePhase({
     projectId,
-    detail: detail as any,
-    storage: storage as any,
+    detail: toRuntimeDetail(detail),
+    storage,
     storageRoot,
     ffmpeg,
     onCheckpoint: checkTaskOwnership,
