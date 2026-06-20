@@ -41,6 +41,35 @@ import {
 
 import type { CanvasPipelinePhase } from '@super-app/types'
 
+// ── Phase Labels & Helper ──────────────────────────────────
+// 必须在 module 定义之前，因为 makePhaseHandler() 在路由链中被立即调用。
+
+const PHASE_LABELS: Record<CanvasPipelinePhase, string> = {
+  analyze: '分析故事',
+  characters: '生成角色',
+  locations: '生成场景',
+  characterRefs: '角色参考图',
+  locationRefs: '场景参考图',
+  storyboard: '生成分镜',
+  continuity: '连续性检查',
+  rebuild: '重建 Prompt',
+  dialogue: '对白层',
+  videos: '生成视频',
+  bgm: '生成配乐',
+  assemble: '合成成片',
+}
+
+function makePhaseHandler(phase: CanvasPipelinePhase) {
+  return {
+    handler: async ({ db, user, params }: { db: Db; user: CurrentUser; params: { id: string } }) => {
+      const result = await triggerPhase({ db, owner: user, projectId: params.id, phase })
+      return { success: true, data: result }
+    },
+    params: t.Object({ id: t.String() }),
+    detail: { summary: `触发「${PHASE_LABELS[phase]}」阶段`, tags: ['Canvas Pipeline'] },
+  }
+}
+
 // ── Module ────────────────────────────────────────────────
 
 export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix: '/api/pipeline' })
@@ -248,30 +277,3 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
       }),
   )
 
-// ── Helper: 生成统一结构的 phase trigger handler ──────────
-
-const PHASE_LABELS: Record<CanvasPipelinePhase, string> = {
-  analyze: '分析故事',
-  characters: '生成角色',
-  locations: '生成场景',
-  characterRefs: '角色参考图',
-  locationRefs: '场景参考图',
-  storyboard: '生成分镜',
-  continuity: '连续性检查',
-  rebuild: '重建 Prompt',
-  dialogue: '对白层',
-  videos: '生成视频',
-  bgm: '生成配乐',
-  assemble: '合成成片',
-}
-
-function makePhaseHandler(phase: CanvasPipelinePhase) {
-  return {
-    handler: async ({ db, user, params }: { db: Db; user: CurrentUser; params: { id: string } }) => {
-      const result = await triggerPhase({ db, owner: user, projectId: params.id, phase })
-      return { success: true, data: result }
-    },
-    params: t.Object({ id: t.String() }),
-    detail: { summary: `触发「${PHASE_LABELS[phase]}」阶段`, tags: ['Canvas Pipeline'] },
-  }
-}
