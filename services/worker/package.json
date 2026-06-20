@@ -1,0 +1,25 @@
+{
+  "name": "@super-app/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --env-file=../../.env src/index.ts",
+    "start": "bun --env-file=../../.env src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {
+    "@super-app/db": "workspace:*",
+    "@super-app/env": "workspace:*",
+    "@super-app/error-recovery": "workspace:*",
+    "@super-app/storage": "workspace:*",
+    "@super-app/task-engine": "workspace:*"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "^5.8.3"
+  }
+}
