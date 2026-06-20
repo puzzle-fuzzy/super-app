@@ -421,13 +421,13 @@ function ListView({
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="group relative flex min-h-[180px] cursor-pointer flex-col rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-5 transition-all duration-160 hover:-translate-y-[3px] hover:border-[#3a3a3a] hover:bg-[#202020]"
+                className="group relative flex min-h-[180px] cursor-pointer flex-col rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-5 transition-all duration-160 hover:border-[#3a3a3a] hover:bg-[#202020]"
                 onClick={() => navigate(`/project/${project.id}`)}
               >
                 <div className="absolute top-4 right-4 z-10">
                   <button
                     type="button"
-                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[#666666] opacity-0 transition-opacity hover:bg-[#2a2a2a] hover:text-[#e5e5e5] group-hover:opacity-100"
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-transparent text-[#666666] transition-opacity hover:bg-[#2a2a2a] hover:text-[#e5e5e5] ${menuOpenId === project.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                     onClick={(e) => {
                       e.stopPropagation()
                       setMenuOpenId(menuOpenId === project.id ? null : project.id)
@@ -438,9 +438,10 @@ function ListView({
                   {menuOpenId === project.id && (
                     <>
                       <div
-                        className="fixed inset-0 z-20"
-                        onClick={(e) => {
+                        className="fixed inset-0 z-20 cursor-default"
+                        onMouseDown={(e) => {
                           e.stopPropagation()
+                          e.preventDefault()
                           setMenuOpenId(null)
                         }}
                       />
