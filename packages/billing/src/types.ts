@@ -21,6 +21,10 @@ export interface CostDetail {
   unit: ModelPricing['unit']
   /** 是否仅为预估（非实际消耗） */
   estimated?: boolean
+  /** 是否为可计费记录（false 表示仅审计不计费） */
+  billable?: boolean
+  /** 费用来源：'estimated' | 'actual' */
+  source?: string
   // Token 计费
   inputTokens?: number
   outputTokens?: number

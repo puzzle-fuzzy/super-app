@@ -6,7 +6,7 @@ import {
 import { Elysia } from 'elysia'
 
 import { getGenerationModel, isVideoGenerationModel } from '@super-app/ai-models'
-import { estimateCost } from '@super-app/billing'
+import { estimateCost, getModelPricing } from '@super-app/billing'
 import { createDedupeKey, createTask, markGenerationFailed, markGenerationSubmitting } from '@super-app/db'
 import { authPlugin, requireUser } from '../../plugins/auth'
 import { ok } from '../../shared/response'
@@ -50,9 +50,10 @@ export const canvasModule = new Elysia({ name: 'canvas' })
           const model = getGenerationModel(body.model)
           const isVideo = body.kind === 'video' || (model ? isVideoGenerationModel(model) : false)
 
-          // 预估费用
+          // 预估费用（使用真实模型定价，未知模型 fallback 到 0）
+          const pricing = getModelPricing(body.model)
           const estimated = estimateCost(
-            { pricing: { unit: isVideo ? 'video' : 'image' as const, inputPriceCents: 0 } },
+            { pricing: pricing ?? { unit: isVideo ? 'video' : 'image' as const, inputPriceCents: 0 } },
             { n: 1, duration: body.duration, resolution: body.resolution }
           )
 
@@ -92,6 +93,8 @@ export const canvasModule = new Elysia({ name: 'canvas' })
               model: body.model,
               prompt: body.prompt,
               kind: isVideo ? 'video' : 'image',
+              estimatedCostCents: estimated.totalPriceCents,
+              ownerId: owner.id,
               ...(body as unknown as Record<string, unknown>),
             },
             generationRecordId: record.id,

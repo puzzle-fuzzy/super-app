@@ -1,5 +1,6 @@
 import type { LoginRequest, RegisterRequest } from '@super-app/contracts/auth'
 import type { Db } from '@super-app/db'
+import { addCredit, getOrCreateCreditAccount } from '@super-app/db'
 import { sessions, users } from '@super-app/db/schema'
 import { eq } from 'drizzle-orm'
 import { Buffer } from 'node:buffer'
@@ -69,6 +70,18 @@ export async function registerUser(db: Db, input: RegisterRequest) {
 
   if (!user) {
     throw new AppError(500, 'INTERNAL_ERROR', 'Failed to create user')
+  }
+
+  // 注册赠送 1000 分（¥10.00），非阻塞：失败不影响注册
+  try {
+    await getOrCreateCreditAccount(user.id)
+    await addCredit({
+      ownerId: user.id,
+      amountCents: 1000,
+      description: '注册赠送',
+    })
+  } catch (err) {
+    console.error('[auth] 注册赠送初始额度失败:', err)
   }
 
   return createSessionForUser(db, user.id)

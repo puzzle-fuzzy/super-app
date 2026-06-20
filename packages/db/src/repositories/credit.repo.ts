@@ -1,7 +1,7 @@
-import { and, desc, eq, gte, lt, notInArray, sql } from 'drizzle-orm'
+import { and, desc, eq, lt, notInArray, sql } from 'drizzle-orm'
 
 import { db } from '../client'
-import { creditAccounts, creditTransactions } from '../schema/credit'
+import { creditAccounts, creditTransactions, usageEvents } from '../schema/credit'
 import { generationRecords } from '../schema/generation-records'
 
 // ===== CreditError =====
@@ -22,6 +22,8 @@ export class CreditError extends Error {
     this.code = code
   }
 }
+
+export { getOrCreateCreditAccount, ensureCreditAccount }
 
 // ===== Helpers =====
 
@@ -121,6 +123,19 @@ export async function reserveCredit(opts: {
         description: opts.description ?? null,
       })
       .returning()
+
+    // 创建 usage_events（桥接 generation_record ↔ credit_transaction）
+    db.insert(usageEvents)
+      .values({
+        generationRecordId: opts.generationRecordId,
+        reserveTxId: tx!.id,
+        reservedCents: opts.amountCents,
+      })
+      .execute()
+      .catch(() => {
+        // usage_events 写入失败不影响主流程（幂等）
+      })
+
     return tx!
   } catch (err) {
     if (getPgErrorCode(err) === '23505') {
@@ -233,6 +248,20 @@ export async function debitCredit(opts: {
         description: opts.description ?? null,
       })
       .returning()
+
+    // 更新 usage_events：标记已扣款
+    db.update(usageEvents)
+      .set({
+        debitTxId: tx!.id,
+        debitedCents: opts.actualCents,
+        updatedAt: new Date(),
+      })
+      .where(eq(usageEvents.generationRecordId, opts.generationRecordId))
+      .execute()
+      .catch(() => {
+        // usage_events 更新失败不影响主流程
+      })
+
     return tx!
   } catch (err) {
     if (getPgErrorCode(err) === '23505') {
@@ -336,6 +365,19 @@ export async function refundCredit(opts: {
         description: opts.description ?? null,
       })
       .returning()
+
+    // 更新 usage_events：标记已退款
+    db.update(usageEvents)
+      .set({
+        refundTxId: tx!.id,
+        updatedAt: new Date(),
+      })
+      .where(eq(usageEvents.generationRecordId, opts.generationRecordId))
+      .execute()
+      .catch(() => {
+        // usage_events 更新失败不影响主流程
+      })
+
     return tx!
   } catch (err) {
     if (getPgErrorCode(err) === '23505') {
@@ -362,6 +404,45 @@ export async function creditBalance(ownerId: string) {
   return { availableCents: acct.availableCents, frozenCents: acct.frozenCents }
 }
 
+/** 增加余额（管理员充值、注册赠送等）。amountCents 必须 > 0。 */
+export async function addCredit(opts: {
+  ownerId: string
+  amountCents: number
+  description?: string
+  metadata?: Record<string, unknown>
+}) {
+  assertPositiveAmount(opts.amountCents)
+
+  const acct = await getOrCreateCreditAccount(opts.ownerId)
+  void acct // ensure account exists
+
+  const [updated] = await db
+    .update(creditAccounts)
+    .set({
+      availableCents: sql`${creditAccounts.availableCents} + ${opts.amountCents}`,
+      updatedAt: new Date(),
+    })
+    .where(eq(creditAccounts.ownerId, opts.ownerId))
+    .returning()
+  if (!updated) {
+    throw new CreditError('ACCOUNT_NOT_FOUND', '账户不存在')
+  }
+
+  const [tx] = await db
+    .insert(creditTransactions)
+    .values({
+      ownerId: opts.ownerId,
+      type: 'credit',
+      amountCents: opts.amountCents,
+      balanceAfterCents: updated.availableCents,
+      frozenAfterCents: updated.frozenCents,
+      description: opts.description ?? null,
+      metadata: opts.metadata ?? null,
+    })
+    .returning()
+  return tx!
+}
+
 export async function listCreditTransactions(
   ownerId: string,
   limit: number = 50,
@@ -382,10 +463,13 @@ export interface StaleReserved {
   generationRecordId: string
   amountCents: number
   createdAt: Date
+  /** generation_records.status，用于判断应 debit 还是 refund */
+  generationStatus: string | null
 }
 
 /**
- * 查找孤立的冻结资金（>thresholdMinutes 无 debit/refund）
+ * 查找孤立的冻结资金（>thresholdMinutes 无 debit/refund）。
+ * 同时返回关联的 generation_records.status 以便调用方决定结算方式。
  */
 export async function findStaleReservedCredits(
   thresholdMinutes: number = 60
@@ -410,6 +494,7 @@ export async function findStaleReservedCredits(
       generationRecordId: creditTransactions.generationRecordId,
       amountCents: creditTransactions.amountCents,
       createdAt: creditTransactions.createdAt,
+      generationStatus: generationRecords.status,
     })
     .from(creditTransactions)
     .leftJoin(
@@ -432,5 +517,6 @@ export async function findStaleReservedCredits(
       generationRecordId: r.generationRecordId!,
       amountCents: Number(r.amountCents),
       createdAt: r.createdAt,
+      generationStatus: r.generationStatus,
     }))
 }

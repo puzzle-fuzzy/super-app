@@ -103,12 +103,14 @@ export function calculateCost(
   }
 }
 
-/** 预估费用（标记 estimated=true） */
+/** 预估费用（标记 estimated=true, billable=false, source='estimated'） */
 export function estimateCost(
   model: { pricing: ModelPricing },
   params: BillingParams
 ): CostDetail {
   const result = calculateCost(model, params, undefined)
   result.estimated = true
+  result.billable = false
+  result.source = 'estimated'
   return result
 }

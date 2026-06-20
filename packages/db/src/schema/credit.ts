@@ -82,6 +82,32 @@ export const creditTransactions = pgTable(
   ]
 )
 
+/** usage_events — 桥接 generation_records 和 credit_transactions，追踪结算状态 */
+export const usageEvents = pgTable(
+  'usage_events',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    generationRecordId: uuid('generation_record_id')
+      .references(() => generationRecords.id)
+      .notNull()
+      .unique(),
+    reserveTxId: uuid('reserve_tx_id')
+      .references(() => creditTransactions.id)
+      .notNull(),
+    debitTxId: uuid('debit_tx_id').references(() => creditTransactions.id),
+    refundTxId: uuid('refund_tx_id').references(() => creditTransactions.id),
+    reservedCents: numeric('reserved_cents', { precision: 20, scale: 4, mode: 'number' }).notNull(),
+    debitedCents: numeric('debited_cents', { precision: 20, scale: 4, mode: 'number' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    unique('idx_usage_events_unique_record').on(table.generationRecordId),
+    index('idx_usage_events_owner_created').on(table.createdAt),
+  ]
+)
+
 export type CreditAccount = typeof creditAccounts.$inferSelect
 export type CreditTransaction = typeof creditTransactions.$inferSelect
 export type NewCreditTransaction = typeof creditTransactions.$inferInsert
+export type UsageEvent = typeof usageEvents.$inferSelect

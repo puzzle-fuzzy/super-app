@@ -85,6 +85,13 @@
       "when": 1781937895865,
       "tag": "0011_aspiring_stingray",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1781938949966,
+      "tag": "0012_condemned_ezekiel",
+      "breakpoints": true
     }
   ]
 }

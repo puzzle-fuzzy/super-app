@@ -2,7 +2,15 @@ import type { Task, TaskOutput } from '@super-app/db'
 import { createStorage } from '@super-app/storage'
 import type { TaskHandler } from '@super-app/task-engine'
 import { serverEnv } from '@super-app/env/server'
-import { markGenerationProcessing, markGenerationSucceeded, markGenerationFailed, notifyTaskStatusChange } from '@super-app/db'
+import {
+  markGenerationProcessing,
+  markGenerationSucceeded,
+  markGenerationFailed,
+  notifyTaskStatusChange,
+  debitCredit,
+  refundCredit,
+  CreditError,
+} from '@super-app/db'
 
 import { AppError } from '../errors'
 
@@ -27,6 +35,7 @@ interface GenerateImageTaskInput {
   prompt: string
   ownerId: string
   kind: string
+  estimatedCostCents: number
   size?: string
   negativePrompt?: string
   watermark?: boolean
@@ -113,11 +122,47 @@ export const generateImageHandler: TaskHandler<Task, { workerId: string }, TaskO
     await markGenerationSucceeded(input.generationRecordId, output)
     await notifyTaskStatusChange(task as Task)
 
+    // 结算：扣款（固定价格生成，预估即为实际）
+    if (input.estimatedCostCents > 0) {
+      // TODO(Step 11): 当有真实定价时，用 calculateCost() 计算 actualCents，
+      // 并与 estimatedCostCents * 1.5 做超额保护比较
+      try {
+        await debitCredit({
+          ownerId: input.ownerId,
+          generationRecordId: input.generationRecordId,
+          actualCents: input.estimatedCostCents,
+          description: `图片生成扣款: ${input.model}`,
+        })
+      } catch (err) {
+        // 幂等：如果已扣款（如重试），CreditError.ALREADY_SETTLED 会被 repo 层抛出，
+        // 这里吞掉不影响流程。其他错误同样不崩 handler，由 reconciliation 兜底。
+        if (!(err instanceof CreditError)) {
+          console.error('[generate-image] debitCredit failed:', err)
+        }
+      }
+    }
+
     return output as TaskOutput
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Image generation failed'
     await markGenerationFailed(input.generationRecordId, message)
     await notifyTaskStatusChange(task as Task)
+
+    // 退款：释放冻结资金
+    if (input.estimatedCostCents > 0) {
+      try {
+        await refundCredit({
+          ownerId: input.ownerId,
+          generationRecordId: input.generationRecordId,
+          description: `图片生成失败退款: ${message.slice(0, 200)}`,
+        })
+      } catch (refundErr) {
+        if (!(refundErr instanceof CreditError)) {
+          console.error('[generate-image] refundCredit failed:', refundErr)
+        }
+      }
+    }
+
     throw err
   }
 }

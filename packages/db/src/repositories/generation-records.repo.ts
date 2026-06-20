@@ -1,5 +1,5 @@
 import type { CostDetail, OutputResult } from '../domain-types'
-import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
+import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 
 import { db } from '../client'
 import { generationRecords } from '../schema/generation-records'
@@ -199,4 +199,33 @@ export async function hideGenerationRecord(id: string) {
     .where(eq(generationRecords.id, id))
     .returning()
   return updated ?? null
+}
+
+/**
+ * 查询用户的费用记录（用于计费统计）。
+ * 返回指定时间范围内的所有生成记录（不含 outputResult 大字段）。
+ */
+export async function getCostRecords(
+  ownerId: string,
+  opts: { from: Date; to: Date }
+) {
+  return db
+    .select({
+      id: generationRecords.id,
+      model: generationRecords.model,
+      category: generationRecords.category,
+      status: generationRecords.status,
+      cost: generationRecords.cost,
+      totalPriceCents: generationRecords.totalPriceCents,
+      createdAt: generationRecords.createdAt,
+    })
+    .from(generationRecords)
+    .where(
+      and(
+        eq(generationRecords.ownerId, ownerId),
+        gte(generationRecords.createdAt, opts.from),
+        lte(generationRecords.createdAt, opts.to)
+      )
+    )
+    .orderBy(desc(generationRecords.createdAt))
 }

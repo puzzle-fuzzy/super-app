@@ -1,11 +1,18 @@
 /**
- * 信用回收 — 定期扫描孤立的冻结资金并退款
+ * 信用回收 — 定期扫描孤立的冻结资金并按 generation_records 状态分发处理。
  *
- * 当 worker 崩溃或任务丢失时，reserve 已执行但 debit/refund 永远无法完成。
- * 此模块定期扫描超过 thresholdMinutes 的孤立的 reserve 交易，
- * 将关联的 generation_records 标记为 failed，并退还冻结资金。
+ * - succeeded 但有 stale reserve → worker 在扣款前崩溃 → debit（扣款）
+ * - failed / cancelled 但有 stale reserve → refund（退款）
+ * - active（pending/submitting/processing/saving_output）且长时间无更新 → markFailed + refund
  */
-import { findStaleReservedCredits, markGenerationFailed, refundCredit } from '@super-app/db'
+import {
+  debitCredit,
+  findStaleReservedCredits,
+  markGenerationFailed,
+  refundCredit,
+} from '@super-app/db'
+
+const ACTIVE_STATUSES = ['pending', 'submitting', 'processing', 'saving_output'] as const
 
 export interface CreditReconciliationConfig {
   /** 扫描间隔（毫秒），默认 60_000 */
@@ -23,14 +30,43 @@ export function startCreditReconciliation(config?: Partial<CreditReconciliationC
       const stale = await findStaleReservedCredits(staleThresholdMinutes)
       for (const item of stale) {
         try {
-          await markGenerationFailed(item.generationRecordId, 'Credit reconciliation: 冻结资金超时')
-          await refundCredit({
-            ownerId: item.ownerId,
-            generationRecordId: item.generationRecordId,
-            description: 'Credit reconciliation: 自动退款超时的冻结资金',
-          })
+          const status = item.generationStatus
+
+          if (status === 'succeeded') {
+            // 生成成功但未扣款 → 补扣款
+            await debitCredit({
+              ownerId: item.ownerId,
+              generationRecordId: item.generationRecordId,
+              actualCents: item.amountCents,
+              description: 'Credit reconciliation: 补扣已成功任务的冻结资金',
+            })
+          } else if (status && (ACTIVE_STATUSES as readonly string[]).includes(status)) {
+            // 活跃状态但超时 → 标记失败 + 退款
+            await markGenerationFailed(
+              item.generationRecordId,
+              'Credit reconciliation: 任务长时间未完成，自动释放冻结余额'
+            )
+            await refundCredit({
+              ownerId: item.ownerId,
+              generationRecordId: item.generationRecordId,
+              description: 'Credit reconciliation: 自动退款超时任务的冻结资金',
+            })
+          } else {
+            // failed / cancelled / null → 退款
+            if (status !== 'failed' && status !== 'cancelled') {
+              await markGenerationFailed(
+                item.generationRecordId,
+                'Credit reconciliation: 冻结资金超时，自动标记失败'
+              )
+            }
+            await refundCredit({
+              ownerId: item.ownerId,
+              generationRecordId: item.generationRecordId,
+              description: 'Credit reconciliation: 自动退款超时的冻结资金',
+            })
+          }
         } catch {
-          // 单条失败不影响其他
+          // 单条失败不影响其他（幂等保证重试安全）
         }
       }
     } catch {

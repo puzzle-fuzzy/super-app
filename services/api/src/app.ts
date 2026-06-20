@@ -16,6 +16,7 @@ import { systemModule } from './modules/system'
 import { textsModule } from './modules/texts'
 import { transfersModule } from './modules/transfers'
 import { sseModule } from './modules/sse'
+import { billingModule } from './modules/billing'
 import { corsPlugin } from './plugins/cors'
 import { errorHandler } from './middlewares/error-handler'
 import { startSSEListener } from './services/sse-manager'
@@ -61,6 +62,7 @@ const baseApp = new Elysia()
           { name: 'canvas', description: '画布项目（CRUD）' },
           { name: 'api-keys', description: 'API 密钥管理' },
           { name: 'transfers', description: 'P2P 文件传输' },
+          { name: 'billing', description: '计费与余额' },
         ],
       },
     })
@@ -80,6 +82,7 @@ const baseApp = new Elysia()
       .use(apiKeysModule)
       .use(transfersModule)
       .use(sseModule)
+      .use(billingModule)
   )
 
 export const app =

@@ -7,6 +7,9 @@ import {
   markGenerationProcessing,
   markGenerationSucceeded,
   notifyTaskStatusChange,
+  debitCredit,
+  refundCredit,
+  CreditError,
 } from '@super-app/db'
 
 import { AppError } from '../errors'
@@ -39,6 +42,7 @@ interface GenerateVideoTaskInput {
   prompt: string
   ownerId: string
   kind: string
+  estimatedCostCents: number
   ratio?: string
   resolution?: string
   duration?: number
@@ -134,11 +138,45 @@ export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskO
     await markGenerationSucceeded(input.generationRecordId, output)
     await notifyTaskStatusChange(task as Task)
 
+    // 结算：扣款（固定价格生成，预估即为实际）
+    if (input.estimatedCostCents > 0) {
+      // TODO(Step 11): 当有真实定价时，用 calculateCost() + 实际视频时长计算 actualCents，
+      // 并与 estimatedCostCents * 1.5 做超额保护比较
+      try {
+        await debitCredit({
+          ownerId: input.ownerId,
+          generationRecordId: input.generationRecordId,
+          actualCents: input.estimatedCostCents,
+          description: `视频生成扣款: ${input.model}`,
+        })
+      } catch (err) {
+        if (!(err instanceof CreditError)) {
+          console.error('[generate-video] debitCredit failed:', err)
+        }
+      }
+    }
+
     return output as TaskOutput
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Video generation failed'
     await markGenerationFailed(input.generationRecordId, message)
     await notifyTaskStatusChange(task as Task)
+
+    // 退款：释放冻结资金
+    if (input.estimatedCostCents > 0) {
+      try {
+        await refundCredit({
+          ownerId: input.ownerId,
+          generationRecordId: input.generationRecordId,
+          description: `视频生成失败退款: ${message.slice(0, 200)}`,
+        })
+      } catch (refundErr) {
+        if (!(refundErr instanceof CreditError)) {
+          console.error('[generate-video] refundCredit failed:', refundErr)
+        }
+      }
+    }
+
     throw err
   }
 }
