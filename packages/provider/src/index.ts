@@ -25,3 +25,4 @@ export type {
   VideoTaskProviderOutput,
   VideoTaskProviderResult,
 } from './types'
+export * from './models'

@@ -6,7 +6,9 @@
   "exports": {
     "./client": "./src/client.ts",
     "./public": "./src/public.ts",
-    "./server": "./src/server.ts"
+    "./server": "./src/server.ts",
+    "./env-helpers": "./src/env-helpers.ts",
+    "./config-helpers": "./src/config-helpers.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -17,6 +19,7 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "bun-types": "latest",
     "typescript": "^5.8.3"
   }
 }

@@ -348,3 +348,6 @@ function buildDiagnostics(parts: DiagnosticsParts): string {
 function truncate(s: string, max: number): string {
   return s.length > max ? `${s.slice(0, max)}…` : s
 }
+
+// ── Canvas 失败分类（历史公共 API，委托 classifyRecovery）────
+export * from './canvas-failure'

@@ -504,3 +504,6 @@ function toTaskErrorInfo(decision: TaskErrorDecision, message: string): TaskErro
     message,
   }
 }
+
+// ── JSONB task input 边界解析（worker 消费）──────────────────
+export * from './task-input'

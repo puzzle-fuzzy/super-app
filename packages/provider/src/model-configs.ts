@@ -1,4 +1,4 @@
-import type { InputMapping, ModelConfig } from '@super-app/shared'
+import type { InputMapping, ModelConfig } from './models'
 
 // ── 通用映射片段，减少重复 ──────────────────────────────
 //
