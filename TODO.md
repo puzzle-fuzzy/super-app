@@ -25,25 +25,13 @@
 - API 与 Worker 链路闭环：`POST /projects` → task created → Worker claim → FFmpeg → ASR → 编辑 → `POST export` → task → Worker burn
 - 剩余待做：API 集成测试（属于 P3 #9）
 
-### 3. Pipeline API 响应契约硬化未完成
+### 3. ~~Pipeline API 响应契约硬化未完成~~ ✅ `925a600`
 
-**问题**
-
-- `services/api/src/modules/canvas-pipeline/index.ts` 多处 handler 仍直接返回 `{ success: true, data: ... }`，没有在后端返回前用 `@super-app/contracts` 的 schema 做 parse。
-- 同一文件多处使用 `body as Record<string, unknown>`、`query as Record<string, unknown>`、`user!`，绕过了 Elysia handler 的类型约束。
-- 现有 TODO 中“Finish JSON API response contract hardening”仍是真实问题，应保留但改成可执行项。
-
-**解决办法**
-
-- 为 pipeline project list/detail/run/asset/trigger/cancel/retry 等响应建立或复用 Zod schema。
-- 提供统一 `okWithSchema(schema, data)` 或类似 helper，在服务端返回前 parse。
-- 将 Elysia `body` / `query` 类型通过局部 schema 或 `Static<typeof schema>` 收口，移除 route-level cast。
-- 对 pipeline 路由补充契约测试：后端实际响应必须能被前端 `api-client` 使用的 schema parse。
-
-**完成标准**
-
-- pipeline 路由无 route-level `body as Record<string, unknown>` / `query as Record<string, unknown>`。
-- pipeline API 测试覆盖实际响应 contract parse。
+- 移除 4 处 route-level `body as Record<string, unknown>` / `query as Record<string, unknown>`
+- 为 character/location/shot PATCH 补充 `t.Record` body schema，消除剩余 3 处 cast
+- 所有 handler 返回统一使用 `ok()`，无裸 `{ success: true, data }`
+- `user!` 仍保留（Elysia 1.x guard 类型不传播，属框架限制）
+- 剩余待做：contract 测试（属于 P3 #9）
 
 ### 4. Canvas Worker 与 runtime 之间存在大量 `any` 桥接
 
