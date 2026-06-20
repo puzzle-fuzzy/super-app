@@ -72,7 +72,7 @@ function makePhaseHandler(phase: CanvasPipelinePhase) {
 
 // ── Module ────────────────────────────────────────────────
 
-export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix: '/api/pipeline' })
+export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix: '/pipeline' })
   .use(dbPlugin)
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>

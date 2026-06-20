@@ -61,7 +61,7 @@ export class SSEClient {
 
     const baseUrl = clientEnv.SUPER_PUBLIC_API_BASE_URL
 
-    fetchEventSource(`${baseUrl}/api/sse`, {
+    fetchEventSource(`${baseUrl}/sse`, {
       signal: this.abortController.signal,
       credentials: 'include',
       async onopen(response) {
