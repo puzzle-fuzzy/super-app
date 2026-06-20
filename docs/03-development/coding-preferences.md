@@ -14,7 +14,7 @@
 - 禁止编写 `unknown`、`as any`、宽泛断言等类型质量差的代码来绕过问题。
 - 遇到不确定输入时，应先设计明确的 schema、DTO、类型守卫或解析边界，再让业务代码消费收窄后的类型。
 - 测试代码也要纳入 `tsconfig` 的 `include`，避免测试游离在类型检查之外。
-- package 边界要清晰：通用纯函数进 `@super-app/utils`，领域契约进 `@super-app/shared` 或 `@super-app/contracts`，运行时基础设施不要塞进 shared。
+- package 边界要清晰：通用纯函数进 `@super-app/utils`，裸 TS 业务类型进 `@super-app/types`（单一真源），Zod wire 契约进 `@super-app/contracts`，跨领域运行时（logger / input-limits / 解析器 / canvas-phases 注册表）进 `@super-app/runtime`。依赖只许向下：L0 基础设施 → L1 类型契约 → L2 领域逻辑 → L3 运行时/IO → L4 客户端（见 `scripts/check-package-boundaries.ts`）。运行时基础设施不要塞进类型层。
 
 ## 架构与职责
 
