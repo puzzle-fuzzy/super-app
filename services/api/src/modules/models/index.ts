@@ -4,7 +4,7 @@
  * GET /api/models — 返回所有可用 AI 模型（含定价、参数、分类）
  */
 import { GENERATION_MODELS } from '@super-app/ai-models'
-import { getModelPricing, MODEL_PRICING } from '@super-app/billing'
+import { getModelPricing } from '@super-app/billing'
 import { GATEWAY_TEXT_MODELS } from '@super-app/gateway'
 import { Elysia } from 'elysia'
 

@@ -85,14 +85,18 @@ export async function concatVideos(videoPaths: string[], outputDir: string): Pro
     try {
       await Bun.file(listPath).delete()
     }
-    catch {}
+    catch {
+      // Best-effort cleanup; the FFmpeg error below is the actionable failure.
+    }
     throw new Error(`FFmpeg 视频拼接失败 (exit=${result.exitCode}): ${result.stderr.slice(-2000)}`)
   }
 
   try {
     await Bun.file(listPath).delete()
   }
-  catch {}
+  catch {
+    // Best-effort cleanup; callers should not fail after the output is ready.
+  }
 
   return { outputPath, fileSize: Bun.file(outputPath).size }
 }

@@ -24,7 +24,6 @@ import { modelsModule } from './modules/models'
 import { billingModule } from './modules/billing'
 import { corsPlugin } from './plugins/cors'
 import { errorHandler } from './middlewares/error-handler'
-import { startSSEListener } from './services/sse-manager'
 
 const storageRoot = path.resolve(serverEnv.STORAGE_DIR)
 

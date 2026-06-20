@@ -10,7 +10,7 @@
 import { Elysia, t } from 'elysia'
 
 import { authPlugin, requireUser } from '../../plugins/auth'
-import { NotFoundError, ForbiddenError } from '../../shared/errors'
+import { AppError, NotFoundError } from '../../shared/errors'
 
 import {
   createProject,
@@ -31,6 +31,13 @@ import {
   updateLocation,
   updateShot,
 } from './service'
+
+function getRequiredUserId(user: { id: string } | null): string {
+  if (!user) {
+    throw new AppError(401, 'UNAUTHORIZED', 'Unauthorized')
+  }
+  return user.id
+}
 
 // ── Module ────────────────────────────────────────────────
 
@@ -58,12 +65,12 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         detail: { summary: '查询 Canvas 项目列表', tags: ['Canvas Pipeline'] },
       })
 
-      .post('/projects', async ({ body, userId }) => {
+      .post('/projects', async ({ body, user }) => {
         const { name, storyText } = body as Record<string, unknown>
         const project = await createProject({
           name: name as string,
           storyText: storyText as string,
-          createdBy: userId,
+          createdBy: getRequiredUserId(user),
         })
         return { success: true, data: project }
       }, {
@@ -83,8 +90,8 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
         detail: { summary: '查询项目详情', tags: ['Canvas Pipeline'] },
       })
 
-      .delete('/projects/:id', async ({ params, userId }) => {
-        await deleteProject(params.id, userId)
+      .delete('/projects/:id', async ({ params, user }) => {
+        await deleteProject(params.id, getRequiredUserId(user))
         return { success: true, message: '项目已删除' }
       }, {
         params: t.Object({ id: t.String() }),
@@ -92,32 +99,32 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
       })
 
       // ── Pipeline 控制 ─────────────────────────────────
-      .post('/projects/:id/pipeline/start', async ({ params, userId }) => {
-        const result = await startPipeline(params.id, userId)
+      .post('/projects/:id/pipeline/start', async ({ params, user }) => {
+        const result = await startPipeline(params.id, getRequiredUserId(user))
         return { success: true, data: result }
       }, {
         params: t.Object({ id: t.String() }),
         detail: { summary: '启动流水线', tags: ['Canvas Pipeline'] },
       })
 
-      .post('/projects/:id/pipeline/advance', async ({ params, userId }) => {
-        const result = await advancePipeline(params.id, userId)
+      .post('/projects/:id/pipeline/advance', async ({ params, user }) => {
+        const result = await advancePipeline(params.id, getRequiredUserId(user))
         return { success: true, data: result }
       }, {
         params: t.Object({ id: t.String() }),
         detail: { summary: '推进到下一阶段', tags: ['Canvas Pipeline'] },
       })
 
-      .post('/projects/:id/pipeline/cancel', async ({ params, userId }) => {
-        await cancelPipeline(params.id, userId)
+      .post('/projects/:id/pipeline/cancel', async ({ params, user }) => {
+        await cancelPipeline(params.id, getRequiredUserId(user))
         return { success: true, message: '流水线已取消' }
       }, {
         params: t.Object({ id: t.String() }),
         detail: { summary: '取消流水线', tags: ['Canvas Pipeline'] },
       })
 
-      .post('/projects/:id/pipeline/retry', async ({ params, userId }) => {
-        const result = await retryPipeline(params.id, userId)
+      .post('/projects/:id/pipeline/retry', async ({ params, user }) => {
+        const result = await retryPipeline(params.id, getRequiredUserId(user))
         return { success: true, data: result }
       }, {
         params: t.Object({ id: t.String() }),

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import type { CurrentUser } from '@super-app/contracts/auth'
 import { db } from '@super-app/db'
-import { apiKeys, sessions, users } from '@super-app/db/schema'
+import { apiKeys, creditAccounts, creditTransactions, sessions, users } from '@super-app/db/schema'
 import { eq } from 'drizzle-orm'
 
 import { app } from '../../app'
@@ -24,6 +24,8 @@ describe('api-keys module', () => {
     for (const user of testUsers) {
       await db.delete(apiKeys).where(eq(apiKeys.userId, user.id))
       await db.delete(sessions).where(eq(sessions.userId, user.id))
+      await db.delete(creditTransactions).where(eq(creditTransactions.ownerId, user.id))
+      await db.delete(creditAccounts).where(eq(creditAccounts.ownerId, user.id))
       await db.delete(users).where(eq(users.id, user.id))
     }
   })

@@ -59,7 +59,9 @@ export async function burnSubtitlesToVideo(
     try {
       await Bun.file(assPath).delete()
     }
-    catch {}
+    catch {
+      // Best-effort cleanup; the FFmpeg error below is the actionable failure.
+    }
     throw new Error(`FFmpeg 字幕烧录失败 (exit=${result.exitCode}): ${result.stderr.slice(-2000)}`)
   }
 
@@ -71,7 +73,9 @@ export async function burnSubtitlesToVideo(
   try {
     await Bun.file(assPath).delete()
   }
-  catch {}
+  catch {
+    // Best-effort cleanup; callers should not fail after the output is ready.
+  }
 
   return { outputPath, fileSize }
 }

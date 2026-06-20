@@ -4,6 +4,7 @@ import { OverlayScrollbarsComponent } from 'overlayscrollbars-react'
 import { ArrowDownToLine, House, Loader, Wifi, WifiOff } from 'lucide-react'
 
 import { clientEnv } from '@super-app/env/client'
+import { formatFileSize } from '@super-app/utils'
 
 import './styles.css'
 
@@ -301,7 +302,7 @@ function TransferApp() {
               <p className="m-0 text-[20px] font-bold tracking-[-0.01em] break-all">
                 {offer.fileName}
               </p>
-              <p className="m-0 mt-1 text-[13px] text-[#999999]">{formatBytes(offer.fileSize)}</p>
+              <p className="m-0 mt-1 text-[13px] text-[#999999]">{formatFileSize(offer.fileSize)}</p>
               <button
                 type="button"
                 className="mt-5 flex h-11 cursor-pointer items-center gap-2 rounded-[12px] border-0 bg-[#e5e5e5] px-6 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
@@ -354,7 +355,7 @@ function TransferApp() {
               download={completed.fileName}
             >
               <ArrowDownToLine size={16} />
-              下载 {completed.fileName}（{formatBytes(completed.size)}）
+              下载 {completed.fileName}（{formatFileSize(completed.size)}）
             </a>
           )}
         </div>
@@ -386,12 +387,6 @@ function parseSignalingMessage(raw: unknown): SignalingMessage | null {
   } catch {
     return null
   }
-}
-
-function formatBytes(size: number) {
-  if (size < 1024) return `${size} B`
-  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
-  return `${(size / 1024 / 1024).toFixed(1)} MB`
 }
 
 /* -------------------------------------------------------------------------- */

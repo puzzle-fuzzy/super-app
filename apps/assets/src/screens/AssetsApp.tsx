@@ -59,6 +59,7 @@ import { assetsApi, stylesApi, subjectsApi, templatesApi, textsApi, SSEClient } 
 import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
 import { clientEnv } from '@super-app/env/client'
+import { formatFileSize } from '@super-app/utils'
 
 type FilterKind = 'all' | AssetKind
 
@@ -1619,7 +1620,7 @@ function assetLabel(asset: AssetDto) {
     parts.push(`${file.width} × ${file.height}`)
   }
   if (file?.size) {
-    parts.push(formatBytes(file.size))
+    parts.push(formatFileSize(file.size))
   }
 
   parts.push(formatDate(asset.createdAt))
@@ -1673,13 +1674,6 @@ function iconForAsset(kind: AssetKind): LucideIcon {
   }
 
   return icons[kind]
-}
-
-function formatBytes(size: number) {
-  if (size < 1024) return `${size} B`
-  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
-  if (size < 1024 * 1024 * 1024) return `${(size / 1024 / 1024).toFixed(1)} MB`
-  return `${(size / 1024 / 1024 / 1024).toFixed(1)} GB`
 }
 
 function formatDate(value: string) {

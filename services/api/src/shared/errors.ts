@@ -11,3 +11,17 @@ export class AppError extends Error {
     this.name = 'AppError'
   }
 }
+
+export class ForbiddenError extends AppError {
+  constructor(message = 'Forbidden', details?: unknown) {
+    super(403, 'FORBIDDEN', message, details)
+    this.name = 'ForbiddenError'
+  }
+}
+
+export class NotFoundError extends AppError {
+  constructor(message = 'Resource not found', details?: unknown) {
+    super(404, 'NOT_FOUND', message, details)
+    this.name = 'NotFoundError'
+  }
+}

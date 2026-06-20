@@ -1,4 +1,7 @@
-export { calculateCost } from './calculate'
+export { calculateCost, estimateCost } from './calculate'
 export { assertCreditLedgerPolicy, getBillingPolicy, isCreditLedgerPolicy } from './policy'
 export type { BillingPolicy, BillingSurface, CostOnlyBillingPolicy, CreditLedgerBillingPolicy, CreditLedgerLifecycle, FreeBillingPolicy } from './policy'
+export { getModelPricing, MODEL_PRICING } from './pricing'
 export { aggregateStatistics } from './statistics'
+export type { CostRecord } from './statistics'
+export type { BillingParams, CostDetail, ModelPricing } from './types'

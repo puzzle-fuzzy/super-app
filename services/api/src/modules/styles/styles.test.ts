@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import type { CurrentUser } from '@super-app/contracts/auth'
 import { db } from '@super-app/db'
-import { assets, sessions, styleAssets, users } from '@super-app/db/schema'
+import { assets, creditAccounts, creditTransactions, sessions, styleAssets, users } from '@super-app/db/schema'
 import { eq } from 'drizzle-orm'
 
 import { app } from '../../app'
@@ -31,6 +31,8 @@ describe('styles module', () => {
       }
       await db.delete(assets).where(eq(assets.ownerId, user.id))
       await db.delete(sessions).where(eq(sessions.userId, user.id))
+      await db.delete(creditTransactions).where(eq(creditTransactions.ownerId, user.id))
+      await db.delete(creditAccounts).where(eq(creditAccounts.ownerId, user.id))
       await db.delete(users).where(eq(users.id, user.id))
     }
   })

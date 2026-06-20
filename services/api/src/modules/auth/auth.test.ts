@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from 'bun:test'
 import { db } from '@super-app/db'
-import { sessions, users } from '@super-app/db/schema'
+import { creditAccounts, creditTransactions, sessions, users } from '@super-app/db/schema'
 import { eq } from 'drizzle-orm'
 
 import { app } from '../../app'
@@ -99,6 +99,8 @@ afterAll(async () => {
 
     if (user) {
       await db.delete(sessions).where(eq(sessions.userId, user.id))
+      await db.delete(creditTransactions).where(eq(creditTransactions.ownerId, user.id))
+      await db.delete(creditAccounts).where(eq(creditAccounts.ownerId, user.id))
       await db.delete(users).where(eq(users.id, user.id))
     }
   }

@@ -5,12 +5,16 @@ import {
   canvasDocuments,
   canvasProjects,
   canvasVersions,
+  creditAccounts,
+  creditTransactions,
   generationRecords,
   idempotencyKeys,
   sessions,
+  tasks,
+  usageEvents,
   users,
 } from '@super-app/db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 
 import { app } from '../../app'
 
@@ -40,8 +44,21 @@ describe('canvas module', () => {
       }
       await db.delete(canvasProjects).where(eq(canvasProjects.ownerId, user.id))
       await db.delete(idempotencyKeys).where(eq(idempotencyKeys.ownerId, user.id))
+
+      const records = await db
+        .select({ id: generationRecords.id })
+        .from(generationRecords)
+        .where(eq(generationRecords.ownerId, user.id))
+      const recordIds = records.map((record) => record.id)
+      if (recordIds.length > 0) {
+        await db.delete(usageEvents).where(inArray(usageEvents.generationRecordId, recordIds))
+      }
+
+      await db.delete(tasks).where(eq(tasks.ownerId, user.id))
+      await db.delete(creditTransactions).where(eq(creditTransactions.ownerId, user.id))
       await db.delete(generationRecords).where(eq(generationRecords.ownerId, user.id))
       await db.delete(sessions).where(eq(sessions.userId, user.id))
+      await db.delete(creditAccounts).where(eq(creditAccounts.ownerId, user.id))
       await db.delete(users).where(eq(users.id, user.id))
     }
   })
@@ -261,7 +278,7 @@ describe('canvas module', () => {
     expect((await archiveRes.json()).data.status).toBe('archived')
   })
 
-  it('returns 503 when DashScope image generation is not configured', async () => {
+  it('queues image generation even when DashScope is not configured at request time', async () => {
     const originalKey = process.env.DASHSCOPE_API_KEY
     delete process.env.DASHSCOPE_API_KEY
 
@@ -271,10 +288,12 @@ describe('canvas module', () => {
           prompt: '一只坐在窗边的橘猫',
         })
       )
-      expect(res.status).toBe(503)
+      expect(res.status).toBe(200)
       const body = await res.json()
-      expect(body.success).toBe(false)
-      expect(body.error.message).toContain('DASHSCOPE_API_KEY')
+      expect(body.success).toBe(true)
+      expect(body.data.status).toBe('queued')
+      expect(body.data.generationRecordId).toBeTruthy()
+      expect(body.data.taskId).toBeTruthy()
     } finally {
       if (originalKey) {
         process.env.DASHSCOPE_API_KEY = originalKey
@@ -282,49 +301,12 @@ describe('canvas module', () => {
     }
   })
 
-  it('generates an image through DashScope and returns the first image URL', async () => {
+  it('queues image generation with DashScope task input', async () => {
     const originalKey = process.env.DASHSCOPE_API_KEY
     const originalBaseUrl = process.env.DASHSCOPE_BASE_URL
-    const originalFetch = globalThis.fetch
-    const providerImageUrl = 'https://dashscope-result.example/generated.png'
-    const pngBytes = Buffer.from(
-      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFhQJ/WxK8WQAAAABJRU5ErkJggg==',
-      'base64'
-    )
-    const calls: Array<{ url: string; authorization: string | null; body: unknown }> = []
 
     process.env.DASHSCOPE_API_KEY = 'fake-dashscope-key'
     process.env.DASHSCOPE_BASE_URL = 'http://fake-provider.local/api/v1'
-    globalThis.fetch = (async (input, init) => {
-      if (String(input) === providerImageUrl) {
-        return new Response(pngBytes, {
-          status: 200,
-          headers: { 'content-type': 'image/png' },
-        })
-      }
-
-      calls.push({
-        url: String(input),
-        authorization: new Headers(init?.headers).get('authorization'),
-        body: JSON.parse(String(init?.body)),
-      })
-      return new Response(
-        JSON.stringify({
-          request_id: 'req-image-1',
-          output: {
-            choices: [
-              {
-                message: {
-                  content: [{ image: providerImageUrl }],
-                },
-              },
-            ],
-          },
-          usage: { image_count: 1, width: 2048, height: 2048 },
-        }),
-        { status: 200, headers: { 'content-type': 'application/json' } }
-      )
-    }) as typeof fetch
 
     try {
       const res = await app.handle(
@@ -335,31 +317,21 @@ describe('canvas module', () => {
       )
       expect(res.status).toBe(200)
       const body = await res.json()
-      expect(body.data.providerImageUrl).toBe(providerImageUrl)
-      expect(body.data.imageUrl).toBe(body.data.asset.files[0].url)
-      expect(body.data.model).toBe('qwen-image-2.0-pro')
-      expect(calls[0].url).toBe(
-        'http://fake-provider.local/api/v1/services/aigc/multimodal-generation/generation'
-      )
-      expect(calls[0].authorization).toBe('Bearer fake-dashscope-key')
-      expect(calls[0].body).toEqual({
+      expect(body.data.status).toBe('queued')
+
+      const [task] = await db.select().from(tasks).where(eq(tasks.id, body.data.taskId)).limit(1)
+      expect(task?.type).toBe('generate.image')
+      expect(task?.status).toBe('queued')
+      expect(task?.generationRecordId).toBe(body.data.generationRecordId)
+      expect(task?.input).toMatchObject({
+        generationRecordId: body.data.generationRecordId,
         model: 'qwen-image-2.0-pro',
-        input: {
-          messages: [
-            {
-              role: 'user',
-              content: [{ text: '赛博城市夜景，霓虹灯，电影感' }],
-            },
-          ],
-        },
-        parameters: {
-          prompt_extend: true,
-          size: '2048*2048',
-          watermark: false,
-        },
+        prompt: '赛博城市夜景，霓虹灯，电影感',
+        size: '2048*2048',
+        kind: 'image',
+        ownerId: primary.id,
       })
     } finally {
-      globalThis.fetch = originalFetch
       if (originalKey) process.env.DASHSCOPE_API_KEY = originalKey
       else delete process.env.DASHSCOPE_API_KEY
       if (originalBaseUrl) process.env.DASHSCOPE_BASE_URL = originalBaseUrl
@@ -367,41 +339,12 @@ describe('canvas module', () => {
     }
   })
 
-  it('persists generated DashScope images into the asset library', async () => {
+  it('creates a submitting generation record for the worker to persist', async () => {
     const originalKey = process.env.DASHSCOPE_API_KEY
     const originalBaseUrl = process.env.DASHSCOPE_BASE_URL
-    const originalFetch = globalThis.fetch
-    const providerImageUrl = 'https://dashscope-result.example/generated-stored.png'
-    const pngBytes = Buffer.from(
-      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFhQJ/WxK8WQAAAABJRU5ErkJggg==',
-      'base64'
-    )
 
     process.env.DASHSCOPE_API_KEY = 'fake-dashscope-key'
     process.env.DASHSCOPE_BASE_URL = 'http://fake-provider.local/api/v1'
-    globalThis.fetch = (async (input, init) => {
-      const url = String(input)
-      if (url === providerImageUrl) {
-        return new Response(pngBytes, {
-          status: 200,
-          headers: { 'content-type': 'image/png' },
-        })
-      }
-
-      expect(url).toBe(
-        'http://fake-provider.local/api/v1/services/aigc/multimodal-generation/generation'
-      )
-      expect(new Headers(init?.headers).get('authorization')).toBe('Bearer fake-dashscope-key')
-      return new Response(
-        JSON.stringify({
-          request_id: 'req-image-stored',
-          output: {
-            choices: [{ message: { content: [{ image: providerImageUrl }] } }],
-          },
-        }),
-        { status: 200, headers: { 'content-type': 'application/json' } }
-      )
-    }) as typeof fetch
 
     try {
       const res = await app.handle(
@@ -412,16 +355,21 @@ describe('canvas module', () => {
       )
       expect(res.status).toBe(200)
       const body = await res.json()
-      expect(body.data.providerImageUrl).toBe(providerImageUrl)
-      expect(body.data.asset.kind).toBe('image')
-      expect(body.data.asset.source).toBe('ai_generation')
-      expect(body.data.asset.title).toContain('一张可长期保存的生成图')
-      expect(body.data.asset.files[0].mimeType).toBe('image/png')
-      expect(body.data.asset.files[0].size).toBe(pngBytes.byteLength)
-      expect(body.data.imageUrl).toBe(body.data.asset.files[0].url)
-      expect(body.data.imageUrl).not.toBe(providerImageUrl)
+      expect(body.data.status).toBe('queued')
+
+      const [record] = await db
+        .select()
+        .from(generationRecords)
+        .where(eq(generationRecords.id, body.data.generationRecordId))
+        .limit(1)
+      expect(record?.status).toBe('submitting')
+      expect(record?.category).toBe('image')
+      expect(record?.model).toBe('qwen-image-2.0-pro')
+      expect(record?.inputParams).toMatchObject({
+        prompt: '一张可长期保存的生成图',
+        size: '2048*2048',
+      })
     } finally {
-      globalThis.fetch = originalFetch
       if (originalKey) process.env.DASHSCOPE_API_KEY = originalKey
       else delete process.env.DASHSCOPE_API_KEY
       if (originalBaseUrl) process.env.DASHSCOPE_BASE_URL = originalBaseUrl

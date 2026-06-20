@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import type { CurrentUser } from '@super-app/contracts/auth'
 import { db } from '@super-app/db'
-import { assets, sessions, users } from '@super-app/db/schema'
+import { assets, creditAccounts, creditTransactions, sessions, users } from '@super-app/db/schema'
 import { eq } from 'drizzle-orm'
 import { serverEnv } from '@super-app/env/server'
 
@@ -44,6 +44,8 @@ describe('transfers module', () => {
   afterAll(async () => {
     await db.delete(assets).where(eq(assets.id, testAssetId))
     await db.delete(sessions).where(eq(sessions.userId, testOwnerId))
+    await db.delete(creditTransactions).where(eq(creditTransactions.ownerId, testOwnerId))
+    await db.delete(creditAccounts).where(eq(creditAccounts.ownerId, testOwnerId))
     await db.delete(users).where(eq(users.id, testOwnerId))
   })
 

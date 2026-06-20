@@ -1,9 +1,9 @@
 import type { AssetKind } from '@super-app/contracts/assets'
+import { buildContentDisposition } from '@super-app/utils'
 import { Elysia, t } from 'elysia'
 
 import { authPlugin, requireUser } from '../../plugins/auth'
 import { storagePlugin } from '../../plugins/storage'
-import { attachmentContentDisposition } from '../../shared/content-disposition'
 import { AppError } from '../../shared/errors'
 import { ok } from '../../shared/response'
 import {
@@ -35,7 +35,7 @@ export const assetsModule = new Elysia({ name: 'assets' })
           headers: {
             'Content-Type': shared.mimeType,
             'Content-Length': String(file.size || shared.size),
-            'Content-Disposition': attachmentContentDisposition(shared.title),
+            'Content-Disposition': buildContentDisposition(shared.title),
           },
         })
       })

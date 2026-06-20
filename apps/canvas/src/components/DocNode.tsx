@@ -1,7 +1,7 @@
 import { File, FileCode, FileText, FileArchive } from 'lucide-react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
+import { formatFileSize } from '@super-app/utils'
 import type { DocNodeType } from '../types'
-import { formatFileSize } from '../utils/format'
 
 type DocNodeProps = NodeProps<DocNodeType>
 

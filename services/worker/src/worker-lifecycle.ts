@@ -18,7 +18,6 @@ import {
 import type { WorkerConfig } from './worker.config'
 import { taskHandlers, type WorkerTaskContext } from './task-handlers'
 import { startCreditReconciliation } from './credit-reconciliation'
-import { advancePipelineAfterTaskSuccess } from './pipeline-stepper'
 
 // Repository adapter — 注入到 task-engine 的纯函数（adapter 模式：纯包不碰 IO）
 const repoAdapter = {

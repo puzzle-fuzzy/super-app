@@ -20,7 +20,7 @@ import {
   sweepStaleSseConnections,
 } from '../../services/sse-manager'
 
-export const sseModule = new Elysia({ name: 'sse' }).use(authPlugin).get('/sse', async function* ({ user, set, request }) {
+export const sseModule = new Elysia({ name: 'sse' }).use(authPlugin).get('/sse', async function* ({ user, set, request: _request }) {
   // 未登录 → 401
   if (!user) {
     set.status = 401

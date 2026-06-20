@@ -1,9 +1,9 @@
 import { Elysia, t } from 'elysia'
 
 import { serverEnv } from '@super-app/env/server'
+import { buildContentDisposition } from '@super-app/utils'
 
 import { storagePlugin } from '../../plugins/storage'
-import { attachmentContentDisposition } from '../../shared/content-disposition'
 import { AppError } from '../../shared/errors'
 import { ok } from '../../shared/response'
 import {
@@ -57,7 +57,7 @@ export const transfersModule = new Elysia({ name: 'transfers' })
           'Cache-Control': 'no-store',
           'Content-Type': room.mimeType,
           'Content-Length': String(file.size || room.size),
-          'Content-Disposition': attachmentContentDisposition(room.title),
+          'Content-Disposition': buildContentDisposition(room.title),
         },
       })
     },

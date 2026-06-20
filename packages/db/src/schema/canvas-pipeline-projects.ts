@@ -1,5 +1,5 @@
 import type { CanvasLayoutDto, CanvasModelPreferences, NovelAnalysis } from '../domain-types'
-import { boolean, index, jsonb, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, index, jsonb, pgEnum, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core'
 
 import { createdAtColumn, updatedAtColumn } from './common'
 import { users } from './identity'
@@ -70,4 +70,3 @@ export const canvasPipelineProjects = pgTable(
 
 export type CanvasPipelineProject = typeof canvasPipelineProjects.$inferSelect
 export type NewCanvasPipelineProject = typeof canvasPipelineProjects.$inferInsert
-

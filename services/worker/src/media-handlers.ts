@@ -92,7 +92,9 @@ export async function handleMediaExtractAudio(task: TaskRow, ctx: WorkerContext)
     try {
       await Bun.file(audioPath).delete()
     }
-    catch {}
+    catch {
+      // Best-effort cleanup; the uploaded audio URL is already persisted.
+    }
 
     // 更新项目 audioFileUrl / videoDurationMs，状态 → asr_processing
     await updateSubtitleProjectStatus(projectId, 'asr_processing', {
@@ -262,7 +264,9 @@ export async function handleMediaBurnSubtitle(task: TaskRow, ctx: WorkerContext)
     try {
       await Bun.file(outputPath).delete()
     }
-    catch {}
+    catch {
+      // Best-effort cleanup; the exported video URL is already persisted.
+    }
 
     // 更新 generation_record → succeeded
     await markGenerationSucceeded(exportRecordId, {

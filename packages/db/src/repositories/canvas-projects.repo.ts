@@ -1,8 +1,5 @@
-import type { CanvasPipelineCharacter, NewCanvasPipelineCharacter } from '../schema/canvas-pipeline-characters'
 import type { CanvasPipelineContinuityReport } from '../schema/canvas-pipeline-continuity'
-import type { CanvasPipelineLocation, NewCanvasPipelineLocation } from '../schema/canvas-pipeline-locations'
 import type { CanvasPipelineProject, NewCanvasPipelineProject } from '../schema/canvas-pipeline-projects'
-import type { CanvasPipelineShot, NewCanvasPipelineShot } from '../schema/canvas-pipeline-shots'
 import { createLogger } from '@super-app/shared'
 import { and, desc, eq, inArray } from 'drizzle-orm'
 import { db } from '../client'
@@ -287,4 +284,3 @@ export async function getCanvasShotDetail(id: string) {
     .limit(1)
   return shot ?? null
 }
-

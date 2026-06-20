@@ -49,6 +49,7 @@ import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
 import { clientEnv } from '@super-app/env/client'
 import { Select } from '@super-app/ui-react'
+import { formatRelativeTime } from '@super-app/utils'
 import {
   DEFAULT_GENERATION_MODEL_ID,
   GENERATION_MODELS,
@@ -163,19 +164,17 @@ export function CanvasApp() {
 
         const store = useCanvasStore.getState()
         store.setNodes((prev) =>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          prev.map((node: any) =>
-            node.data?.taskId === data.taskId
+          prev.map((node) =>
+            isMediaNode(node) && node.data?.taskId === data.taskId
               ? { ...node, data: { ...node.data, src: mediaUrl, uploading: undefined } }
               : node
           )
         )
       }
       if (data.status === 'failed') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        useCanvasStore.getState().setNodes((prev: any[]) =>
-          prev.map((node: any) =>
-            node.data?.taskId === data.taskId
+        useCanvasStore.getState().setNodes((prev) =>
+          prev.map((node) =>
+            isMediaNode(node) && node.data?.taskId === data.taskId
               ? { ...node, data: { ...node.data, uploading: undefined, fileName: '生成失败' } }
               : node
           )
@@ -207,6 +206,10 @@ export function CanvasApp() {
       </Routes>
     </BrowserRouter>
   )
+}
+
+function isMediaNode(node: AppNode): node is ImageNodeType | VideoNodeType {
+  return node.type === 'imageNode' || node.type === 'videoNode'
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1759,18 +1762,3 @@ function ScreenState({ title, description }: { title: string; description: strin
 /* -------------------------------------------------------------------------- */
 /*  Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
-
-function formatRelativeTime(iso: string): string {
-  const date = new Date(iso)
-  const now = Date.now()
-  const diffMs = now - date.getTime()
-  const diffMin = Math.floor(diffMs / 60_000)
-  const diffHrs = Math.floor(diffMs / 3_600_000)
-  const diffDays = Math.floor(diffMs / 86_400_000)
-
-  if (diffMin < 1) return '刚刚'
-  if (diffMin < 60) return `${diffMin} 分钟前`
-  if (diffHrs < 24) return `${diffHrs} 小时前`
-  if (diffDays < 30) return `${diffDays} 天前`
-  return date.toLocaleDateString('zh-CN')
-}

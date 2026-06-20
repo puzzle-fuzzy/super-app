@@ -17,8 +17,6 @@
 import { Elysia, t } from 'elysia'
 
 import { authPlugin, requireUser } from '../../plugins/auth'
-import { ForbiddenError } from '../../shared/errors'
-import type { Config } from '../../config'
 
 // ── Handler imports (stubbed for gradual port) ────────────
 
@@ -40,16 +38,6 @@ async function getAdminOverview(): Promise<AdminOverview> {
     pendingTasks: 0,
     failedTasks24h: 0,
     totalCreditsCents: 0,
-  }
-}
-
-// ── Admin guard ───────────────────────────────────────────
-
-function createAdminGuard(config: Config) {
-  return (ctx: { userId?: string; authMethod?: string }) => {
-    if (ctx.authMethod !== 'jwt' || !(config.adminUserIds ?? []).includes(ctx.userId ?? '')) {
-      throw new ForbiddenError('无权访问管理后台')
-    }
   }
 }
 

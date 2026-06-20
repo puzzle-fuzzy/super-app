@@ -13,17 +13,24 @@
  */
 import { Elysia, t } from 'elysia'
 import { authPlugin, requireUser } from '../../plugins/auth'
-import { NotFoundError } from '../../shared/errors'
+import { AppError, NotFoundError } from '../../shared/errors'
 import * as svc from './service'
+
+function getRequiredUserId(user: { id: string } | null): string {
+  if (!user) {
+    throw new AppError(401, 'UNAUTHORIZED', 'Unauthorized')
+  }
+  return user.id
+}
 
 export const subtitleModule = new Elysia({ name: 'subtitle', prefix: '/api/subtitle' })
   .use(authPlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded
       // ── 创建字幕项目 ──────────────────────────────────
-      .post('/projects', async ({ body, userId }) => {
+      .post('/projects', async ({ body, user }) => {
         const { videoFileId } = body as { videoFileId: string }
-        const project = await svc.createProject(userId, videoFileId)
+        const project = await svc.createProject(getRequiredUserId(user), videoFileId)
         return { success: true, data: project }
       }, {
         body: t.Object({ videoFileId: t.String() }),
@@ -31,16 +38,16 @@ export const subtitleModule = new Elysia({ name: 'subtitle', prefix: '/api/subti
       })
 
       // ── 列出项目 ──────────────────────────────────────
-      .get('/projects', async ({ userId }) => {
-        const items = await svc.listProjects(userId)
+      .get('/projects', async ({ user }) => {
+        const items = await svc.listProjects(getRequiredUserId(user))
         return { success: true, items, total: items.length }
       }, {
         detail: { summary: '列出字幕项目', tags: ['字幕'] },
       })
 
       // ── 项目详情 ──────────────────────────────────────
-      .get('/projects/:id', async ({ params, userId }) => {
-        const project = await svc.getProject(params.id, userId)
+      .get('/projects/:id', async ({ params, user }) => {
+        const project = await svc.getProject(params.id, getRequiredUserId(user))
         if (!project) throw new NotFoundError('字幕项目不存在')
         return { success: true, data: project }
       }, {
@@ -49,8 +56,8 @@ export const subtitleModule = new Elysia({ name: 'subtitle', prefix: '/api/subti
       })
 
       // ── 删除项目 ──────────────────────────────────────
-      .delete('/projects/:id', async ({ params, userId }) => {
-        await svc.deleteProject(params.id, userId)
+      .delete('/projects/:id', async ({ params, user }) => {
+        await svc.deleteProject(params.id, getRequiredUserId(user))
         return { success: true }
       }, {
         params: t.Object({ id: t.String() }),
@@ -58,8 +65,8 @@ export const subtitleModule = new Elysia({ name: 'subtitle', prefix: '/api/subti
       })
 
       // ── 更新字幕句子 ──────────────────────────────────
-      .patch('/projects/:id/sentences', async ({ params, body, userId }) => {
-        const project = await svc.updateSentences(params.id, userId, body as any)
+      .patch('/projects/:id/sentences', async ({ params, body, user }) => {
+        const project = await svc.updateSentences(params.id, getRequiredUserId(user), body as any)
         return { success: true, data: project }
       }, {
         params: t.Object({ id: t.String() }),
@@ -76,8 +83,8 @@ export const subtitleModule = new Elysia({ name: 'subtitle', prefix: '/api/subti
       })
 
       // ── 更新字幕样式 ──────────────────────────────────
-      .patch('/projects/:id/style', async ({ params, body, userId }) => {
-        const project = await svc.updateStyle(params.id, userId, body as any)
+      .patch('/projects/:id/style', async ({ params, body, user }) => {
+        const project = await svc.updateStyle(params.id, getRequiredUserId(user), body as any)
         return { success: true, data: project }
       }, {
         params: t.Object({ id: t.String() }),
@@ -97,8 +104,8 @@ export const subtitleModule = new Elysia({ name: 'subtitle', prefix: '/api/subti
       })
 
       // ── 提交导出 ──────────────────────────────────────
-      .post('/projects/:id/export', async ({ params, userId }) => {
-        await svc.exportProject(params.id, userId)
+      .post('/projects/:id/export', async ({ params, user }) => {
+        await svc.exportProject(params.id, getRequiredUserId(user))
         return { success: true }
       }, {
         params: t.Object({ id: t.String() }),
@@ -106,8 +113,8 @@ export const subtitleModule = new Elysia({ name: 'subtitle', prefix: '/api/subti
       })
 
       // ── 重试 ──────────────────────────────────────────
-      .post('/projects/:id/retry', async ({ params, userId }) => {
-        const project = await svc.retryProject(params.id, userId)
+      .post('/projects/:id/retry', async ({ params, user }) => {
+        const project = await svc.retryProject(params.id, getRequiredUserId(user))
         return { success: true, data: project }
       }, {
         params: t.Object({ id: t.String() }),

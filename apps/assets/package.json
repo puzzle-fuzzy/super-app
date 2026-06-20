@@ -18,6 +18,7 @@
     "@super-app/design-tokens": "workspace:*",
     "@super-app/env": "workspace:*",
     "@super-app/ui-react": "workspace:*",
+    "@super-app/utils": "workspace:*",
     "lucide-react": "^1.21.0",
     "overlayscrollbars": "^2.16.0",
     "overlayscrollbars-react": "^0.5.6",

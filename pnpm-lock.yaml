@@ -105,6 +105,9 @@ importers:
       '@super-app/ui-react':
         specifier: workspace:*
         version: link:../../packages/ui-react
+      '@super-app/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       lucide-react:
         specifier: ^1.21.0
         version: 1.21.0(react@19.2.7)
@@ -206,6 +209,9 @@ importers:
       '@super-app/ui-react':
         specifier: workspace:*
         version: link:../../packages/ui-react
+      '@super-app/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@xyflow/react':
         specifier: ^12.11.0
         version: 12.11.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -387,6 +393,9 @@ importers:
       '@super-app/env':
         specifier: workspace:*
         version: link:../../packages/env
+      '@super-app/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       lucide-react:
         specifier: ^1.21.0
         version: 1.21.0(react@19.2.7)
@@ -824,6 +833,9 @@ importers:
 
   packages/utils:
     devDependencies:
+      bun-types:
+        specifier: latest
+        version: 1.3.14
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
@@ -876,6 +888,9 @@ importers:
       '@super-app/storage':
         specifier: workspace:*
         version: link:../../packages/storage
+      '@super-app/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       drizzle-orm:
         specifier: ^0.44.2
         version: 0.44.7(bun-types@1.3.14)(postgres@3.4.9)

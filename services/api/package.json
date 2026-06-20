@@ -22,6 +22,7 @@
     "@super-app/events": "workspace:*",
     "@super-app/gateway": "workspace:*",
     "@super-app/storage": "workspace:*",
+    "@super-app/utils": "workspace:*",
     "drizzle-orm": "^0.44.2",
     "elysia": "latest",
     "nodemailer": "^9.0.1",

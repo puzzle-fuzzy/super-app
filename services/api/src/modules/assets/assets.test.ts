@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import type { CurrentUser } from '@super-app/contracts/auth'
 import { db } from '@super-app/db'
-import { assetFiles, assets, sessions, users } from '@super-app/db/schema'
+import { assetFiles, assets, creditAccounts, creditTransactions, sessions, users } from '@super-app/db/schema'
 import { eq } from 'drizzle-orm'
 import { rm } from 'node:fs/promises'
 import path from 'node:path'
@@ -37,6 +37,8 @@ describe('assets module', () => {
       }
       await db.delete(assets).where(eq(assets.ownerId, user.id))
       await db.delete(sessions).where(eq(sessions.userId, user.id))
+      await db.delete(creditTransactions).where(eq(creditTransactions.ownerId, user.id))
+      await db.delete(creditAccounts).where(eq(creditAccounts.ownerId, user.id))
       await db.delete(users).where(eq(users.id, user.id))
 
       // Remove any files this user's uploads wrote under STORAGE_DIR.
