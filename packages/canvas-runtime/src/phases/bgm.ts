@@ -11,6 +11,7 @@ import type { ShotEnvironment } from '@super-app/types'
 import type { CanvasRuntimeLlmClient, CanvasRuntimeProviderAdapter, CanvasRuntimeStorageAdapter } from '../adapter-types'
 import type { CanvasProjectDetail } from '../normalize'
 import { buildBgmPrompt } from '@super-app/prompt-engine'
+import { downloadAndUpload } from '../io/storage-helpers'
 
 /** Canvas BGM 流水线使用的音频模型（邀测期唯一可选） */
 export const CANVAS_BGM_MODEL = 'fun-music-v1'
@@ -72,7 +73,7 @@ export async function runBgmPhase(input: BgmPhaseInput): Promise<BgmPhaseResult>
 
   const ext = result.output.format === 'wav' ? 'wav' : 'mp3'
   const fileName = `bgm/${input.projectId}/bgm.${ext}`
-  const downloadResult = await input.storage.downloadAndUpload(result.output.url, fileName)
+  const downloadResult = await downloadAndUpload(input.storage, result.output.url, fileName)
   const audioUrl = downloadResult.url
 
   return {

@@ -10,6 +10,7 @@
 
 import type { CanvasRuntimeFfmpegAdapter, CanvasRuntimeStorageAdapter } from '../adapter-types'
 import type { CanvasProjectDetail } from '../normalize'
+import { resolveLocalPath, downloadToTemp, uploadGenerated } from '../io/storage-helpers'
 
 export interface AssemblePhaseInput {
   projectId: string
@@ -49,10 +50,10 @@ export async function runAssemblePhase(input: AssemblePhaseInput): Promise<Assem
     for (let i = 0; i < shotsWithVideo.length; i++) {
       const shot = shotsWithVideo[i]!
       const url = shot.videoUrl!
-      const local = (input.storage as any).localCopyPath(url)
+      const local = resolveLocalPath(input.storageRoot, url)
       const path = local !== null && await pathExists(local)
         ? local
-        : await (input.storage as any).downloadToFile(url, `${tempDir}/shot_${i}.mp4`)
+        : await downloadToTemp(url, `${tempDir}/shot_${i}.mp4`)
       localPaths.push(path)
     }
 
@@ -66,19 +67,19 @@ export async function runAssemblePhase(input: AssemblePhaseInput): Promise<Assem
     input.onCheckpoint?.() // ← checkpoint: concat 完成，准备 FFmpeg BGM overlay
     const bgmUrl = input.detail.project.bgmUrl
     if (bgmUrl) {
-      const bgmLocal = (input.storage as any).localCopyPath(bgmUrl)
+      const bgmLocal = resolveLocalPath(input.storageRoot, bgmUrl)
       const bgmPath = bgmLocal !== null && await pathExists(bgmLocal)
         ? bgmLocal
-        : await (input.storage as any).downloadToFile(bgmUrl, `${tempDir}/bgm.${extFromUrl(bgmUrl) || 'mp3'}`)
+        : await downloadToTemp(bgmUrl, `${tempDir}/bgm.${extFromUrl(bgmUrl) || 'mp3'}`)
       const mixed = await input.ffmpeg.mixBgmTrack(concat.outputPath, bgmPath, tempDir)
       finalPath = mixed.outputPath
       bgmOverlaid = true
     }
 
     // 5. 上传最终视频到存储
-    const buffer = Buffer.from(await (Bun as any).file(finalPath).arrayBuffer())
-    const finalVideoUrl = await (input.storage as any).uploadGenerated(
-      buffer,
+    const finalVideoUrl = await uploadGenerated(
+      input.storage,
+      finalPath,
       `assemble/${input.projectId}/final.mp4`,
       'video/mp4',
     )
@@ -98,7 +99,7 @@ export async function runAssemblePhase(input: AssemblePhaseInput): Promise<Assem
 /** 判断本地文件是否存在（(Bun as any).file.exists 对文件返回 true，不存在返回 false，不抛错） */
 async function pathExists(p: string): Promise<boolean> {
   try {
-    return await (Bun as any).file(p).exists()
+    return await Bun.file(p).exists()
   }
   catch {
     return false

@@ -22,6 +22,8 @@ export type {
 export { generateCanvasImageAsset, runCanvasAssetStep } from './io/asset'
 export type { GenerateCanvasImageAssetInput, GeneratedCanvasImageAsset, RunCanvasAssetStepInput } from './io/asset'
 
+export { downloadAndMap, downloadAndUpload, downloadToTemp, resolveLocalPath, uploadGenerated } from './io/storage-helpers'
+
 export type { CanvasVideoSubmitInput, CanvasVideoSubmitResult } from './io/types'
 export { prepareCanvasVideoParams, submitCanvasShotVideo } from './io/video'
 export type { CanvasVideoSubmitFullInput } from './io/video'

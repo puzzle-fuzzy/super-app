@@ -89,7 +89,20 @@ export function createWorkerLlmAdapter(client: DashScopeClient): CanvasRuntimeLl
 }
 
 export function createWorkerStorageAdapter(storage: StorageProvider): CanvasRuntimeStorageAdapter {
-  return storage as any as CanvasRuntimeStorageAdapter
+  return {
+    put: async (key, body, contentType) => {
+      // StorageProvider.put 的 body 只接受 Buffer；必要时转换
+      const buf = Buffer.isBuffer(body) ? body : Buffer.from(body)
+      const result = await storage.put({ key, body: buf, mimeType: contentType ?? 'application/octet-stream' })
+      return { url: result.url }
+    },
+    read: async (key) => {
+      const result = await storage.read(key)
+      return { body: result.body }
+    },
+    delete: (key) => storage.delete(key),
+    urlFor: (key) => storage.urlFor(key),
+  }
 }
 
 export function createWorkerCanvasAdapters(storage: CanvasRuntimeStorageAdapter) {

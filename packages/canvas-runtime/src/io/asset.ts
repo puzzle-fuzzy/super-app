@@ -6,6 +6,7 @@
 
 import type { CanvasAssetOutput } from '@super-app/types'
 import type { CanvasRuntimeModelConfig, CanvasRuntimeLlmClient, CanvasRuntimeProviderAdapter, CanvasRuntimeRepoAdapter, CanvasRuntimeStorageAdapter } from '../adapter-types'
+import { downloadAndMap } from './storage-helpers'
 
 type CreateCanvasAssetInput = Parameters<CanvasRuntimeRepoAdapter['createCanvasAsset']>[0]
 
@@ -86,7 +87,7 @@ export async function generateCanvasImageAsset(
     return null
 
   const providerUrls = urls as string[]
-  const savedUrls = await input.storage.downloadAndMap(providerUrls, input.subDir, input.prefix)
+  const savedUrls = await downloadAndMap(input.storage, providerUrls, input.subDir, input.prefix)
   const publicUrl = savedUrls[0] || providerUrls[0]!
   const outputJson: CanvasAssetOutput = { type: 'image', urls: savedUrls.length > 0 ? savedUrls : urls }
   await input.repo.markCanvasAssetSucceeded(input.assetId, outputJson as unknown as Record<string, unknown>, publicUrl, savedUrls[0] ?? undefined, providerUrls[0], undefined)

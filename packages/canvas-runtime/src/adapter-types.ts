@@ -210,20 +210,18 @@ export interface CanvasRuntimeRepoAdapter {
 
 // ─── Storage 适配器 ────────────────────────────────────────
 
-/** canvas-runtime 需要的对象存储接口（鸭子类型，AssetStorage 满足此接口） */
+/**
+ * canvas-runtime 需要的对象存储接口
+ *
+ * 与 @super-app/storage 的 StorageProvider 对齐，通过 createWorkerStorageAdapter 包装。
+ * 高层操作（downloadAndMap / downloadAndUpload 等）不再作为接口方法，而是
+ * 组合此基础接口 + fetch + Bun API 的自由函数（见 io/storage-helpers.ts）。
+ */
 export interface CanvasRuntimeStorageAdapter {
-  upload: (key: string, body: Blob | Buffer | Uint8Array, contentType?: string) => Promise<{ url: string }>
-  getSignedUrl: (key: string, expiresIn?: number) => Promise<string>
-  /** 下载远程文件到本地临时路径，返回本地路径 */
-  downloadToFile: (url: string, localPath: string) => Promise<string>
-  /** 上传本地文件并返回 URL */
-  uploadGenerated: (localPath: string, key: string, contentType?: string) => Promise<{ url: string }>
-  /** 下载 URL 对应文件并映射到本地路径 */
-  downloadAndMap: (urls: string[], subDir: string, prefix: string) => Promise<string[]>
-  /** 下载远程文件并上传到存储，返回新 URL */
-  downloadAndUpload: (remoteUrl: string, targetKey: string, contentType?: string) => Promise<{ url: string }>
-  /** 本地临时文件根路径 */
-  localCopyPath: string
+  put: (key: string, body: Buffer | Uint8Array, contentType?: string) => Promise<{ url: string }>
+  read: (key: string) => Promise<{ body: Buffer; contentType?: string }>
+  delete: (key: string) => Promise<void>
+  urlFor: (key: string) => string
 }
 
 // ─── FFmpeg 适配器 ─────────────────────────────────────────
