@@ -3,6 +3,7 @@ import { and, desc, eq, lt, notInArray, sql } from 'drizzle-orm'
 import { db } from '../client'
 import { creditAccounts, creditTransactions, usageEvents } from '../schema/credit'
 import { generationRecords } from '../schema/generation-records'
+import { getPgErrorCode } from '@super-app/runtime'
 
 // ===== CreditError =====
 
@@ -26,13 +27,6 @@ export class CreditError extends Error {
 export { getOrCreateCreditAccount, ensureCreditAccount }
 
 // ===== Helpers =====
-
-function getPgErrorCode(err: unknown): string | null {
-  if (typeof err === 'object' && err !== null && 'code' in err) {
-    return (err as { code: string }).code
-  }
-  return null
-}
 
 function assertPositiveAmount(amountCents: number): void {
   if (!(amountCents > 0)) {

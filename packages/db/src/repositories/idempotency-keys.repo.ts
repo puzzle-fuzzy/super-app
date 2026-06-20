@@ -3,19 +3,12 @@ import { and, eq } from 'drizzle-orm'
 import { db } from '../client'
 import { idempotencyKeys } from '../schema/idempotency-keys'
 import type { NewIdempotencyKey as IdempotencyKeyInsert } from '../schema/idempotency-keys'
+import { getPgErrorCode } from '@super-app/runtime'
 
 export type ClaimIdempotencyKeyResult =
   | { claimed: true; row: IdempotencyKeyInsert & { id: string } }
   | { claimed: false; conflict: false; row: IdempotencyKeyInsert & { id: string } }
   | { claimed: false; conflict: true; row: IdempotencyKeyInsert & { id: string } }
-
-/** 获取 PG 错误码 */
-function getPgErrorCode(err: unknown): string | null {
-  if (typeof err === 'object' && err !== null && 'code' in err) {
-    return (err as { code: string }).code
-  }
-  return null
-}
 
 /**
  * 尝试 claim 一个幂等键。

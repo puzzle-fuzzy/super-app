@@ -4,14 +4,9 @@ import { and, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 import { db } from '../client'
 import { generationRecords } from '../schema/generation-records'
 import type { NewGenerationRecord } from '../schema/generation-records'
-
-// 活跃状态：在这些状态内的记录视为"正在处理中"
-export const ACTIVE_GENERATION_STATUSES = [
-  'pending',
-  'submitting',
-  'processing',
-  'saving_output',
-] as const
+// 活跃状态常量真源在 @super-app/runtime（单一来源），本地引入供查询使用，re-export 保持 db 消费方 import 不变
+import { ACTIVE_GENERATION_STATUSES } from '@super-app/runtime'
+export { ACTIVE_GENERATION_STATUSES } from '@super-app/runtime'
 
 function sanitizeErrorMessage(msg: string): string {
   return msg.length > 2000 ? msg.slice(0, 2000) + '...' : msg
