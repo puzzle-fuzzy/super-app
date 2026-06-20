@@ -12,27 +12,18 @@
 
 ## P1 - 架构与功能完整性
 
-### 2. 字幕 API 仍是 mock/stub，和 DB/Worker 已实现能力脱节
+### 2. ~~字幕 API 仍是 mock/stub，和 DB/Worker 已实现能力脱节~~ ✅ `64e800d`
 
-**问题**
-
-- `services/api/src/modules/subtitle/service.ts` 仍返回 mock 数据，未真正接入 `@super-app/db` 的 subtitle repository，也未创建 `media.extract-audio` / `media.burn-subtitle` 任务。
-- `packages/db/src/repositories/subtitle-projects.repo.ts`、`packages/db/src/schema/subtitle-projects.ts` 和 `services/worker/src/media-handlers.ts` 已经存在，说明底层能力和 API 层没有闭环。
-- `services/api/src/modules/subtitle/index.ts` 的列表响应是 `{ success: true, items, total }`，和项目里常用的 `{ success: true, data: { items, total } }` envelope 不一致。
-
-**解决办法**
-
-- 在 subtitle service 中接入 `createSubtitleProject`、`listSubtitleProjectsByOwner`、`getSubtitleProjectForOwner`、`updateSubtitleSentences`、`updateSubtitleStyle`、`updateSubtitleExport`、`deleteSubtitleProject`。
-- 创建项目时校验视频文件归属，写入 subtitle project，并排队 `media.extract-audio`。
-- 导出时校验项目归属、状态、字幕句子与样式，创建 generation record，并排队 `media.burn-subtitle`。
-- 为 subtitle 路由补充 contracts schema，统一响应 envelope。
-- 增加 API 集成测试：创建、列表、详情、权限隔离、编辑句子、编辑样式、导出、重试。
-
-**完成标准**
-
-- subtitle API 不再返回 mock 数据。
-- subtitle 路由响应通过共享 contract 校验。
-- 对应 API 测试覆盖权限和任务创建。
+- `packages/contracts/src/subtitle.ts` — Zod schemas for SubtitleProjectDTO、请求/响应
+- `services/api/src/modules/subtitle/service.ts` — 8 个函数全部接入真实 DB repo
+  - `createProject`：校验文件归属 → 创建 project → 创建 `media.extract-audio` task
+  - `listProjects` / `getProject` / `deleteProject` / `updateSentences` / `updateStyle`
+  - `exportProject`：校验句子 → 创建 generation record → 创建 `media.burn-subtitle` task
+  - `retryProject`：校验 failed → 重置为 draft → 重创建 task
+- `index.ts`：使用 `ok()` 统一响应 envelope，移除 `body as` 类型转换
+- Worker `media-handlers.ts` 已完整实现（extract-audio → ASR → burn-subtitle）
+- API 与 Worker 链路闭环：`POST /projects` → task created → Worker claim → FFmpeg → ASR → 编辑 → `POST export` → task → Worker burn
+- 剩余待做：API 集成测试（属于 P3 #9）
 
 ### 3. Pipeline API 响应契约硬化未完成
 
