@@ -1,0 +1,930 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  ArrowLeft,
+  Loader2,
+  Play,
+  RefreshCw,
+  XCircle,
+} from 'lucide-react'
+import { useNavigate, useParams } from 'react-router-dom'
+import {
+  Background,
+  Controls,
+  ReactFlow,
+  ReactFlowProvider,
+  useReactFlow,
+  type Node,
+  type Edge,
+  type NodeProps,
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
+
+import { pipelineApi, SSEClient, type TriggerPhaseResult, type PipelineRunDTO } from '@super-app/api-client'
+import type { ProjectDTO, CharacterDTO, LocationDTO, ShotDTO } from '@super-app/types'
+import { assetsApi } from '@super-app/api-client'
+import type { AssetDto, AssetKind } from '@super-app/contracts/assets'
+
+// ── Helpers ─────────────────────────────────────────────────────────
+
+function getAssetUrl(asset: AssetDto): string {
+  return asset.files?.[0]?.url ?? asset.thumbnailUrl ?? ''
+}
+
+// ── Phase Metadata ─────────────────────────────────────────────────
+
+type PhaseKey = 'analyze' | 'characters' | 'locations' | 'characterRefs' | 'locationRefs'
+  | 'storyboard' | 'continuity' | 'rebuild' | 'dialogue' | 'videos' | 'bgm' | 'assemble'
+
+const PHASE_LABEL: Record<PhaseKey, string> = {
+  analyze: '分析故事',
+  characters: '生成角色',
+  locations: '生成场景',
+  characterRefs: '角色参考图',
+  locationRefs: '场景参考图',
+  storyboard: '生成分镜',
+  continuity: '连续性检查',
+  rebuild: '重建 Prompt',
+  dialogue: '对白层',
+  videos: '生成视频',
+  bgm: '生成配乐',
+  assemble: '合成成片',
+}
+
+type NodeStatus = 'pending' | 'running' | 'succeeded' | 'failed'
+
+interface PipelineNodeData {
+  [key: string]: unknown
+  label: string
+  phase: PhaseKey | 'storyInput' | 'analysis' | 'character' | 'location' | 'shot' | 'bgm' | 'assemble'
+  status: NodeStatus
+  entityId?: string
+  entityData?: CharacterDTO | LocationDTO | ShotDTO | null
+  storyText?: string
+  analysis?: Record<string, unknown> | null
+  onTrigger?: () => void
+  onRetry?: () => void
+  errorMessage?: string
+}
+
+// ── Pipeline Node Component ────────────────────────────────────────
+
+function PipelineNode({ data }: NodeProps) {
+  const d = data as unknown as PipelineNodeData
+  const statusColors: Record<NodeStatus, string> = {
+    pending: 'border-[#3a3a3a] bg-[#1c1c1c]',
+    running: 'border-blue-500 bg-[#1a1f35] animate-pulse',
+    succeeded: 'border-green-600 bg-[#1a221a]',
+    failed: 'border-red-500 bg-[#221a1a]',
+  }
+
+  const statusIndicator: Record<NodeStatus, { color: string; label: string }> = {
+    pending: { color: '#666666', label: '待执行' },
+    running: { color: '#3b82f6', label: '生成中…' },
+    succeeded: { color: '#22c55e', label: '已完成' },
+    failed: { color: '#ef4444', label: '失败' },
+  }
+
+  const indicator = statusIndicator[d.status]
+
+  const isCharacterNode = d.phase === 'character'
+  const isLocationNode = d.phase === 'location'
+  const isShotNode = d.phase === 'shot'
+  const isStoryInput = d.phase === 'storyInput'
+  const isAnalysis = d.phase === 'analysis'
+  const isBgm = d.phase === 'bgm'
+  const isAssemble = d.phase === 'assemble'
+
+  const showImage = isCharacterNode && (d.entityData as CharacterDTO)?.referenceImageUrl
+  const showVideo = isShotNode && (d.entityData as ShotDTO)?.videoUrl
+
+  return (
+    <div
+      className={`relative min-w-[260px] max-w-[320px] rounded-xl border-2 p-4 ${statusColors[d.status]} transition-all`}
+    >
+      {/* Header */}
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-[13px] font-semibold text-[#e5e5e5]">{d.label}</span>
+        <span className="text-[11px] font-medium" style={{ color: indicator.color }}>
+          {indicator.label}
+        </span>
+      </div>
+
+      {/* Content */}
+      {isStoryInput && d.storyText && (
+        <p className="m-0 line-clamp-3 text-[12px] leading-relaxed text-[#888888]">
+          {d.storyText.slice(0, 120)}{d.storyText.length > 120 ? '…' : ''}
+        </p>
+      )}
+
+      {isAnalysis && d.analysis && (
+        <div className="text-[12px] text-[#888888]">
+          <p className="m-0 line-clamp-2">{(d.analysis as Record<string, unknown>).summary as string ?? '分析完成'}</p>
+        </div>
+      )}
+
+      {isCharacterNode && d.entityData && (
+        <div className="flex items-start gap-3">
+          {showImage && (
+            <img
+              src={showImage as string}
+              alt={(d.entityData as CharacterDTO).name}
+              className="h-14 w-14 shrink-0 rounded-lg object-cover"
+            />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="m-0 text-[13px] font-medium text-[#e5e5e5]">
+              {(d.entityData as CharacterDTO).name}
+            </p>
+            <p className="m-0 mt-0.5 text-[11px] text-[#888888] line-clamp-2">
+              {(d.entityData as CharacterDTO).description ?? (d.entityData as CharacterDTO).role}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isLocationNode && d.entityData && (
+        <div className="flex items-start gap-3">
+          {((d.entityData as LocationDTO).referenceImageUrl) && (
+            <img
+              src={(d.entityData as LocationDTO).referenceImageUrl!}
+              alt={(d.entityData as LocationDTO).name}
+              className="h-14 w-14 shrink-0 rounded-lg object-cover"
+            />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="m-0 text-[13px] font-medium text-[#e5e5e5]">
+              {(d.entityData as LocationDTO).name}
+            </p>
+            <p className="m-0 mt-0.5 text-[11px] text-[#888888]">
+              {(d.entityData as LocationDTO).type}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isShotNode && d.entityData && (
+        <div>
+          {showVideo && (
+            <video
+              src={showVideo as string}
+              className="mb-2 w-full rounded-lg"
+              controls
+              muted
+              preload="metadata"
+            />
+          )}
+          <p className="m-0 text-[12px] font-medium text-[#e5e5e5]">
+            镜头 #{(d.entityData as ShotDTO).shotIndex + 1}
+          </p>
+          <p className="m-0 mt-0.5 text-[11px] text-[#888888] line-clamp-2">
+            {(d.entityData as ShotDTO).narrative?.slice(0, 80)}
+          </p>
+        </div>
+      )}
+
+      {isBgm && (
+        <p className="m-0 text-[12px] text-[#888888]">
+          {d.status === 'succeeded' ? '配乐已生成' : '生成背景音乐'}
+        </p>
+      )}
+
+      {isAssemble && (
+        <div>
+          {d.status === 'succeeded' && (
+            <p className="m-0 text-[12px] text-[#22c55e]">成片已合成</p>
+          )}
+          {d.status !== 'succeeded' && (
+            <p className="m-0 text-[12px] text-[#888888]">将镜头和配乐合成为最终视频</p>
+          )}
+        </div>
+      )}
+
+      {/* Error message */}
+      {d.status === 'failed' && d.errorMessage && (
+        <p className="mt-2 text-[11px] text-red-400 line-clamp-2">{d.errorMessage}</p>
+      )}
+
+      {/* Action buttons */}
+      <div className="mt-3 flex gap-2">
+        {d.status === 'pending' && d.onTrigger && (
+          <button
+            type="button"
+            className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[#e5e5e5] px-3 text-[11px] font-semibold text-[#141414] transition-colors hover:bg-white"
+            onClick={(e) => {
+              e.stopPropagation()
+              d.onTrigger?.()
+            }}
+          >
+            <Play size={12} />
+            开始
+          </button>
+        )}
+        {d.status === 'failed' && d.onRetry && (
+          <button
+            type="button"
+            className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[#f87171] px-3 text-[11px] font-semibold text-white transition-colors hover:bg-[#ef4444]"
+            onClick={(e) => {
+              e.stopPropagation()
+              d.onRetry?.()
+            }}
+          >
+            <RefreshCw size={12} />
+            重试
+          </button>
+        )}
+        {d.status === 'running' && (
+          <span className="inline-flex items-center gap-1 text-[11px] text-blue-400">
+            <Loader2 size={12} className="animate-spin" />
+            执行中…
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Node Types ──────────────────────────────────────────────────────
+
+const pipelineNodeTypes = {
+  pipelineNode: PipelineNode,
+}
+
+// ── PipelineEditorRoute ─────────────────────────────────────────────
+
+export function PipelineEditorRoute({
+  user,
+}: {
+  user: { id: string; name?: string; email: string; avatarUrl?: string }
+}) {
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+
+  if (!id) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-[#141414]">
+        <p className="text-[#999999]">项目 ID 无效</p>
+      </div>
+    )
+  }
+
+  return (
+    <ReactFlowProvider>
+      <PipelineEditor projectId={id} user={user} onBack={() => navigate('/pipeline')} />
+    </ReactFlowProvider>
+  )
+}
+
+// ── PipelineEditor ──────────────────────────────────────────────────
+
+function PipelineEditor({
+  projectId,
+  user,
+  onBack,
+}: {
+  projectId: string
+  user: { id: string; name?: string; email: string; avatarUrl?: string }
+  onBack: () => void
+}) {
+  const reactFlowInstance = useReactFlow()
+  const sseRef = useRef<SSEClient | null>(null)
+
+  const [project, setProject] = useState<ProjectDTO | null>(null)
+  const [runs, setRuns] = useState<PipelineRunDTO[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const [assetSidebarOpen, setAssetSidebarOpen] = useState(true)
+  const [assets, setAssets] = useState<AssetDto[]>([])
+  const [assetFilter, setAssetFilter] = useState<AssetKind | 'all'>('all')
+
+  const taskMapRef = useRef<Map<string, { phase: PhaseKey; entityId?: string }>>(new Map())
+
+  /* ---- Data Loading ------------------------------------------------- */
+
+  const loadProject = useCallback(async () => {
+    try {
+      const [p, r] = await Promise.all([
+        pipelineApi.get(projectId),
+        pipelineApi.getRuns(projectId),
+      ])
+      setProject(p)
+      setRuns(r)
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '加载项目失败')
+    } finally {
+      setLoading(false)
+    }
+  }, [projectId])
+
+  useEffect(() => {
+    loadProject()
+  }, [loadProject])
+
+  useEffect(() => {
+    assetsApi.list({ limit: 50 }).then((res) => setAssets(res.items)).catch(() => {})
+  }, [])
+
+  /* ---- SSE ────────────────────────────────────────────────────────── */
+
+  useEffect(() => {
+    const sse = new SSEClient()
+    sse.on('task_status', (data) => {
+      const mapping = taskMapRef.current.get(data.taskId)
+      if (!mapping) return
+
+      if (data.status === 'succeeded') {
+        loadProject()
+        taskMapRef.current.delete(data.taskId)
+      }
+      if (data.status === 'failed') {
+        setRuns((prev) =>
+          prev.map((r) =>
+            r.taskId === data.taskId ? { ...r, status: 'failed' as const, errorMessage: data.error?.message ?? '任务失败' } : r
+          )
+        )
+        taskMapRef.current.delete(data.taskId)
+      }
+    })
+    sse.connect()
+    sseRef.current = sse
+    return () => {
+      sse.disconnect()
+      sseRef.current = null
+    }
+  }, [projectId, loadProject])
+
+  /* ---- Phase Trigger ──────────────────────────────────────────────── */
+
+  async function handleTriggerPhase(phase: PhaseKey) {
+    try {
+      const phaseFn: Record<PhaseKey, (id: string) => Promise<TriggerPhaseResult>> = {
+        analyze: pipelineApi.analyze,
+        characters: pipelineApi.characters,
+        locations: pipelineApi.locations,
+        characterRefs: pipelineApi.characterRefs,
+        locationRefs: pipelineApi.locationRefs,
+        storyboard: pipelineApi.storyboard,
+        continuity: pipelineApi.continuity,
+        rebuild: pipelineApi.rebuild,
+        dialogue: pipelineApi.dialogue,
+        videos: pipelineApi.videos,
+        bgm: pipelineApi.bgm,
+        assemble: pipelineApi.assemble,
+      }
+
+      const result = await phaseFn[phase](projectId)
+      taskMapRef.current.set(result.taskId, { phase })
+      setRuns((prev) => [
+        ...prev,
+        {
+          id: result.runId,
+          projectId,
+          phase,
+          status: 'running',
+          startedAt: new Date().toISOString(),
+          finishedAt: null,
+          errorMessage: null,
+          createdBy: user.id,
+          taskId: result.taskId,
+          createdAt: new Date().toISOString(),
+        },
+      ])
+    } catch (err) {
+      console.error('Trigger phase failed:', err)
+    }
+  }
+
+  /* ---- Build ReactFlow Nodes ──────────────────────────────────────── */
+
+  const nodes = useMemo(() => {
+    if (!project) return [] as Node[]
+
+    const phaseStatus = (phase: PhaseKey): NodeStatus => {
+      if (!runs || runs.length === 0) return 'pending'
+      const phaseRuns = runs.filter((r) => r.phase === phase)
+      if (phaseRuns.length === 0) return 'pending'
+      const latest = phaseRuns[phaseRuns.length - 1]
+      return (latest.status as NodeStatus) || 'pending'
+    }
+
+    const runError = (phase: PhaseKey): string | undefined => {
+      const phaseRuns = runs.filter((r) => r.phase === phase)
+      if (phaseRuns.length === 0) return undefined
+      const latest = phaseRuns[phaseRuns.length - 1]
+      return latest.errorMessage ?? undefined
+    }
+
+    const result: Node[] = []
+
+    // 1. Story Input
+    result.push({
+      id: 'story-input',
+      type: 'pipelineNode',
+      position: { x: 100, y: 30 },
+      data: {
+        label: '故事文本',
+        phase: 'storyInput',
+        status: 'succeeded' as NodeStatus,
+        storyText: project.storyText,
+      },
+    })
+
+    // 2. Analysis
+    result.push({
+      id: 'analysis',
+      type: 'pipelineNode',
+      position: { x: 100, y: 280 },
+      data: {
+        label: PHASE_LABEL.analyze,
+        phase: 'analysis',
+        status: project.analysis ? ('succeeded' as NodeStatus) : phaseStatus('analyze'),
+        analysis: project.analysis as Record<string, unknown> | null,
+        onTrigger: !project.analysis ? () => handleTriggerPhase('analyze') : undefined,
+        onRetry: phaseStatus('analyze') === 'failed' ? () => handleTriggerPhase('analyze') : undefined,
+        errorMessage: runError('analyze'),
+      },
+    })
+
+    // 3. Characters
+    const charStartY = 550
+    if (project.characters.length > 0) {
+      project.characters.forEach((c: CharacterDTO, i: number) => {
+        result.push({
+          id: `character-${c.id}`,
+          type: 'pipelineNode',
+          position: { x: 100 + i * 340, y: charStartY },
+          data: {
+            label: c.name,
+            phase: 'character' as const,
+            status: (c.referenceImageUrl ? 'succeeded' : phaseStatus('characterRefs')) as NodeStatus,
+            entityId: c.id,
+            entityData: c,
+            onTrigger: !c.referenceImageUrl ? () => handleTriggerPhase('characterRefs') : undefined,
+            onRetry: phaseStatus('characterRefs') === 'failed' ? () => handleTriggerPhase('characterRefs') : undefined,
+            errorMessage: runError('characterRefs'),
+          },
+        })
+      })
+    } else {
+      result.push({
+        id: 'characters-placeholder',
+        type: 'pipelineNode',
+        position: { x: 100, y: charStartY },
+        data: {
+          label: PHASE_LABEL.characters,
+          phase: 'characters' as const,
+          status: phaseStatus('characters'),
+          onTrigger: phaseStatus('characters') !== 'succeeded' ? () => handleTriggerPhase('characters') : undefined,
+          onRetry: phaseStatus('characters') === 'failed' ? () => handleTriggerPhase('characters') : undefined,
+          errorMessage: runError('characters'),
+        },
+      })
+    }
+
+    // 4. Locations
+    const locStartY = charStartY + 260
+    if (project.locations.length > 0) {
+      project.locations.forEach((l: LocationDTO, i: number) => {
+        result.push({
+          id: `location-${l.id}`,
+          type: 'pipelineNode',
+          position: { x: 100 + i * 340, y: locStartY },
+          data: {
+            label: l.name,
+            phase: 'location' as const,
+            status: (l.referenceImageUrl ? 'succeeded' : phaseStatus('locationRefs')) as NodeStatus,
+            entityId: l.id,
+            entityData: l,
+            onTrigger: !l.referenceImageUrl ? () => handleTriggerPhase('locationRefs') : undefined,
+            onRetry: phaseStatus('locationRefs') === 'failed' ? () => handleTriggerPhase('locationRefs') : undefined,
+            errorMessage: runError('locationRefs'),
+          },
+        })
+      })
+    } else {
+      result.push({
+        id: 'locations-placeholder',
+        type: 'pipelineNode',
+        position: { x: 100, y: locStartY },
+        data: {
+          label: PHASE_LABEL.locations,
+          phase: 'locations' as const,
+          status: phaseStatus('locations'),
+          onTrigger: phaseStatus('locations') !== 'succeeded' ? () => handleTriggerPhase('locations') : undefined,
+          onRetry: phaseStatus('locations') === 'failed' ? () => handleTriggerPhase('locations') : undefined,
+          errorMessage: runError('locations'),
+        },
+      })
+    }
+
+    // 5. Storyboard
+    result.push({
+      id: 'storyboard',
+      type: 'pipelineNode',
+      position: { x: 100, y: locStartY + 260 },
+      data: {
+        label: PHASE_LABEL.storyboard,
+        phase: 'storyboard' as const,
+        status: phaseStatus('storyboard'),
+        onTrigger: phaseStatus('storyboard') !== 'succeeded' ? () => handleTriggerPhase('storyboard') : undefined,
+        onRetry: phaseStatus('storyboard') === 'failed' ? () => handleTriggerPhase('storyboard') : undefined,
+        errorMessage: runError('storyboard'),
+      },
+    })
+
+    // 6. Shots
+    const shotStartY = locStartY + 520
+    if (project.shots.length > 0) {
+      project.shots.slice(0, 6).forEach((s: ShotDTO, i: number) => {
+        const statusMap: Record<string, NodeStatus> = {
+          completed: 'succeeded',
+          failed: 'failed',
+          generating: 'running',
+        }
+        result.push({
+          id: `shot-${s.id}`,
+          type: 'pipelineNode',
+          position: { x: 100 + (i % 3) * 340, y: shotStartY + Math.floor(i / 3) * 280 },
+          data: {
+            label: `镜头 #${s.shotIndex + 1}`,
+            phase: 'shot' as const,
+            status: statusMap[s.status] ?? 'pending',
+            entityId: s.id,
+            entityData: s,
+            onTrigger: s.status === 'draft' ? () => handleTriggerPhase('videos') : undefined,
+            onRetry: s.status === 'failed' ? () => handleTriggerPhase('videos') : undefined,
+            errorMessage: s.errorMessage ?? undefined,
+          },
+        })
+      })
+    } else {
+      result.push({
+        id: 'shots-placeholder',
+        type: 'pipelineNode',
+        position: { x: 100, y: shotStartY },
+        data: {
+          label: PHASE_LABEL.videos,
+          phase: 'videos' as const,
+          status: phaseStatus('videos'),
+          onTrigger: phaseStatus('videos') !== 'succeeded' ? () => handleTriggerPhase('videos') : undefined,
+          onRetry: phaseStatus('videos') === 'failed' ? () => handleTriggerPhase('videos') : undefined,
+          errorMessage: runError('videos'),
+        },
+      })
+    }
+
+    // 7. BGM
+    const bgmY = shotStartY + Math.ceil((project.shots.length || 1) / 3) * 280 + 40
+    result.push({
+      id: 'bgm',
+      type: 'pipelineNode',
+      position: { x: 100, y: bgmY },
+      data: {
+        label: PHASE_LABEL.bgm,
+        phase: 'bgm' as const,
+        status: phaseStatus('bgm'),
+        onTrigger: phaseStatus('bgm') !== 'succeeded' ? () => handleTriggerPhase('bgm') : undefined,
+        onRetry: phaseStatus('bgm') === 'failed' ? () => handleTriggerPhase('bgm') : undefined,
+        errorMessage: runError('bgm'),
+      },
+    })
+
+    // 8. Assemble
+    result.push({
+      id: 'assemble',
+      type: 'pipelineNode',
+      position: { x: 100, y: bgmY + 260 },
+      data: {
+        label: PHASE_LABEL.assemble,
+        phase: 'assemble' as const,
+        status: phaseStatus('assemble'),
+        onTrigger: phaseStatus('assemble') !== 'succeeded' ? () => handleTriggerPhase('assemble') : undefined,
+        onRetry: phaseStatus('assemble') === 'failed' ? () => handleTriggerPhase('assemble') : undefined,
+        errorMessage: runError('assemble'),
+      },
+    })
+
+    return result
+  }, [project, runs])
+
+  /* ---- Edges ─────────────────────────────────────────────────────── */
+
+  const edges = useMemo(() => {
+    if (!project) return [] as Edge[]
+
+    const result: Edge[] = []
+    result.push({ id: 'e-story-analysis', source: 'story-input', target: 'analysis', animated: true, style: { stroke: '#3a3a3a' } })
+
+    // Analysis → Characters/Locations
+    if (project.characters.length > 0) {
+      project.characters.forEach((c: CharacterDTO) => {
+        result.push({ id: `e-analysis-char-${c.id}`, source: 'analysis', target: `character-${c.id}`, animated: true, style: { stroke: '#3a3a3a' } })
+      })
+    } else {
+      result.push({ id: 'e-analysis-char-placeholder', source: 'analysis', target: 'characters-placeholder', animated: true, style: { stroke: '#3a3a3a' } })
+    }
+
+    if (project.locations.length > 0) {
+      project.locations.forEach((l: LocationDTO) => {
+        result.push({ id: `e-analysis-loc-${l.id}`, source: 'analysis', target: `location-${l.id}`, animated: true, style: { stroke: '#3a3a3a' } })
+      })
+    } else {
+      result.push({ id: 'e-analysis-loc-placeholder', source: 'analysis', target: 'locations-placeholder', animated: true, style: { stroke: '#3a3a3a' } })
+    }
+
+    result.push({ id: 'e-analysis-storyboard', source: 'analysis', target: 'storyboard', animated: true, style: { stroke: '#3a3a3a' } })
+    result.push({ id: 'e-storyboard-shots', source: 'storyboard', target: project.shots[0] ? `shot-${project.shots[0].id}` : 'shots-placeholder', animated: true, style: { stroke: '#3a3a3a' } })
+    result.push({ id: 'e-shots-bgm', source: project.shots[0] ? `shot-${project.shots[0].id}` : 'shots-placeholder', target: 'bgm', animated: true, style: { stroke: '#3a3a3a' } })
+    result.push({ id: 'e-bgm-assemble', source: 'bgm', target: 'assemble', animated: true, style: { stroke: '#3a3a3a' } })
+
+    return result
+  }, [project])
+
+  /* ---- Detail Panel ──────────────────────────────────────────────── */
+
+  const detailContent = useMemo(() => {
+    if (!selectedNode) return null
+    const data = selectedNode.data as unknown as PipelineNodeData
+
+    if (data.phase === 'character' && data.entityData) {
+      const c = data.entityData as CharacterDTO
+      return (
+        <div className="space-y-4">
+          <h3 className="m-0 text-base font-bold">{c.name}</h3>
+          {c.referenceImageUrl && (
+            <img src={c.referenceImageUrl} alt={c.name} className="w-full rounded-xl" />
+          )}
+          <p className="m-0 text-[13px] text-[#999999]">角色: {c.role || '未设定'}</p>
+          {c.description && <p className="m-0 text-[13px] text-[#888888]">{c.description}</p>}
+          {c.identityPrompt && (
+            <details className="text-[12px] text-[#777777]">
+              <summary className="cursor-pointer">Identity Prompt</summary>
+              <pre className="mt-2 whitespace-pre-wrap text-[11px]">{c.identityPrompt}</pre>
+            </details>
+          )}
+        </div>
+      )
+    }
+
+    if (data.phase === 'location' && data.entityData) {
+      const l = data.entityData as LocationDTO
+      return (
+        <div className="space-y-4">
+          <h3 className="m-0 text-base font-bold">{l.name}</h3>
+          {l.referenceImageUrl && (
+            <img src={l.referenceImageUrl} alt={l.name} className="w-full rounded-xl" />
+          )}
+          <p className="m-0 text-[13px] text-[#999999]">类型: {l.type}</p>
+          {l.scenePrompt && (
+            <details className="text-[12px] text-[#777777]">
+              <summary className="cursor-pointer">Scene Prompt</summary>
+              <pre className="mt-2 whitespace-pre-wrap text-[11px]">{l.scenePrompt}</pre>
+            </details>
+          )}
+        </div>
+      )
+    }
+
+    if (data.phase === 'shot' && data.entityData) {
+      const s = data.entityData as ShotDTO
+      return (
+        <div className="space-y-4">
+          <h3 className="m-0 text-base font-bold">镜头 #{s.shotIndex + 1}</h3>
+          {s.videoUrl && (
+            <video src={s.videoUrl} controls className="w-full rounded-xl" />
+          )}
+          <p className="m-0 text-[13px] text-[#999999]">时长: {s.duration}s</p>
+          <p className="m-0 text-[13px] text-[#888888]">{s.narrative}</p>
+          {s.videoPrompt && (
+            <details className="text-[12px] text-[#777777]">
+              <summary className="cursor-pointer">Video Prompt</summary>
+              <pre className="mt-2 whitespace-pre-wrap text-[11px]">{s.videoPrompt}</pre>
+            </details>
+          )}
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-3">
+        <h3 className="m-0 text-base font-bold">{data.label}</h3>
+        <p className="m-0 text-[13px] text-[#999999]">状态: {data.status}</p>
+        {data.errorMessage && (
+          <p className="m-0 rounded-lg bg-red-500/10 p-3 text-[12px] text-red-400">{data.errorMessage}</p>
+        )}
+      </div>
+    )
+  }, [selectedNode])
+
+  /* ---- Loading / Error ───────────────────────────────────────────── */
+
+  if (loading) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-[#141414]">
+        <p className="text-[#999999]">加载中…</p>
+      </div>
+    )
+  }
+
+  if (error || !project) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-[#141414]">
+        <div className="text-center">
+          <p className="text-[#f87171]">{error || '项目不存在'}</p>
+          <button
+            type="button"
+            className="mt-4 inline-flex h-10 cursor-pointer items-center gap-2 rounded-[10px] border border-[#3a3a3a] bg-transparent px-5 text-[13px] font-medium text-[#e5e5e5] transition-colors hover:border-[#666666]"
+            onClick={onBack}
+          >
+            <ArrowLeft size={14} />
+            返回列表
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  /* ---- Render ────────────────────────────────────────────────────── */
+
+  return (
+    <div className="flex h-screen flex-col bg-[#141414] text-[#e5e5e5]">
+      {/* Top Bar */}
+      <header className="flex shrink-0 items-center gap-4 border-b border-[#2a2a2a] px-5 py-3">
+        <button
+          type="button"
+          className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] transition-colors hover:border-[#3a3a3a] hover:text-[#e5e5e5]"
+          onClick={onBack}
+        >
+          <ArrowLeft size={16} />
+        </button>
+        <div className="min-w-0 flex-1">
+          <h1 className="m-0 truncate text-base font-bold">{project.title || '未命名项目'}</h1>
+          <p className="m-0 text-[12px] text-[#666666]">状态: {project.status}</p>
+        </div>
+        <button
+          type="button"
+          className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-[#2a2a2a] bg-transparent px-3 text-[12px] font-medium text-[#999999] transition-colors hover:border-[#3a3a3a] hover:text-[#e5e5e5]"
+          onClick={() => setAssetSidebarOpen((v) => !v)}
+        >
+          {assetSidebarOpen ? '隐藏资产' : '资产库'}
+        </button>
+      </header>
+
+      {/* Main Area */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Asset Sidebar */}
+        {assetSidebarOpen && (
+          <aside className="flex w-[240px] shrink-0 flex-col border-r border-[#2a2a2a] bg-[#181818]">
+            <div className="border-b border-[#2a2a2a] px-3 py-3">
+              <p className="m-0 text-[12px] font-semibold text-[#999999]">资产库</p>
+              <p className="m-0 mt-0.5 text-[10px] text-[#666666]">拖拽到节点设置参考图</p>
+            </div>
+            <div className="flex flex-wrap gap-1.5 border-b border-[#2a2a2a] px-3 py-2">
+              {(['all', 'image', 'video'] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  className={`rounded-md px-2 py-1 text-[10px] font-medium transition-colors ${
+                    assetFilter === k
+                      ? 'bg-[#e5e5e5] text-[#141414]'
+                      : 'bg-[#242424] text-[#888888] hover:bg-[#2a2a2a]'
+                  }`}
+                  onClick={() => setAssetFilter(k)}
+                >
+                  {k === 'all' ? '全部' : k === 'image' ? '图片' : '视频'}
+                </button>
+              ))}
+            </div>
+            <div className="flex-1 overflow-y-auto p-3">
+              <div className="grid grid-cols-2 gap-2">
+                {assets
+                  .filter((a) => assetFilter === 'all' || a.kind === assetFilter)
+                  .slice(0, 30)
+                  .map((asset) => {
+                    const url = getAssetUrl(asset)
+                    return (
+                      <div
+                        key={asset.id}
+                        className="group relative cursor-grab rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] p-1 transition-colors hover:border-[#444444]"
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('application/super-asset', JSON.stringify(asset))
+                        }}
+                      >
+                        {asset.kind === 'image' && url ? (
+                          <img
+                            src={url}
+                            alt={asset.title ?? ''}
+                            className="aspect-square w-full rounded-md object-cover"
+                            loading="lazy"
+                          />
+                        ) : asset.kind === 'video' && url ? (
+                          <video
+                            src={url}
+                            className="aspect-square w-full rounded-md object-cover"
+                            muted
+                            preload="metadata"
+                          />
+                        ) : (
+                          <div className="flex aspect-square w-full items-center justify-center rounded-md bg-[#242424] text-[10px] text-[#666666]">
+                            {asset.kind}
+                          </div>
+                        )}
+                        <p className="mt-1 truncate text-[10px] text-[#888888]">{asset.title || asset.kind}</p>
+                      </div>
+                    )
+                  })}
+              </div>
+            </div>
+          </aside>
+        )}
+
+        {/* React Flow Canvas */}
+        <div className="flex-1">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={pipelineNodeTypes}
+            onNodeClick={(_e, node) => setSelectedNode(node)}
+            onPaneClick={() => setSelectedNode(null)}
+            fitView
+            fitViewOptions={{ padding: 0.3 }}
+            minZoom={0.1}
+            maxZoom={2}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={true}
+            proOptions={{ hideAttribution: true }}
+            onDrop={(e) => {
+              const raw = e.dataTransfer.getData('application/super-asset')
+              if (!raw) return
+              try {
+                const asset: AssetDto = JSON.parse(raw)
+                const position = reactFlowInstance.screenToFlowPosition({ x: e.clientX, y: e.clientY })
+                const targetNode = nodes.find((n) => {
+                  return (
+                    position.x >= n.position.x &&
+                    position.x <= n.position.x + 280 &&
+                    position.y >= n.position.y &&
+                    position.y <= n.position.y + 200
+                  )
+                })
+                if (!targetNode) return
+
+                const nodeData = targetNode.data as unknown as PipelineNodeData
+                const entityId = nodeData?.entityId
+                if (!entityId) return
+
+                const assetUrl = getAssetUrl(asset)
+                if (!assetUrl) return
+
+                if (nodeData.phase === 'character') {
+                  pipelineApi.updateCharacter(projectId, entityId, { referenceImageUrl: assetUrl })
+                    .then(() => loadProject())
+                    .catch(console.error)
+                } else if (nodeData.phase === 'location') {
+                  pipelineApi.updateLocation(projectId, entityId, { referenceImageUrl: assetUrl })
+                    .then(() => loadProject())
+                    .catch(console.error)
+                } else if (nodeData.phase === 'shot') {
+                  pipelineApi.updateShot(projectId, entityId, { referenceMedia: [assetUrl] })
+                    .then(() => loadProject())
+                    .catch(console.error)
+                }
+              } catch {
+                // Invalid asset data
+              }
+            }}
+            onDragOver={(e) => {
+              e.preventDefault()
+              e.dataTransfer.dropEffect = 'copy'
+            }}
+          >
+            <Background color="#2a2a2a" gap={20} />
+            <Controls className="!bg-[#1c1c1c] !border-[#2a2a2a] !fill-[#999999]" />
+          </ReactFlow>
+        </div>
+
+        {/* Detail Panel */}
+        {selectedNode && (
+          <aside className="flex w-[320px] shrink-0 flex-col border-l border-[#2a2a2a] bg-[#181818]">
+            <div className="flex items-center justify-between border-b border-[#2a2a2a] px-4 py-3">
+              <p className="m-0 text-[13px] font-semibold">节点详情</p>
+              <button
+                type="button"
+                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[#666666] transition-colors hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
+                onClick={() => setSelectedNode(null)}
+              >
+                <XCircle size={14} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              {detailContent}
+            </div>
+          </aside>
+        )}
+      </div>
+    </div>
+  )
+}

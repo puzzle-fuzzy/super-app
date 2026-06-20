@@ -18,6 +18,7 @@
     "@super-app/contracts": "workspace:*",
     "@super-app/design-tokens": "workspace:*",
     "@super-app/env": "workspace:*",
+    "@super-app/types": "workspace:*",
     "@super-app/ui-react": "workspace:*",
     "@super-app/utils": "workspace:*",
     "@xyflow/react": "^12.11.0",

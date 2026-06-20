@@ -9,6 +9,7 @@ import { apiKeysModule } from './modules/api-keys'
 import { authModule } from './modules/auth'
 import { assetsModule } from './modules/assets'
 import { canvasModule } from './modules/canvas'
+import { canvasPipelineModule } from './modules/canvas-pipeline'
 import { stylesModule } from './modules/styles'
 import { subjectsModule } from './modules/subjects'
 import { templatesModule } from './modules/templates'
@@ -64,6 +65,7 @@ const baseApp = new Elysia()
           { name: 'styles', description: '风格资产（可复用生成风格）' },
           { name: 'templates', description: '模板资产（可复用结构）' },
           { name: 'canvas', description: '画布项目（CRUD）' },
+          { name: 'Canvas Pipeline', description: 'AI 视频制作流水线' },
           { name: 'api-keys', description: 'API 密钥管理' },
           { name: 'transfers', description: 'P2P 文件传输' },
           { name: 'billing', description: '计费与余额' },
@@ -88,6 +90,7 @@ const baseApp = new Elysia()
       .use(stylesModule)
       .use(templatesModule)
       .use(canvasModule)
+      .use(canvasPipelineModule)
       .use(apiKeysModule)
       .use(transfersModule)
       .use(tasksModule)

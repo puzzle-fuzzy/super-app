@@ -86,7 +86,8 @@ import { useSelectionToolbar } from '../hooks/useSelectionToolbar'
 import { useGroupToolbar } from '../hooks/useGroupToolbar'
 import { useNodeActions } from '../hooks/useNodeActions'
 import type { AppNode, DocNodeType, ImageNodeType, TextNodeType, VideoNodeType } from '../types'
-
+import { PipelineList } from './PipelineList'
+import { PipelineEditorRoute } from './PipelineEditor'
 /* -------------------------------------------------------------------------- */
 /*  Node Types (stable module-level identity)                                  */
 /* -------------------------------------------------------------------------- */
@@ -202,6 +203,8 @@ export function CanvasApp() {
       <Routes>
         <Route path="/" element={<ListView user={user} />} />
         <Route path="/project/:id" element={<EditorRoute user={user} />} />
+        <Route path="/pipeline" element={<PipelineList user={user} />} />
+        <Route path="/pipeline/:id" element={<PipelineEditorRoute user={user} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
@@ -351,14 +354,24 @@ function ListView({
             </h1>
             <p className="m-0 mt-2 text-sm text-[#999999]">{projects.length} 个项目</p>
           </div>
-          <button
-            type="button"
-            className="flex h-10 cursor-pointer items-center gap-2 rounded-[10px] border-0 bg-[#e5e5e5] px-5 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
-            onClick={() => setCreateOpen(true)}
-          >
-            <Plus size={16} />
-            新建画布
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="flex h-10 cursor-pointer items-center gap-2 rounded-[10px] border border-[#3a3a3a] bg-transparent px-5 text-[13px] font-medium text-[#999999] transition-colors hover:border-[#666666] hover:text-[#e5e5e5]"
+              onClick={() => navigate('/pipeline')}
+            >
+              <Film size={16} />
+              AI 视频流水线
+            </button>
+            <button
+              type="button"
+              className="flex h-10 cursor-pointer items-center gap-2 rounded-[10px] border-0 bg-[#e5e5e5] px-5 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
+              onClick={() => setCreateOpen(true)}
+            >
+              <Plus size={16} />
+              新建画布
+            </button>
+          </div>
         </div>
 
         {/* Project Grid */}

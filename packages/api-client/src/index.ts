@@ -36,6 +36,12 @@ import type {
   UpdateCanvasProjectRequest,
 } from '@super-app/contracts/canvas'
 import type { CurrentUser, LoginRequest, RegisterRequest } from '@super-app/contracts/auth'
+import type {
+  CharacterDTO,
+  LocationDTO,
+  ProjectDTO,
+  ShotDTO,
+} from '@super-app/types'
 import { redirectToLogin } from '@super-app/auth-client'
 import { clientEnv } from '@super-app/env/client'
 
@@ -274,6 +280,144 @@ export const canvasApi = {
 
   remove(id: string) {
     return apiFetch<{ deleted: true }>(`/canvas/projects/${id}`, { method: 'DELETE' })
+  },
+}
+
+// ── Pipeline API ───────────────────────────────────────────────
+
+export interface PipelineProjectSummary {
+  id: string
+  accountId: string
+  title: string | null
+  storyText: string
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PipelineProjectListResponse {
+  items: PipelineProjectSummary[]
+  total: number
+}
+
+export interface TriggerPhaseResult {
+  runId: string
+  taskId: string
+  taskType: string
+  phase: string
+}
+
+export interface PipelineRunDTO {
+  id: string
+  projectId: string
+  phase: string
+  status: string
+  startedAt: string | null
+  finishedAt: string | null
+  errorMessage: string | null
+  createdBy: string | null
+  taskId: string | null
+  createdAt: string
+}
+
+export interface CancelPipelineResult {
+  cancelled: number
+}
+
+export const pipelineApi = {
+  // Project CRUD
+  list(params?: { search?: string; status?: string; limit?: number; offset?: number }) {
+    const qs = new URLSearchParams()
+    if (params?.search) qs.set('search', params.search)
+    if (params?.status) qs.set('status', params.status)
+    if (params?.limit) qs.set('limit', String(params.limit))
+    if (params?.offset) qs.set('offset', String(params.offset))
+    const query = qs.toString()
+    return apiFetch<PipelineProjectListResponse>(`/pipeline/projects/${query ? `?${query}` : ''}`)
+  },
+
+  create(input: { name: string; storyText: string }) {
+    return apiFetch<PipelineProjectSummary>('/pipeline/projects/', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
+  },
+
+  get(id: string) {
+    return apiFetch<ProjectDTO>(`/pipeline/projects/${id}`)
+  },
+
+  delete(id: string) {
+    return apiFetch<{ message: string }>(`/pipeline/projects/${id}`, { method: 'DELETE' })
+  },
+
+  // Phase triggers — 每个阶段一个 POST
+  analyze(id: string) {
+    return apiFetch<TriggerPhaseResult>(`/pipeline/projects/${id}/analyze`, { method: 'POST' })
+  },
+  characters(id: string) {
+    return apiFetch<TriggerPhaseResult>(`/pipeline/projects/${id}/characters`, { method: 'POST' })
+  },
+  locations(id: string) {
+    return apiFetch<TriggerPhaseResult>(`/pipeline/projects/${id}/locations`, { method: 'POST' })
+  },
+  characterRefs(id: string) {
+    return apiFetch<TriggerPhaseResult>(`/pipeline/projects/${id}/character-refs`, { method: 'POST' })
+  },
+  locationRefs(id: string) {
+    return apiFetch<TriggerPhaseResult>(`/pipeline/projects/${id}/location-refs`, { method: 'POST' })
+  },
+  storyboard(id: string) {
+    return apiFetch<TriggerPhaseResult>(`/pipeline/projects/${id}/storyboard`, { method: 'POST' })
+  },
+  continuity(id: string) {
+    return apiFetch<TriggerPhaseResult>(`/pipeline/projects/${id}/continuity`, { method: 'POST' })
+  },
+  rebuild(id: string) {
+    return apiFetch<TriggerPhaseResult>(`/pipeline/projects/${id}/rebuild`, { method: 'POST' })
+  },
+  dialogue(id: string) {
+    return apiFetch<TriggerPhaseResult>(`/pipeline/projects/${id}/dialogue`, { method: 'POST' })
+  },
+  videos(id: string) {
+    return apiFetch<TriggerPhaseResult>(`/pipeline/projects/${id}/videos`, { method: 'POST' })
+  },
+  bgm(id: string) {
+    return apiFetch<TriggerPhaseResult>(`/pipeline/projects/${id}/bgm`, { method: 'POST' })
+  },
+  assemble(id: string) {
+    return apiFetch<TriggerPhaseResult>(`/pipeline/projects/${id}/assemble`, { method: 'POST' })
+  },
+
+  // Control
+  cancel(id: string) {
+    return apiFetch<CancelPipelineResult>(`/pipeline/projects/${id}/cancel`, { method: 'POST' })
+  },
+  retry(id: string) {
+    return apiFetch<TriggerPhaseResult | null>(`/pipeline/projects/${id}/retry`, { method: 'POST' })
+  },
+  getRuns(id: string) {
+    return apiFetch<PipelineRunDTO[]>(`/pipeline/projects/${id}/runs`)
+  },
+
+  // Resources
+  updateCharacter(projectId: string, characterId: string, data: Record<string, unknown>) {
+    return apiFetch<CharacterDTO>(`/pipeline/projects/${projectId}/characters/${characterId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  },
+  updateLocation(projectId: string, locationId: string, data: Record<string, unknown>) {
+    return apiFetch<LocationDTO>(`/pipeline/projects/${projectId}/locations/${locationId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  },
+  updateShot(projectId: string, shotId: string, data: Record<string, unknown>) {
+    return apiFetch<ShotDTO>(`/pipeline/projects/${projectId}/shots/${shotId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
   },
 }
 
