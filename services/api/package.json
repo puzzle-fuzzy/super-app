@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
-    "test": "bun test --env-file=../../.env src"
+    "test": "bun test --env-file=../../.env tests"
   },
   "dependencies": {
     "@elysia/cors": "^1.4.2",

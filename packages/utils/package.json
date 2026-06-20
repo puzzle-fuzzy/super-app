@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "bun test"
+    "test": "bun test tests"
   },
   "devDependencies": {
     "bun-types": "latest",

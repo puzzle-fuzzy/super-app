@@ -12,7 +12,7 @@
     "db:generate": "bun --env-file=../../.env drizzle-kit generate",
     "db:migrate": "bun --env-file=../../.env drizzle-kit migrate",
     "db:studio": "bun --env-file=../../.env drizzle-kit studio",
-    "test": "bun --env-file=../../.env test",
+    "test": "bun --env-file=../../.env test tests",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit"
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.1",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "bun-types": "latest"
   }
 }

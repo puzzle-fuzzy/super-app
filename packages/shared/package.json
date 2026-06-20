@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "bun test"
+    "test": "bun test tests"
   },
   "dependencies": {
     "@super-app/error-recovery": "workspace:*",
