@@ -107,8 +107,8 @@ billing/     ← 又重新定义 ModelPricing / BillingParams / CostDetail
 | **L0** | `eslint-config` | 不动 |
 | **L0** | `tailwind-config` | **正名**：补 `package.json` + 源码，消除幽灵包状态 |
 | **L1** | `contracts` | **吸收** shared 11 个纯类型文件的 DTO 部分（非 schema）；保持纯 Zod wire 层定位；修正 `records.ts` 的 `cost: unknown` 占位为精确类型引用 |
-| **L1** | `types` **(新)** | 收口全部裸 TS 业务类型，成为类型单一真源。吸收 `domain-types.ts`（拆成 7 个领域模块）、`admin`/`assets`/`asset-tags`/`auth`/`api-keys`/`billing`(DTO)/`notifications`/`subtitle`(DTO)/`upload`/`user-tasks`/`webhooks` |
-| **L2 胶水** | `runtime` **(新)** | 收口跨领域运行时。吸收 `logger`/`input-limits`/`error`(pg 错误检测)/`canvas-phases`(跨层注册表)/`generation`(运行时解析器)/`sse`(运行时解析器) |
+| **L1** | `types` **(新)** | 收口全部裸 TS 业务类型，成为类型单一真源。吸收 `domain-types.ts`（拆成 7 个领域模块）、`admin`/`assets`/`asset-tags`/`auth`/`api-keys`/`billing`(DTO)/`notifications`/`subtitle`(DTO)/`upload`/`user-tasks` |
+| **L2 胶水** | `runtime` **(新)** | 收口跨领域运行时。吸收 `logger`/`input-limits`/`error`(pg 错误检测)/`canvas-phases`(跨层注册表)/`generation`(运行时解析器)/`sse`(运行时解析器)/`webhooks`(含 `WEBHOOK_EVENTS` 常量与派生类型，整体进 runtime) |
 | **L2 逻辑** | `billing` | **修复漂移**：删除自身 `types.ts` 的 `ModelPricing`/`BillingParams`/`CostDetail` 定义，改从 `types` re-export；**吸收** shared 的 `billing-params.ts`（`extractBillingParams`） |
 | **L2 逻辑** | `provider` | **吸收** shared 的 `models.ts`（`ModelConfig`/`MODEL_CATEGORIES`/`CATEGORY_META`） |
 | **L2 逻辑** | `gateway` | **吸收** shared 的 `openai-gateway.ts`（`MODEL_ALIASES`/`resolveModelId`）；类型改引 `types` |
@@ -160,7 +160,7 @@ billing/     ← 又重新定义 ModelPricing / BillingParams / CostDetail
 | `billing.ts` | 66 | `types` | 纯 DTO |
 | `canvas-failure.ts` | 61 | `error-recovery` | 本就是它的弃用垫片 |
 | `user-tasks.ts` | 57 | `types` | 纯 DTO |
-| `webhooks.ts` | 56 | `types` | 孤儿文件，纳入正式导出 |
+| `webhooks.ts` | 56 | `runtime` | 含 `WEBHOOK_EVENTS` 常量 + 派生类型 `WebhookEvent`（值派生类型不可拆），整体进 runtime，纳入正式导出 |
 | `auth.ts` | 50 | `types` | 纯 DTO |
 | `config-helpers.ts` | 46 | `env` | OSS 配置加载归 env |
 | `error.ts` | 39 | `runtime` | pg 错误检测，跨领域 |
