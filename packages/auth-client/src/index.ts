@@ -7,16 +7,21 @@ export interface RedirectToLoginOptions {
 }
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
-  const response = await fetch(`${clientEnv.SUPER_PUBLIC_API_BASE_URL}/auth/me`, {
-    credentials: 'include',
-  })
+  try {
+    const response = await fetch(`${clientEnv.SUPER_PUBLIC_API_BASE_URL}/auth/me`, {
+      credentials: 'include',
+    })
 
-  if (response.status === 401) {
+    if (response.status === 401) {
+      return null
+    }
+
+    const payload = await parseApiResponse<CurrentUser>(response)
+    return payload
+  } catch {
+    // 网络错误或 CORS 失败 → 视为未认证，触发登录跳转
     return null
   }
-
-  const payload = await parseApiResponse<CurrentUser>(response)
-  return payload
 }
 
 export async function requireAuth(): Promise<CurrentUser> {
@@ -50,7 +55,13 @@ export function redirectToLogin(options: RedirectToLoginOptions = {}): void {
     return
   }
 
-  window.location.assign(getLoginUrl(options.returnTo))
+  try {
+    window.location.assign(getLoginUrl(options.returnTo))
+  } catch {
+    // window.location.assign 极少情况会抛异常（无效 URL 等），
+    // 回退到直接设置 href
+    window.location.href = getLoginUrl(options.returnTo)
+  }
 }
 
 export function getLoginUrl(returnTo?: string): string {
