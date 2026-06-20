@@ -8,6 +8,8 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 
+import type { CanvasPipelineRunSnapshot } from '@super-app/types'
+
 import { createdAtColumn } from './common'
 import { users } from './identity'
 import { canvasPipelineProjects } from './canvas-pipeline-projects'
@@ -61,8 +63,8 @@ export const canvasPipelineRuns = pgTable(
     finishedAt: timestamp('finished_at', { withTimezone: true }),
     errorMessage: text('error_message'),
     createdBy: uuid('created_by').references(() => users.id),
-    inputSnapshotJson: jsonb('input_snapshot_json').$type<Record<string, unknown>>(),
-    outputSummaryJson: jsonb('output_summary_json').$type<Record<string, unknown>>(),
+    inputSnapshotJson: jsonb('input_snapshot_json').$type<CanvasPipelineRunSnapshot>(),
+    outputSummaryJson: jsonb('output_summary_json').$type<CanvasPipelineRunSnapshot>(),
     taskId: uuid('task_id'),
     createdAt: createdAtColumn(),
   },

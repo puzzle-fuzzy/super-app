@@ -235,7 +235,7 @@ export interface AdminPipelineRun {
   durationMs: number | null
   errorMessage: string | null
   /** outputSummaryJson 解析后的对象；形状随 phase 变化，前端只做摘要展示 */
-  outputSummary: Record<string, unknown> | null
+  outputSummary: import('./canvas').CanvasPipelineRunSnapshot | null
   createdAt: string
 }
 
@@ -267,12 +267,24 @@ export interface AdminTaskGenerationRecord {
   matchReason: 'direct' | 'worker-task' | 'pipeline-run' | 'time-window'
 }
 
+export interface AdminAuditDetail {
+  /** 审计操作类型 */
+  action?: string
+  /** 操作前的状态快照 */
+  before?: unknown
+  /** 操作后的状态快照 */
+  after?: unknown
+  /** 变更字段列表 */
+  changes?: string[]
+  [key: string]: unknown
+}
+
 export interface AdminTaskAuditLog {
   id: string
   accountId: string | null
   action: string
   targetId: string | null
-  detail: Record<string, unknown> | null
+  detail: AdminAuditDetail | null
   createdAt: string
 }
 
@@ -321,7 +333,7 @@ export interface AdminAuditLogItem {
   accountId: string | null
   action: string
   targetId: string | null
-  detail: Record<string, unknown> | null
+  detail: AdminAuditDetail | null
   ip: string | null
   createdAt: string
 }

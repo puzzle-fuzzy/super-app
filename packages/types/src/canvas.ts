@@ -62,6 +62,20 @@ export type CanvasPipelinePhase
     | 'bgm'
     | 'assemble'
 
+// ===== 流水线运行快照（JSONB 列的类型收窄） =====
+
+/**
+ * 流水线阶段运行快照 — inputSnapshotJson / outputSummaryJson 的域类型
+ *
+ * 替代无结构的 Record<string, unknown>，为未来按 phase 细化 discriminator 预留锚点。
+ * 当前各 phase 的 payload 形状尚未固化（worker 端未接入），保留 [key: string]: unknown。
+ */
+export interface CanvasPipelineRunSnapshot {
+  /** 快照捕获时间（ISO 8601） */
+  capturedAt?: string
+  [key: string]: unknown
+}
+
 // ===== 批量应用参考资产类型（client/server 共用） =====
 
 /** 批量应用策略 */
@@ -128,8 +142,8 @@ export interface CanvasPipelineRunDTO {
   finishedAt: string | null
   errorMessage: string | null
   createdBy: string | null
-  inputSnapshotJson: Record<string, unknown> | null
-  outputSummaryJson: Record<string, unknown> | null
+  inputSnapshotJson: CanvasPipelineRunSnapshot | null
+  outputSummaryJson: CanvasPipelineRunSnapshot | null
   taskId: string | null
   createdAt: string
 }

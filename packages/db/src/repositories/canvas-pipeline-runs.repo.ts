@@ -1,4 +1,4 @@
-import type { CanvasPipelinePhase } from '@super-app/types'
+import type { CanvasPipelinePhase, CanvasPipelineRunSnapshot } from '@super-app/types'
 import type { NewCanvasPipelineRun } from '../schema/canvas-pipeline-runs'
 import { and, desc, eq, inArray } from 'drizzle-orm'
 import { db } from '../client'
@@ -44,7 +44,7 @@ export async function findActiveRunForPhase(projectId: string, phase: CanvasPipe
 }
 
 /** Mark run as running — only succeeds if current status is 'pending' (append-only guard) */
-export async function markPipelineRunRunning(id: string, inputSnapshot?: Record<string, unknown>) {
+export async function markPipelineRunRunning(id: string, inputSnapshot?: CanvasPipelineRunSnapshot) {
   const [updated] = await db
     .update(canvasPipelineRuns)
     .set({
@@ -58,7 +58,7 @@ export async function markPipelineRunRunning(id: string, inputSnapshot?: Record<
 }
 
 /** Mark run as succeeded — only succeeds if current status is 'running' (append-only guard) */
-export async function markPipelineRunSucceeded(id: string, outputSummary?: Record<string, unknown>) {
+export async function markPipelineRunSucceeded(id: string, outputSummary?: CanvasPipelineRunSnapshot) {
   const [updated] = await db
     .update(canvasPipelineRuns)
     .set({
