@@ -1,7 +1,7 @@
 import type { CanvasAssetOutput } from '@super-app/db'
 import type { DashScopeClient } from '@super-app/provider'
 import type { CanvasRuntimeLlmClient, CanvasRuntimeStorageAdapter } from '@super-app/canvas-runtime'
-import type { NovelAnalysis } from '@super-app/shared'
+import type { NovelAnalysis } from '@super-app/types'
 import { runAnalysisPhase, runCanvasAssetStep } from '@super-app/canvas-runtime'
 import { getCanvasProjectById } from '@super-app/db'
 import { createWorkerProviderAdapter, createWorkerRepoAdapter } from './canvas-adapter-factory'

@@ -19,7 +19,7 @@ import {
   getCanvasProjectById,
   linkPipelineRunToTask,
 } from '@super-app/db'
-import { createLogger } from '@super-app/shared'
+import { createLogger } from '@super-app/runtime'
 import {
   canAdvanceToPhase,
   CANVAS_PAUSE_BEFORE,

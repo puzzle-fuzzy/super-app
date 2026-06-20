@@ -6,7 +6,7 @@
  */
 import type { Task, TaskOutput } from '@super-app/db'
 import type { WorkerTaskContext } from './task-handlers'
-import { createLogger } from '@super-app/shared'
+import { createLogger } from '@super-app/runtime'
 
 import { executeCanvasAnalysis } from './canvas-analysis'
 import { executeCanvasAssemble } from './canvas-assemble'

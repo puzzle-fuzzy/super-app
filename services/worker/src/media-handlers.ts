@@ -23,7 +23,8 @@ import {
   updateSubtitleProjectStatus,
 } from '@super-app/db'
 import { burnSubtitlesToVideo, extractAudioFromVideo, getMediaDurationMs } from '@super-app/ffmpeg'
-import { createLogger, parseMediaBurnSubtitleInput, parseMediaExtractAudioInput } from '@super-app/shared'
+import { createLogger } from '@super-app/runtime'
+import { parseMediaBurnSubtitleInput, parseMediaExtractAudioInput } from '@super-app/task-engine'
 import { getDefaultStyleConfig, sentencesToAss } from '@super-app/subtitle-engine'
 import { getTaskPriority, TaskInputError } from '@super-app/task-engine'
 import { checkTaskOwnership } from './task-ownership'

@@ -20,10 +20,11 @@
     "@super-app/ffmpeg": "workspace:*",
     "@super-app/provider": "workspace:*",
     "@super-app/provider-health": "workspace:*",
-    "@super-app/shared": "workspace:*",
+    "@super-app/runtime": "workspace:*",
     "@super-app/storage": "workspace:*",
     "@super-app/subtitle-engine": "workspace:*",
     "@super-app/task-engine": "workspace:*",
+    "@super-app/types": "workspace:*",
     "@super-app/workflow-engine": "workspace:*",
     "drizzle-orm": "^0.44.2",
     "elysia": "^1.3.0"

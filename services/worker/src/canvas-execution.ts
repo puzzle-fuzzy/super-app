@@ -1,4 +1,4 @@
-import type { CanvasModelPreferences } from '@super-app/shared'
+import type { CanvasModelPreferences } from '@super-app/types'
 import { getCanvasVideoModel } from '@super-app/canvas-runtime'
 import {
   getCanvasProjectDetail,
