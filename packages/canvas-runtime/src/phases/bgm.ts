@@ -7,7 +7,7 @@
  * 单次调用（项目级 BGM，非逐镜头）。音频 URL 写入 canvas_projects.bgm_url。
  */
 
-import type { ShotEnvironment } from '@super-app/shared'
+import type { ShotEnvironment } from '@super-app/types'
 import type { CanvasRuntimeLlmClient, CanvasRuntimeProviderAdapter, CanvasRuntimeStorageAdapter } from '../adapter-types'
 import type { CanvasProjectDetail } from '../normalize'
 import { buildBgmPrompt } from '@super-app/prompt-engine'

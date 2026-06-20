@@ -7,7 +7,7 @@
  */
 
 import type { PromptReferenceEntry } from '@super-app/prompt-engine'
-import type { CanvasShotReferenceAsset, CanvasVideoReference } from '@super-app/shared'
+import type { CanvasShotReferenceAsset, CanvasVideoReference } from '@super-app/types'
 
 export interface ResolveShotVideoReferencesInput {
   shot: {

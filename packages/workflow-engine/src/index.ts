@@ -1,4 +1,4 @@
-import type { CanvasPipelinePhase } from '@super-app/shared'
+import type { CanvasPipelinePhase } from '@super-app/types'
 import {
   CANVAS_PAUSE_BEFORE,
   CANVAS_PHASE_ORDER,
@@ -6,10 +6,10 @@ import {
   getNextCanvasPhase,
   isPauseBeforePhase,
   phaseToTaskType,
-} from '@super-app/shared'
+} from '@super-app/runtime'
 import { getTaskPriority } from '@super-app/task-engine'
 
-// 阶段注册表的权威源在 @super-app/shared（canvas-phases）。
+// 阶段注册表的权威源在 @super-app/runtime（canvas-phases 常量）+ @super-app/types（类型）。
 // 此处 re-export 保持 workflow-engine 的公开 API，消费者无需改 import 路径。
 export {
   CANVAS_PAUSE_BEFORE,

@@ -5,10 +5,10 @@
  * prepareCanvasVideoParams 涉及 provider 参数校验。
  */
 
-import type { GenerationInputParams } from '@super-app/shared'
+import type { GenerationInputParams } from '@super-app/types'
 import type { CanvasRuntimeBillingAdapter, CanvasRuntimeProviderAdapter, CanvasRuntimeRepoAdapter, ValidatedModelParameters } from '../adapter-types'
 import type { CanvasVideoSubmitInput, CanvasVideoSubmitResult } from './types'
-import { extractBillingParams } from '@super-app/shared'
+import { extractBillingParams } from '@super-app/billing'
 
 type CanvasVideoResolution = '720P' | '1080P'
 

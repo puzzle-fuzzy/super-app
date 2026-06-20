@@ -1,4 +1,4 @@
-import type { CanvasPipelinePhase } from '@super-app/shared'
+import type { CanvasPipelinePhase } from '@super-app/types'
 import type { NewCanvasPipelineRun } from '../schema/canvas-pipeline-runs'
 import { and, desc, eq, inArray } from 'drizzle-orm'
 import { db } from '../client'

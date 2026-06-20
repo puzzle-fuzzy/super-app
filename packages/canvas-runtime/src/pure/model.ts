@@ -4,9 +4,9 @@
  * 无 IO 依赖。根据镜头参考图情况和模型能力做变体降级推荐。
  */
 
-import type { CanvasVideoVariant } from '@super-app/shared'
+import type { CanvasVideoVariant } from '@super-app/types'
 import type { CanvasRuntimeProviderAdapter } from '../adapter-types'
-import { recommendCanvasVideoVariant } from '@super-app/shared'
+import { recommendCanvasVideoVariant } from './canvas-rules'
 
 /** 变体降级优先级：i2v → r2v → t2v；r2v → t2v；t2v 不降级 */
 export const VARIANT_FALLBACK: Record<CanvasVideoVariant, CanvasVideoVariant[]> = {
@@ -24,13 +24,13 @@ export interface CanvasVideoModelRecommendation {
 /**
  * 带能力降级的镜头视频模型推荐。
  *
- * 1. 调用 @super-app/shared 纯规则 recommendCanvasVideoVariant(refs) 确定目标变体。
+ * 1. 调用 @super-app/canvas-runtime 纯规则 recommendCanvasVideoVariant(refs) 确定目标变体。
  * 2. 检查所选 base 模型是否真有该变体；若无，沿降级链回退。
  * 3. 返回最终 model id + 实际变体 + 原因。
  */
 export function recommendCanvasVideoModel(
   prefs: { videoModel?: string | null } | null | undefined,
-  references: ReadonlyArray<import('@super-app/shared').CanvasVideoReference>,
+  references: ReadonlyArray<import('@super-app/types').CanvasVideoReference>,
   provider: CanvasRuntimeProviderAdapter,
 ): CanvasVideoModelRecommendation {
   const base = (prefs?.videoModel || 'happyhorse-1.0').replace(/-r2v$|-t2v$|-i2v$/, '')

@@ -1,4 +1,4 @@
-import type { ModelConfig } from '@super-app/shared'
+import type { ModelConfig } from './models'
 
 /**
  * 参数校验错误 — 字段级错误信息，可被前端逐项展示

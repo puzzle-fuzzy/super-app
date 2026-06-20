@@ -1,4 +1,4 @@
-import type { CharacterProfile, NovelAnalysis } from '@super-app/shared'
+import type { CharacterProfile, NovelAnalysis } from '@super-app/types'
 import type { CanvasRuntimeLlmClient, CanvasRuntimeRepoAdapter } from '../adapter-types'
 import type { RunTextLlmOnceDeps } from '../llm-helpers'
 import { characterProfileSchema } from '@super-app/canvas-engine'

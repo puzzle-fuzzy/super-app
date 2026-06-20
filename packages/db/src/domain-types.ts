@@ -1,7 +1,7 @@
 /**
  * 领域类型 — 附着到 JSONB 列的 TypeScript 接口。
  *
- * 已从 @super-app/shared/domain-types 统一收口。
+ * 真源在 @super-app/types（domain 模块）+ @super-app/contracts/billing（CostDetail）。
  * 此处 re-export 保持向后兼容，已有 import 路径无需修改。
  */
 export type {
@@ -10,7 +10,6 @@ export type {
   TaskErrorInfo,
   GenerationInputParams,
   OutputResult,
-  CostDetail,
   TextOutputResult,
   ImageOutputResult,
   VideoOutputResult,
@@ -33,4 +32,5 @@ export type {
   SubtitleSentence,
   SubtitleStyleConfig,
   GenerationNotifyPayload,
-} from '@super-app/shared/domain-types'
+} from '@super-app/types'
+export type { CostDetail } from '@super-app/contracts/billing'

@@ -1,4 +1,4 @@
-import type { ProviderModelHealth as DomainProviderModelHealth } from '@super-app/shared'
+import type { ProviderModelHealth as DomainProviderModelHealth } from '@super-app/types'
 import { eq } from 'drizzle-orm'
 import { db } from '../client'
 import { providerModelHealth } from '../schema/provider-model-health'

@@ -1,6 +1,6 @@
 import type { CanvasPipelineContinuityReport } from '../schema/canvas-pipeline-continuity'
 import type { CanvasPipelineProject, NewCanvasPipelineProject } from '../schema/canvas-pipeline-projects'
-import { createLogger } from '@super-app/shared'
+import { createLogger } from '@super-app/runtime'
 import { and, desc, eq, inArray } from 'drizzle-orm'
 import { db } from '../client'
 import { canvasPipelineCharacters } from '../schema/canvas-pipeline-characters'

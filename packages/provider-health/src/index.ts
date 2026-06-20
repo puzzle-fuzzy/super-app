@@ -1,4 +1,4 @@
-import type { ProviderModelHealth, ProviderModelHealthStatus } from '@super-app/shared'
+import type { ProviderModelHealth, ProviderModelHealthStatus } from '@super-app/types'
 
 /**
  * @super-app/provider-health —— 纯规则包（无 IO 依赖）
@@ -16,7 +16,7 @@ import type { ProviderModelHealth, ProviderModelHealthStatus } from '@super-app/
  *   - `packages/db` 的 provider-model-health repository 用 `applyProviderOutcome` 计算写值。
  *   - `apps/server` / `apps/worker` 的 guard 用 `isDegraded` 在调用前快速失败。
  */
-export type { ProviderModelHealth, ProviderModelHealthStatus } from '@super-app/shared'
+export type { ProviderModelHealth, ProviderModelHealthStatus } from '@super-app/types'
 
 /** 降级策略配置。阈值与冷却窗口可由 app 从环境变量覆盖。 */
 export interface DegradationConfig {

@@ -1,4 +1,4 @@
-import type { InputMapping, ModelConfig } from '@super-app/shared'
+import type { InputMapping, ModelConfig } from './models'
 import type { ValidatedModelParameters } from './model-validator'
 
 /**

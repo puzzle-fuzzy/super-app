@@ -3,7 +3,7 @@ import type {
   LocationProfile,
   NovelAnalysis,
   ShotDraft,
-} from '@super-app/shared'
+} from '@super-app/types'
 /**
  * Canvas LLM 输出 schema 校验器（纯函数，不调用 LLM/DB/provider）
  *
@@ -23,7 +23,7 @@ import type {
  * 所以嵌套对象的默认值必须预先填好全字段（见 FACE_DEFAULT / HAIR_DEFAULT 等），
  * 否则会出现 `face: {}` 这种内层字段缺失的情况。
  *
- * 参考 `./continuity.ts` 的纯领域函数风格：仅依赖 `@super-app/shared` 类型。
+ * 参考 `./continuity.ts` 的纯领域函数风格：仅依赖 `@super-app/types` 类型。
  */
 import { z } from 'zod'
 

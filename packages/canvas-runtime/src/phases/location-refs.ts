@@ -1,5 +1,4 @@
-import type { ModelConfig } from '@super-app/shared'
-import type { CanvasRuntimeLlmClient, CanvasRuntimeProviderAdapter, CanvasRuntimeRepoAdapter, CanvasRuntimeStorageAdapter } from '../adapter-types'
+import type { CanvasRuntimeModelConfig, CanvasRuntimeLlmClient, CanvasRuntimeProviderAdapter, CanvasRuntimeRepoAdapter, CanvasRuntimeStorageAdapter } from '../adapter-types'
 import type { CanvasProjectDetail } from '../normalize'
 import { generateCanvasImageAsset } from '..'
 
@@ -21,7 +20,7 @@ export interface LocationRefAssetInput {
   location: LocationRow
   refAssetId: string
   imageModel: string
-  imageModelConfig: ModelConfig
+  imageModelConfig: CanvasRuntimeModelConfig
   client: CanvasRuntimeLlmClient
   storage: CanvasRuntimeStorageAdapter
   repo: CanvasRuntimeRepoAdapter

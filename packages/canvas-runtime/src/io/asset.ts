@@ -4,8 +4,8 @@
  * runCanvasAssetStep 和 generateCanvasImageAsset 涉及 DB/Provider 调用。
  */
 
-import type { CanvasAssetOutput, ModelConfig } from '@super-app/shared'
-import type { CanvasRuntimeLlmClient, CanvasRuntimeProviderAdapter, CanvasRuntimeRepoAdapter, CanvasRuntimeStorageAdapter } from '../adapter-types'
+import type { CanvasAssetOutput } from '@super-app/types'
+import type { CanvasRuntimeModelConfig, CanvasRuntimeLlmClient, CanvasRuntimeProviderAdapter, CanvasRuntimeRepoAdapter, CanvasRuntimeStorageAdapter } from '../adapter-types'
 
 type CreateCanvasAssetInput = Parameters<CanvasRuntimeRepoAdapter['createCanvasAsset']>[0]
 
@@ -19,7 +19,7 @@ export interface RunCanvasAssetStepInput<T> {
 export interface GenerateCanvasImageAssetInput {
   assetId: string
   imageModel: string
-  imageModelConfig: ModelConfig
+  imageModelConfig: CanvasRuntimeModelConfig
   prompt: string
   subDir: string
   prefix: string

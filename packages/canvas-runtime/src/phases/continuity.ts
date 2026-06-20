@@ -1,4 +1,4 @@
-import type { ContinuityIssue } from '@super-app/shared'
+import type { ContinuityIssue } from '@super-app/types'
 import type { CanvasRuntimeRepoAdapter } from '../adapter-types'
 import type { CanvasProjectDetail } from '../normalize'
 import { validateShotContinuity } from '@super-app/canvas-engine'

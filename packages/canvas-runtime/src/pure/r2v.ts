@@ -9,7 +9,7 @@
  * 即 TODO 所述「依赖 dialogue 产出 reference_media」的数据流。
  */
 
-import type { CanvasVideoReference, R2VReferenceMedia } from '@super-app/shared'
+import type { CanvasVideoReference, R2VReferenceMedia } from '@super-app/types'
 
 /** DashScope R2V 模型参考图上限（happyhorse-r2v / wan2.7-r2v 均为 1~9 张） */
 export const R2V_MAX_REFERENCES = 9

@@ -1,7 +1,7 @@
 import type { PromptReferenceEntry } from '@super-app/prompt-engine'
 import type { CanvasProjectDetail } from '../normalize'
 import { buildShotVideoPrompt } from '@super-app/prompt-engine'
-import { hasDialogueAudio } from '@super-app/shared'
+import { hasDialogueAudio } from '../pure/canvas-rules'
 import { toNormalizedCharacter, toNormalizedLocation, toNormalizedShot } from '../normalize'
 
 type ShotRow = CanvasProjectDetail['shots'][number]

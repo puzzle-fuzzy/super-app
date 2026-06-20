@@ -1,4 +1,4 @@
-import type { NovelAnalysis, ShotDraft } from '@super-app/shared'
+import type { NovelAnalysis, ShotDraft } from '@super-app/types'
 import type { CanvasRuntimeLlmClient, CanvasRuntimeRepoAdapter } from '../adapter-types'
 import type { RunTextLlmOnceDeps } from '../llm-helpers'
 import { shotDraftsSchema } from '@super-app/canvas-engine'

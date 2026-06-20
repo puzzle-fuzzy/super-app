@@ -18,8 +18,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@super-app/contracts": "workspace:*",
     "@super-app/env": "workspace:*",
-    "@super-app/shared": "workspace:*",
+    "@super-app/runtime": "workspace:*",
+    "@super-app/types": "workspace:*",
     "drizzle-orm": "^0.44.2",
     "postgres": "^3.4.7"
   },

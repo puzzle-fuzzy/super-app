@@ -6,7 +6,7 @@
  */
 
 import type { DialogueInput } from '@super-app/prompt-engine'
-import type { R2VReferenceMedia } from '@super-app/shared'
+import type { R2VReferenceMedia } from '@super-app/types'
 import type { CanvasRuntimeLlmClient, CanvasRuntimeProviderAdapter } from '../adapter-types'
 import type { CanvasProjectDetail } from '../normalize'
 import { buildDialogueSystemPrompt, buildDialogueUserPrompt } from '@super-app/prompt-engine'

@@ -14,7 +14,7 @@
  *   message: 人类可读描述
  *   suggestion: 修复建议
  */
-import type { ContinuityIssue, ShotCamera, ShotContinuity, ShotEnvironment, ShotTimelineEntry } from '@super-app/shared'
+import type { ContinuityIssue, ShotCamera, ShotContinuity, ShotEnvironment, ShotTimelineEntry } from '@super-app/types'
 
 /** 标准化镜头数据 — 从 DB row 映射为校验器所需的统一结构 */
 export interface NormalizedShot {
