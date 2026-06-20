@@ -39,35 +39,49 @@ const sidebar = [
     <link rel="icon" href="https://websource-meiyi.oss-cn-hangzhou.aliyuncs.com/website/super/logo.ico" />
   </head>
   <body>
-    <div class="docs-layout">
-      <aside class="sidebar">
-        <a href="/docs/" class="sidebar-home">Super 文档</a>
-        <nav class="sidebar-nav">
-          {sidebar.map((group) => (
-            <div class="nav-group">
-              <p class="nav-group-label">{group.label}</p>
-              <ul>
-                {group.items.map((item) => (
-                  <li>
-                    <a
-                      href={item.href}
-                      class={Astro.url.pathname === item.href ? 'active' : ''}
-                    >
-                      {item.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </nav>
-      </aside>
-      <main class="content">
-        <article>
-          <slot />
-        </article>
-      </main>
-    </div>
+    <main class="min-h-screen bg-[#141414] text-[#e5e5e5]">
+      <section class="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16
+        max-[920px]:px-[18px] max-[920px]:py-6
+        max-[620px]:px-3.5 max-[620px]:py-5">
+        <div class="flex gap-0 min-h-[calc(100vh-128px)]">
+          <aside class="w-[240px] min-w-[240px] pr-8 border-r border-[#2a2a2a]
+            max-[920px]:hidden">
+            <a href="/docs/" class="block text-lg font-bold text-[#e5e5e5] no-underline mb-7 tracking-[-0.02em]">
+              Super 文档
+            </a>
+            <nav>
+              {sidebar.map((group) => (
+                <div class="mb-6">
+                  <p class="text-[11px] font-bold uppercase tracking-[0.08em] text-[#666666] mb-2">
+                    {group.label}
+                  </p>
+                  <ul class="list-none m-0 p-0">
+                    {group.items.map((item) => (
+                      <li class="m-0">
+                        <a
+                          href={item.href}
+                          class={`block py-[6px] px-[10px] rounded-md text-sm no-underline transition-colors
+                            ${Astro.url.pathname === item.href
+                              ? 'text-[#e5e5e5] bg-[#1c1c1c] font-medium'
+                              : 'text-[#999999] hover:text-[#e5e5e5] hover:bg-[#1c1c1c]'
+                            }`}
+                        >
+                          {item.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </nav>
+          </aside>
+
+          <article class="flex-1 min-w-0 max-[920px]:max-w-none">
+            <slot />
+          </article>
+        </div>
+      </section>
+    </main>
   </body>
 </html>
 
@@ -79,107 +93,67 @@ const sidebar = [
   :root { color-scheme: dark; }
   html, body { min-width: 320px; min-height: 100%; background: #141414; margin: 0; }
   body {
-    color: #e5e5e5;
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
-  .docs-layout { display: flex; min-height: 100vh; }
-
-  /* ---- 侧边栏 ---- */
-  .sidebar {
-    width: 260px; min-width: 260px;
-    background: #181818; border-right: 1px solid #2a2a2a;
-    padding: 32px 24px;
-    position: sticky; top: 0; height: 100vh;
-    overflow-y: auto;
-  }
-  .sidebar-home {
-    display: block; font-size: 18px; font-weight: 700; color: #e5e5e5;
-    text-decoration: none; margin-bottom: 28px; letter-spacing: -0.02em;
-  }
-  .nav-group { margin-bottom: 24px; }
-  .nav-group-label {
-    font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.08em; color: #555; margin: 0 0 8px;
-  }
-  .nav-group ul { list-style: none; margin: 0; padding: 0; }
-  .nav-group li { margin: 0; }
-  .nav-group a {
-    display: block; padding: 6px 10px; border-radius: 6px;
-    font-size: 14px; color: #999; text-decoration: none;
-    transition: all 0.12s;
-  }
-  .nav-group a:hover { color: #e5e5e5; background: #222; }
-  .nav-group a.active { color: #e5e5e5; background: #1a2a3a; font-weight: 500; }
-
-  /* ---- 内容区 ---- */
-  .content { flex: 1; min-width: 0; padding: 48px 56px 96px; max-width: 820px; }
-  .content :global(h1) {
+  /* ---- 内容排版 ---- */
+  article :global(h1) {
     font-size: 34px; font-weight: 700; letter-spacing: -0.03em;
     margin: 0 0 8px; color: #e5e5e5;
   }
-  .content :global(h2) {
+  article :global(h2) {
     font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
     margin: 40px 0 12px; padding-top: 24px; border-top: 1px solid #2a2a2a;
     color: #e5e5e5;
   }
-  .content :global(h3) {
+  article :global(h3) {
     font-size: 17px; font-weight: 600; margin: 28px 0 8px; color: #e5e5e5;
   }
-  .content :global(p) {
-    font-size: 15px; line-height: 1.8; color: #bbb; margin: 0 0 14px;
+  article :global(p) {
+    font-size: 15px; line-height: 1.8; color: #999999; margin: 0 0 14px;
   }
-  .content :global(ul), .content :global(ol) {
+  article :global(ul), article :global(ol) {
     padding-left: 22px; margin: 0 0 14px;
   }
-  .content :global(li) {
-    font-size: 15px; line-height: 1.8; color: #bbb; margin: 2px 0;
+  article :global(li) {
+    font-size: 15px; line-height: 1.8; color: #999999; margin: 2px 0;
   }
-  .content :global(code) {
-    background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 4px;
+  article :global(code) {
+    background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 4px;
     padding: 1px 6px; font-size: 13px; color: #c9a67a; font-family: 'SF Mono', 'Fira Code', monospace;
   }
-  .content :global(pre) {
-    background: #111; border: 1px solid #2a2a2a; border-radius: 10px;
+  article :global(pre) {
+    background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 10px;
     padding: 20px 24px; overflow-x: auto; margin: 0 0 18px;
   }
-  .content :global(pre code) {
+  article :global(pre code) {
     background: none; border: none; padding: 0; font-size: 13px; color: #e5e5e5;
     line-height: 1.7;
   }
-  .content :global(.endpoint) {
+  article :global(.endpoint) {
     display: inline-flex; align-items: center; gap: 8px;
     background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 8px;
     padding: 6px 14px; margin: 4px 0; font-size: 14px;
   }
-  .content :global(.method) {
+  article :global(.method) {
     font-weight: 700; font-size: 12px; letter-spacing: 0.04em;
     border-radius: 4px; padding: 2px 6px;
   }
-  .content :global(.method.get) { background: #1a3a1a; color: #6c6; }
-  .content :global(.method.post) { background: #3a3a1a; color: #cc6; }
-  .content :global(.method.patch) { background: #2a2a3a; color: #88c; }
-  .content :global(.method.delete) { background: #3a1a1a; color: #c66; }
-  .content :global(table) {
+  article :global(.method.get) { background: #1a3a1a; color: #6c6; }
+  article :global(.method.post) { background: #3a3a1a; color: #cc6; }
+  article :global(.method.patch) { background: #2a2a3a; color: #88c; }
+  article :global(.method.delete) { background: #3a1a1a; color: #c66; }
+  article :global(table) {
     width: 100%; border-collapse: collapse; margin: 0 0 18px;
   }
-  .content :global(th) {
+  article :global(th) {
     text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 600;
-    color: #888; border-bottom: 1px solid #2a2a2a; text-transform: uppercase; letter-spacing: 0.04em;
+    color: #666666; border-bottom: 1px solid #2a2a2a; text-transform: uppercase; letter-spacing: 0.04em;
   }
-  .content :global(td) {
-    padding: 8px 12px; font-size: 14px; color: #bbb; border-bottom: 1px solid #1a1a1a;
+  article :global(td) {
+    padding: 8px 12px; font-size: 14px; color: #999999; border-bottom: 1px solid #1a1a1a;
   }
-  .content :global(a) { color: #6af; text-decoration: none; }
-  .content :global(a:hover) { text-decoration: underline; }
-
-  @media (max-width: 768px) {
-    .docs-layout { flex-direction: column; }
-    .sidebar {
-      width: 100%; min-width: 0; height: auto; position: static;
-      border-right: none; border-bottom: 1px solid #2a2a2a; padding: 20px;
-    }
-    .content { padding: 28px 20px 64px; }
-  }
+  article :global(a) { color: #6af; text-decoration: none; }
+  article :global(a:hover) { text-decoration: underline; }
 </style>
