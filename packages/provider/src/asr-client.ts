@@ -1,5 +1,5 @@
-import type { SubtitleSentence } from '@super-app/subtitle-engine'
-import { parseAsrTranscription } from '@super-app/subtitle-engine'
+import type { SubtitleSentence } from '@super-app/subtitle'
+import { parseAsrTranscription } from '@super-app/subtitle'
 import {
   notifyProviderCallObservers,
   runProviderCallGuards,
@@ -11,7 +11,7 @@ import {
   timeoutSignal,
 } from './http-timeout'
 
-export type { SubtitleSentence } from '@super-app/subtitle-engine'
+export type { SubtitleSentence } from '@super-app/subtitle'
 
 /** Paraformer-v2 模型 ID —— observer 记录与请求体共用的唯一 model 标识 */
 const ASR_MODEL = 'paraformer-v2'

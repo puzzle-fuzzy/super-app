@@ -1,5 +1,5 @@
 /**
- * @super-app/subtitle-engine —— 纯规则包（无 IO 依赖）
+ * @super-app/subtitle —— 纯规则包（无 IO 依赖）
  *
  * 字幕相关的纯逻辑：ASR 转写解析 → SubtitleSentence[] → ASS 字幕文件内容生成。
  * 不含 DB、FFmpeg 或存储操作。

@@ -745,9 +745,9 @@ importers:
 
   packages/provider:
     dependencies:
-      '@super-app/subtitle-engine':
+      '@super-app/subtitle':
         specifier: workspace:*
-        version: link:../subtitle-engine
+        version: link:../subtitle
       '@super-app/types':
         specifier: workspace:*
         version: link:../types
@@ -825,7 +825,7 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
-  packages/subtitle-engine:
+  packages/subtitle:
     dependencies:
       '@super-app/types':
         specifier: workspace:*
@@ -1005,9 +1005,9 @@ importers:
       '@super-app/storage':
         specifier: workspace:*
         version: link:../../packages/storage
-      '@super-app/subtitle-engine':
+      '@super-app/subtitle':
         specifier: workspace:*
-        version: link:../../packages/subtitle-engine
+        version: link:../../packages/subtitle
       '@super-app/task-engine':
         specifier: workspace:*
         version: link:../../packages/task-engine

@@ -22,7 +22,7 @@
     "@super-app/provider-health": "workspace:*",
     "@super-app/runtime": "workspace:*",
     "@super-app/storage": "workspace:*",
-    "@super-app/subtitle-engine": "workspace:*",
+    "@super-app/subtitle": "workspace:*",
     "@super-app/task-engine": "workspace:*",
     "@super-app/types": "workspace:*",
     "@super-app/canvas-pipeline": "workspace:*",

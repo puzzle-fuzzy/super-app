@@ -25,7 +25,7 @@ import {
 import { burnSubtitlesToVideo, extractAudioFromVideo, getMediaDurationMs } from '@super-app/ffmpeg'
 import { createLogger } from '@super-app/runtime'
 import { parseMediaBurnSubtitleInput, parseMediaExtractAudioInput } from '@super-app/task-engine'
-import { getDefaultStyleConfig, sentencesToAss } from '@super-app/subtitle-engine'
+import { getDefaultStyleConfig, sentencesToAss } from '@super-app/subtitle'
 import { getTaskPriority, TaskInputError } from '@super-app/task-engine'
 import { checkTaskOwnership } from './task-ownership'
 

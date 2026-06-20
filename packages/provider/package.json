@@ -14,7 +14,7 @@
     "test": "bun test tests"
   },
   "dependencies": {
-    "@super-app/subtitle-engine": "workspace:*",
+    "@super-app/subtitle": "workspace:*",
     "@super-app/types": "workspace:*",
     "@super-app/utils": "workspace:*"
   },
