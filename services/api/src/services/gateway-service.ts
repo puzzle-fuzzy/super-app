@@ -22,10 +22,6 @@ import {
 
 import { reserveAndTrack } from './billing-ledger'
 
-function asDbCost(c: CostDetail): CostDetail {
-  return c
-}
-
 // ---- Setup ----
 
 export interface GatewaySetupResult {
@@ -57,7 +53,7 @@ export async function setupGatewayCall(opts: {
     category: 'text',
     inputParams: opts.params as unknown as Record<string, unknown>,
     dedupeKey: null,
-    cost: asDbCost(estimated),
+    cost: estimated,
     totalPriceCents: estimated.totalPriceCents,
   })
 
@@ -128,7 +124,7 @@ export async function settleGatewaySuccess(opts: {
     text: opts.result.text,
     raw: opts.result.raw,
   }
-  await markGenerationSucceeded(opts.recordId, output, asDbCost(actualCost))
+  await markGenerationSucceeded(opts.recordId, output, actualCost)
 
   // 扣款
   if (actualCost.totalPriceCents > 0) {
