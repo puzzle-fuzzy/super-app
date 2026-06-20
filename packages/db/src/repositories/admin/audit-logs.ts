@@ -13,7 +13,6 @@ export async function createAuditLog(values: {
   await db.insert(auditLogs).values(values)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents
 function buildAuditFilters(filters: {
   operatorId?: string
   action?: string

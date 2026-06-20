@@ -1,4 +1,4 @@
-import { index, jsonb, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { index, jsonb, pgTable, uuid, varchar } from 'drizzle-orm/pg-core'
 
 import { createdAtColumn } from './common'
 import { users } from './identity'
