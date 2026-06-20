@@ -7,15 +7,16 @@ import {
 } from '@super-app/task-engine'
 
 import { generateVideoHandler } from './handlers/generate-video'
+import { generateImageHandler } from './handlers/generate-image'
 
 /**
  * 任务处理器注册表 — 按 task.type 分发到对应 handler。
  *
- * 5a 只注册 generate.video。未知 type 会被 task-engine 的
- * TaskHandlerRegistry 抛 TaskNotImplementedError（分类为 validation/permanent → 不重试）。
+ * 5e: 新增 generate.image handler（图片异步生成）。
  */
 const definitions: Array<TaskDefinition<Task, WorkerTaskContext, TaskOutput>> = [
   { type: 'generate.video', handler: generateVideoHandler },
+  { type: 'generate.image', handler: generateImageHandler },
 ]
 
 export interface WorkerTaskContext {

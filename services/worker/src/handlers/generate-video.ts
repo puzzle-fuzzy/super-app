@@ -2,12 +2,25 @@ import type { Task, TaskOutput } from '@super-app/db'
 import { createStorage } from '@super-app/storage'
 import type { TaskHandler } from '@super-app/task-engine'
 import { serverEnv } from '@super-app/env/server'
+import {
+  markGenerationFailed,
+  markGenerationProcessing,
+  markGenerationSucceeded,
+  notifyTaskStatusChange,
+} from '@super-app/db'
 
 import { AppError } from '../errors'
 
 const DEFAULT_DASHSCOPE_BASE_URL = 'https://dashscope.aliyuncs.com/api/v1'
 const POLL_INTERVAL_MS = 3000
-const MAX_POLL_ATTEMPTS = 100 // ~5 分钟上限（100 × 3s）
+const MAX_POLL_ATTEMPTS = 100 // ~5 分钟
+
+interface DashScopeVideoCreateResponse {
+  request_id?: string
+  code?: string
+  message?: string
+  output?: { task_id?: string; task_status?: string }
+}
 
 interface DashScopeVideoTaskResponse {
   request_id?: string
@@ -21,26 +34,26 @@ interface DashScopeVideoTaskResponse {
 }
 
 interface GenerateVideoTaskInput {
-  providerTaskId: string
+  generationRecordId: string
   model: string
   prompt: string
   ownerId: string
+  kind: string
+  ratio?: string
+  resolution?: string
+  duration?: number
+  negativePrompt?: string
+  watermark?: boolean
+  seed?: number
+  promptExtend?: boolean
 }
 
-/**
- * generate.video handler — 轮询 DashScope 异步视频任务直到完成，下载视频，
- * 落盘到本地存储，返回 { videoUrl, storageKey, providerVideoUrl }。
- *
- * 5a 实现：worker 独立运行，直接用 @super-app/storage 写文件，不依赖 API 进程。
- * 完整的 asset 创建（写 assets 表 + asset_files）留给 5e，那时 generate-image
- * 端点会改造成「提交 → 立即返回 processing → 写 generate.video task」的完整链路。
- */
 export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskOutput> = async (
   task
 ) => {
   const input = task.input as unknown as GenerateVideoTaskInput
-  if (!input?.providerTaskId || !input?.ownerId) {
-    throw new AppError('Task input missing providerTaskId or ownerId')
+  if (!input?.generationRecordId || !input?.ownerId) {
+    throw new AppError('Task input missing generationRecordId or ownerId')
   }
 
   const apiKey = process.env.DASHSCOPE_API_KEY || serverEnv.DASHSCOPE_API_KEY
@@ -49,29 +62,84 @@ export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskO
   }
   const baseUrl = dashScopeBaseUrl()
 
-  const completed = await waitForVideoTask({ baseUrl, apiKey, taskId: input.providerTaskId })
-  const providerVideoUrl = completed.output?.video_url
-  if (!providerVideoUrl) {
-    throw new AppError('DashScope did not return a video URL')
-  }
+  // 同步 generation_records 状态: submitting → processing
+  await markGenerationProcessing(input.generationRecordId, task.id)
+  await notifyTaskStatusChange(task as Task)
 
-  const downloaded = await downloadVideo(providerVideoUrl)
-  const storage = createStorage()
-  const storageKey = `${input.ownerId}/${task.id}/original/dashscope-video-${input.providerTaskId}.mp4`
-  const stored = await storage.put({
-    key: storageKey,
-    body: downloaded.body,
-    mimeType: downloaded.mimeType,
-  })
+  try {
+    // 1. 创建 DashScope 视频任务
+    const createResponse = await fetch(
+      `${baseUrl}/services/aigc/video-generation/video-synthesis`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'X-DashScope-Async': 'enable',
+        },
+        body: JSON.stringify({
+          model: input.model,
+          input: { prompt: input.prompt, ...(input.negativePrompt ? { negative_prompt: input.negativePrompt } : {}) },
+          parameters: {
+            resolution: input.resolution ?? '720P',
+            ratio: input.ratio ?? '16:9',
+            duration: input.duration ?? 5,
+            ...(input.promptExtend !== undefined ? { prompt_extend: input.promptExtend } : {}),
+            ...(input.watermark !== undefined ? { watermark: input.watermark } : {}),
+            ...(input.seed !== undefined ? { seed: input.seed } : {}),
+          },
+        }),
+      }
+    )
 
-  return {
-    videoUrl: stored.url,
-    storageKey: stored.key,
-    storageBucket: stored.bucket,
-    providerVideoUrl,
-    providerTaskId: input.providerTaskId,
-    model: input.model,
-    prompt: input.prompt,
+    const created = (await createResponse.json().catch(() => null)) as DashScopeVideoCreateResponse | null
+    if (!createResponse.ok) {
+      throw new AppError(
+        created?.message || created?.code || 'DashScope video task creation failed'
+      )
+    }
+
+    const providerTaskId = created?.output?.task_id
+    if (!providerTaskId) {
+      throw new AppError('DashScope did not return a video task id')
+    }
+
+    // 2. 轮询等待完成
+    const completed = await waitForVideoTask({ baseUrl, apiKey, taskId: providerTaskId })
+    const providerVideoUrl = completed.output?.video_url
+    if (!providerVideoUrl) {
+      throw new AppError('DashScope did not return a video URL')
+    }
+
+    // 3. 下载 + 存储
+    const downloaded = await downloadVideo(providerVideoUrl)
+    const storage = createStorage()
+    const storageKey = `${input.ownerId}/${task.id}/original/dashscope-video-${providerTaskId}.mp4`
+    const stored = await storage.put({
+      key: storageKey,
+      body: downloaded.body,
+      mimeType: downloaded.mimeType,
+    })
+
+    const output: Record<string, unknown> = {
+      videoUrl: stored.url,
+      storageKey: stored.key,
+      storageBucket: stored.bucket,
+      providerVideoUrl,
+      providerTaskId,
+      model: input.model,
+      prompt: input.prompt,
+    }
+
+    await markGenerationSucceeded(input.generationRecordId, output)
+    await notifyTaskStatusChange(task as Task)
+
+    return output as TaskOutput
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Video generation failed'
+    await markGenerationFailed(input.generationRecordId, message)
+    await notifyTaskStatusChange(task as Task)
+    throw err
   }
 }
 
@@ -100,7 +168,7 @@ async function waitForVideoTask(input: {
     }
     await Bun.sleep(POLL_INTERVAL_MS)
   }
-  throw new AppError('DashScope video generation timed out (polling)')
+  throw new AppError('DashScope video generation timed out')
 }
 
 async function downloadVideo(url: string): Promise<{ body: Buffer; mimeType: string }> {
@@ -108,12 +176,11 @@ async function downloadVideo(url: string): Promise<{ body: Buffer; mimeType: str
   if (!response.ok) {
     throw new AppError(`Failed to download generated video: ${response.status}`)
   }
-  const mimeType = 'video/mp4' // DashScope video 任务返回 mp4
   const bytes = await response.arrayBuffer()
   if (bytes.byteLength === 0) {
     throw new AppError('Generated video download was empty')
   }
-  return { body: Buffer.from(bytes), mimeType }
+  return { body: Buffer.from(bytes), mimeType: 'video/mp4' }
 }
 
 function dashScopeBaseUrl(): string {

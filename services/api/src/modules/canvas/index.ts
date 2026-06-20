@@ -5,14 +5,13 @@ import {
 } from '@super-app/contracts/canvas'
 import { Elysia } from 'elysia'
 
+import { getGenerationModel, isVideoGenerationModel } from '@super-app/ai-models'
 import { estimateCost } from '@super-app/billing'
-import { createDedupeKey, markGenerationFailed, markGenerationSucceeded, markGenerationSubmitting } from '@super-app/db'
+import { createDedupeKey, createTask, markGenerationFailed, markGenerationSubmitting } from '@super-app/db'
 import { authPlugin, requireUser } from '../../plugins/auth'
-import { storagePlugin } from '../../plugins/storage'
 import { ok } from '../../shared/response'
-import { generateCanvasImage } from './generate-image'
 import { checkDedupe, createGenerationRequest } from '../generation/service'
-import { debitReservedAndTrack, refundReservedAndTrack, reserveAndTrack } from '../../services/billing-ledger'
+import { reserveAndTrack } from '../../services/billing-ledger'
 import {
   createCanvasProject,
   deleteCanvasProject,
@@ -23,12 +22,11 @@ import {
 
 export const canvasModule = new Elysia({ name: 'canvas' })
   .use(authPlugin)
-  .use(storagePlugin)
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded
       .post(
         '/canvas/generate-image',
-        async ({ user, db, storage, body, set }) => {
+        async ({ user, body, set }) => {
           const owner = user!
 
           // 计算去重键
@@ -48,22 +46,21 @@ export const canvasModule = new Elysia({ name: 'canvas' })
             })
           }
 
-          // 预估费用（当前使用默认零定价，正式定价后续配置）
-          const billingParams = {
-            n: 1,
-            duration: body.duration,
-            resolution: body.resolution,
-          }
+          // 判断任务类型
+          const model = getGenerationModel(body.model)
+          const isVideo = body.kind === 'video' || (model ? isVideoGenerationModel(model) : false)
+
+          // 预估费用
           const estimated = estimateCost(
-            { pricing: { unit: body.kind === 'video' ? 'video' : 'image' as const, inputPriceCents: 0 } },
-            billingParams
+            { pricing: { unit: isVideo ? 'video' : 'image' as const, inputPriceCents: 0 } },
+            { n: 1, duration: body.duration, resolution: body.resolution }
           )
 
           // 创建生成记录
           const record = await createGenerationRequest({
             ownerId: owner.id,
             model: body.model,
-            category: body.kind === 'video' ? 'video' : 'image',
+            category: isVideo ? 'video' : 'image',
             inputParams: body as unknown as Record<string, unknown>,
             dedupeKey,
           })
@@ -84,36 +81,30 @@ export const canvasModule = new Elysia({ name: 'canvas' })
             }
           }
 
-          try {
-            await markGenerationSubmitting(record.id)
-            const result = await generateCanvasImage({
-              db,
-              storage,
-              owner,
-              input: body,
-            })
-            await markGenerationSucceeded(record.id, result as unknown as Record<string, unknown>)
-            if (amountCents > 0) {
-              await debitReservedAndTrack({
-                ownerId: owner.id,
-                recordId: record.id,
-                amountCents,
-                source: 'canvas.generate',
-              })
-            }
-            return ok({ ...result, generationRecordId: record.id })
-          } catch (err) {
-            const message = err instanceof Error ? err.message : 'Generation failed'
-            await markGenerationFailed(record.id, message)
-            if (amountCents > 0) {
-              await refundReservedAndTrack({
-                ownerId: owner.id,
-                recordId: record.id,
-                source: 'canvas.generate',
-              }).catch(() => {}) // best-effort 退款
-            }
-            throw err
-          }
+          // 创建异步任务（不再同步调用 DashScope）
+          const taskType = isVideo ? 'generate.video' : 'generate.image'
+          const task = await createTask({
+            type: taskType,
+            domain: 'generate',
+            ownerId: owner.id,
+            input: {
+              generationRecordId: record.id,
+              model: body.model,
+              prompt: body.prompt,
+              kind: isVideo ? 'video' : 'image',
+              ...(body as unknown as Record<string, unknown>),
+            },
+            generationRecordId: record.id,
+            maxAttempts: isVideo ? 3 : 1,
+          })
+
+          await markGenerationSubmitting(record.id)
+
+          return ok({
+            generationRecordId: record.id,
+            taskId: task.id,
+            status: 'queued',
+          })
         },
         { body: CanvasGenerateImageRequestSchema }
       )

@@ -151,12 +151,36 @@ export function CanvasApp() {
   const { user, isLoading, error } = useRequireAuth()
   const sseRef = useRef<SSEClient | null>(null)
 
-  // SSE 连接 — 5b demo，5e 接真实 UI
+  // SSE 连接 — 5e: 接收 task_status 事件，回填 canvas 节点
   useEffect(() => {
     if (!user) return
     const sse = new SSEClient()
     sse.on('task_status', (data) => {
-      console.log('[SSE] task_status:', data)
+      if (data.status === 'succeeded' && data.output) {
+        const output = data.output as Record<string, unknown>
+        const mediaUrl = (output.videoUrl || output.imageUrl || '') as string
+        if (!mediaUrl) return
+
+        const store = useCanvasStore.getState()
+        store.setNodes((prev) =>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          prev.map((node: any) =>
+            node.data?.taskId === data.taskId
+              ? { ...node, data: { ...node.data, src: mediaUrl, uploading: undefined } }
+              : node
+          )
+        )
+      }
+      if (data.status === 'failed') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        useCanvasStore.getState().setNodes((prev: any[]) =>
+          prev.map((node: any) =>
+            node.data?.taskId === data.taskId
+              ? { ...node, data: { ...node.data, uploading: undefined, fileName: '生成失败' } }
+              : node
+          )
+        )
+      }
     })
     sse.connect()
     sseRef.current = sse
@@ -786,24 +810,18 @@ function EditorViewInner({
     setNodes((prev) => [...prev, placeholder])
 
     try {
+      // 5e: API 返回 { generationRecordId, taskId, status: 'queued' }，异步生成
       const result = await canvasApi.generateImage(input)
-      const mediaUrl = result.url ?? result.imageUrl ?? result.videoUrl ?? ''
-      setNodes((prev) =>
-        prev.map((node) =>
-          node.id === nodeId
-            ? ({
-                ...node,
-                data: {
-                  src: mediaUrl,
-                  fileName: result.prompt,
-                  width: dimensions.width,
-                  height: dimensions.height,
-                  assetId: result.asset?.id,
-                },
-              } as ImageNodeType | VideoNodeType)
-            : node
+      const taskId = (result as Record<string, unknown>).taskId as string | undefined
+      if (taskId) {
+        // 把 taskId 存到 placeholder 节点，供 SSE handler 匹配
+        setNodes((prev) =>
+          prev.map((node) =>
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            node.id === nodeId ? { ...node, data: { ...node.data, taskId } as any } : node
+          )
         )
-      )
+      }
       return result
     } catch (error) {
       setNodes((prev) =>
