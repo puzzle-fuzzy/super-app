@@ -15,6 +15,7 @@ import { Elysia, t } from 'elysia'
 import { dbPlugin } from '../../plugins/db'
 import { authPlugin, requireUser } from '../../plugins/auth'
 import { NotFoundError } from '../../shared/errors'
+import { ok } from '../../shared/response'
 
 import type { Db } from '@super-app/db'
 import type { CurrentUser } from '@super-app/contracts/auth'
@@ -88,7 +89,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
           limit: limit ? Number(limit) : 20,
           offset: offset ? Number(offset) : 0,
         })
-        return { success: true, ...result }
+        return ok(result)
       }, {
         query: t.Object({
           search: t.Optional(t.String()),
@@ -127,7 +128,7 @@ export const canvasPipelineModule = new Elysia({ name: 'canvas-pipeline', prefix
 
       .delete('/projects/:id', async ({ db, user, params }) => {
         await deleteProject({ db, owner: user!, id: params.id })
-        return { success: true, message: '项目已删除' }
+        return ok({ message: '项目已删除' })
       }, {
         params: t.Object({ id: t.String() }),
         detail: { summary: '删除项目', tags: ['Canvas Pipeline'] },
