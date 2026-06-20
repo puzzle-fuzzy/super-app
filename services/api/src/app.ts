@@ -17,6 +17,7 @@ import { textsModule } from './modules/texts'
 import { transfersModule } from './modules/transfers'
 import { recordsModule } from './modules/records'
 import { sseModule } from './modules/sse'
+import { gatewayModule } from './modules/gateway'
 import { tasksModule } from './modules/tasks'
 import { billingModule } from './modules/billing'
 import { corsPlugin } from './plugins/cors'
@@ -73,6 +74,7 @@ const baseApp = new Elysia()
   )
   .use(corsPlugin)
   .use(errorHandler)
+  .use(gatewayModule)
   .group('/api', (api) =>
     api
       .use(systemModule)

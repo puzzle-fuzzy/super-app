@@ -5,8 +5,6 @@
  *   SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / SMTP_FROM
  * 任一缺失则 fallback 到 console.log（dev 模式不阻塞）。
  */
-import { serverEnv } from '@super-app/env/server'
-
 let _transporter: unknown = null
 
 async function getTransporter() {
