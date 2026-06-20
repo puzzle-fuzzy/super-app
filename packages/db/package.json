@@ -12,6 +12,7 @@
     "db:generate": "bun --env-file=../../.env drizzle-kit generate",
     "db:migrate": "bun --env-file=../../.env drizzle-kit migrate",
     "db:studio": "bun --env-file=../../.env drizzle-kit studio",
+    "test": "bun --env-file=../../.env test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit"
