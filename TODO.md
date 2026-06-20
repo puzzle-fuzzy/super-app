@@ -6,28 +6,7 @@
 
 ## P0 - 当前会直接影响质量门禁
 
-### 1. 修复 `pnpm lint` 失败
-
-**问题**
-
-- `pnpm typecheck` 通过，`pnpm test` 通过，但 `pnpm lint` 当前失败。
-- 失败位置：
-  - `packages/db/src/schema/audit-logs.ts:1` 引入了未使用的 `timestamp`。
-  - `packages/db/src/repositories/admin/audit-logs.ts:16` 有过期的 `eslint-disable`，规则已不再触发。
-
-**解决办法**
-
-- 删除 `packages/db/src/schema/audit-logs.ts` 中未使用的 `timestamp` import。
-- 删除 `packages/db/src/repositories/admin/audit-logs.ts` 中无效的 `eslint-disable-next-line`。
-- 修复后运行：
-
-```bash
-pnpm lint
-pnpm typecheck
-pnpm test
-```
-
-**完成标准**
+### 1. ~~修复 `pnpm lint` 失败~~ ✅ `b70d23f`
 
 - `pnpm lint`、`pnpm typecheck`、`pnpm test` 全部通过。
 
