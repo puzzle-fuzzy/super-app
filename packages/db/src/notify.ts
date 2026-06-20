@@ -18,7 +18,23 @@ export interface TaskStatusNotifyPayload {
 
 /** 频道名常量 —— 与 SSE listener 保持一致 */
 export const TASK_STATUS_CHANNEL = 'task_status'
+export const NOTIFICATION_CHANNEL = 'notification'
 
 export async function notifyTaskStatus(payload: TaskStatusNotifyPayload): Promise<void> {
   await sql.notify(TASK_STATUS_CHANNEL, JSON.stringify(payload))
+}
+
+export interface NotificationNotifyPayload {
+  id: string
+  ownerId: string
+  type: string
+  title: string
+  body?: string | null
+  meta?: Record<string, unknown> | null
+  read: boolean
+  createdAt: string
+}
+
+export async function notifyNotification(payload: NotificationNotifyPayload): Promise<void> {
+  await sql.notify(NOTIFICATION_CHANNEL, JSON.stringify(payload))
 }

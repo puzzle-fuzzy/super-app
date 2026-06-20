@@ -12,8 +12,8 @@
  */
 import { UserEventHub } from '@super-app/events'
 import type { AddConnectionResult, EventSender } from '@super-app/events'
-import { sql, TASK_STATUS_CHANNEL } from '@super-app/db'
-import type { TaskStatusNotifyPayload } from '@super-app/db'
+import { sql, TASK_STATUS_CHANNEL, NOTIFICATION_CHANNEL } from '@super-app/db'
+import type { NotificationNotifyPayload, TaskStatusNotifyPayload } from '@super-app/db'
 
 // ===== SSE 连接管理 =====
 
@@ -55,15 +55,25 @@ export function sweepStaleSseConnections(maxIdleMs?: number): number {
  * 在 app.ts 初始化时调用一次即可。
  */
 export async function startSSEListener(): Promise<void> {
+  // task_status 频道
   await sql.listen(TASK_STATUS_CHANNEL, (rawPayload: string) => {
     try {
       const payload: TaskStatusNotifyPayload = JSON.parse(rawPayload)
-      const dispatched = eventHub.dispatchToUser(payload.ownerId, 'task_status', payload)
-      if (dispatched === 0) {
-        // 用户不在线 —— 正常情况，可能是 worker 处理了离线用户的 task
-      }
+      eventHub.dispatchToUser(payload.ownerId, 'task_status', payload)
     } catch {
-      // 无法解析的 payload，忽略（NOTIFY payload 非 JSON 或格式不匹配）
+      // 无法解析的 payload，忽略
+    }
+  })
+
+  // notification 频道
+  await sql.listen(NOTIFICATION_CHANNEL, (rawPayload: string) => {
+    try {
+      const payload: NotificationNotifyPayload = JSON.parse(rawPayload)
+      // 剥离 ownerId，前端不需要
+      const { ownerId, ...rest } = payload
+      eventHub.dispatchToUser(ownerId, 'notification', rest)
+    } catch {
+      // 无法解析的 payload，忽略
     }
   })
 }

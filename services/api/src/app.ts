@@ -19,6 +19,8 @@ import { recordsModule } from './modules/records'
 import { sseModule } from './modules/sse'
 import { gatewayModule } from './modules/gateway'
 import { tasksModule } from './modules/tasks'
+import { notificationsModule } from './modules/notifications'
+import { modelsModule } from './modules/models'
 import { billingModule } from './modules/billing'
 import { corsPlugin } from './plugins/cors'
 import { errorHandler } from './middlewares/error-handler'
@@ -67,6 +69,8 @@ const baseApp = new Elysia()
           { name: 'transfers', description: 'P2P 文件传输' },
           { name: 'billing', description: '计费与余额' },
           { name: 'tasks', description: '用户任务中心' },
+          { name: 'notifications', description: '通知系统' },
+          { name: 'models', description: '模型目录' },
           { name: 'records', description: '生成记录管理' },
         ],
       },
@@ -90,6 +94,8 @@ const baseApp = new Elysia()
       .use(tasksModule)
       .use(recordsModule)
       .use(sseModule)
+      .use(notificationsModule)
+      .use(modelsModule)
       .use(billingModule)
   )
 
