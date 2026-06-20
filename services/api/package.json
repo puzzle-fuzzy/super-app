@@ -15,6 +15,7 @@
     "@elysia/cors": "^1.4.2",
     "@elysia/openapi": "^1.4.15",
     "@super-app/ai-models": "workspace:*",
+    "@super-app/billing": "workspace:*",
     "@super-app/contracts": "workspace:*",
     "@super-app/db": "workspace:*",
     "@super-app/events": "workspace:*",

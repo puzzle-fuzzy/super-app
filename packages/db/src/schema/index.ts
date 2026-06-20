@@ -1,6 +1,7 @@
 export * from './api-keys'
 export * from './assets'
 export * from './canvas'
+export * from './credit'
 export * from './generation-records'
 export * from './idempotency-keys'
 export * from './identity'

@@ -78,6 +78,13 @@
       "when": 1781937360311,
       "tag": "0010_busy_metal_master",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1781937895865,
+      "tag": "0011_aspiring_stingray",
+      "breakpoints": true
     }
   ]
 }

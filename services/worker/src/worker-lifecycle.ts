@@ -17,6 +17,7 @@ import {
 
 import type { WorkerConfig } from './worker.config'
 import { taskHandlers, type WorkerTaskContext } from './task-handlers'
+import { startCreditReconciliation } from './credit-reconciliation'
 
 // Repository adapter — 注入到 task-engine 的纯函数（adapter 模式：纯包不碰 IO）
 const repoAdapter = {
@@ -128,6 +129,12 @@ export function setupLifecycle(config: WorkerConfig): WorkerLifecycle {
     }, config.orphanSweepIntervalMs)
   )
 
+  // ── Credit reconciliation ────────────────────────────
+  const creditRecon = startCreditReconciliation({
+    intervalMs: config.orphanSweepIntervalMs,
+    staleThresholdMinutes: 60,
+  })
+
   // ── Health server ───────────────────────────────────
   healthServer = Bun.serve({
     port: config.healthPort,
@@ -141,6 +148,7 @@ export function setupLifecycle(config: WorkerConfig): WorkerLifecycle {
     running = false
     console.log('[worker] shutting down...')
     for (const t of timers) clearInterval(t)
+    creditRecon.stop()
     healthServer?.stop(true)
     // 等待 in-flight 任务完成（最多 30s）
     for (let i = 0; i < 30 && inFlight; i++) {
