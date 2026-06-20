@@ -9,6 +9,7 @@
     "./api-keys": "./src/api-keys.ts",
     "./assets": "./src/assets.ts",
     "./auth": "./src/auth.ts",
+    "./billing": "./src/billing.ts",
     "./canvas": "./src/canvas.ts",
     "./style-assets": "./src/style-assets.ts",
     "./subject-assets": "./src/subject-assets.ts",

@@ -3,6 +3,10 @@
 // 纯数据接口，无运行时依赖。
 
 import type { SubtitleSentence } from './subtitle'
+// CostDetail 真源在 @super-app/contracts/billing（被 wire 层引用，铁律：被 contracts
+// 引用的类型定义在 contracts）。本文件 import 引入名字供 GenerationNotifyPayload.cost 使用；
+// 对外 re-export 由 src/index.ts 统一处理。
+import type { CostDetail } from '@super-app/contracts/billing'
 
 /**
  * 生成任务输入参数信封 — 存储在 generation_records.inputParams JSONB 中
@@ -31,43 +35,6 @@ export interface GenerationInputParams {
    * 服务层应通过 ValidatedModelParameters 访问，此处仅存储。
    */
   [key: string]: unknown
-}
-
-/**
- * 费用明细（jsonb cost 字段的域类型）
- *
- * 注意：CostDetail 的真源最终归位 @super-app/contracts/billing（被 wire 层
- * GenerationRecordDTO.cost 引用）。本模块暂时定义，Task 7 后改为从 contracts re-export。
- *
- *  quantity / unitPrice 仅 image/video variant 存在；
- *  token variant 使用 inputUnitPrice / outputUnitPrice / inputCost / outputCost
- */
-export interface CostDetail {
-  unit: 'token' | 'image' | 'video' | 'audio'
-  totalPriceCents: number // 整数分，金额的权威值
-  totalPrice: number // 元（浮点），向后兼容
-  quantity?: number
-  unitPriceCents?: number // 分（整数）
-  unitPrice?: number // 元（浮点），向后兼容
-  inputTokens?: number
-  outputTokens?: number
-  inputUnitPriceCents?: number // 分
-  inputUnitPrice?: number // 元，向后兼容
-  outputUnitPriceCents?: number // 分
-  outputUnitPrice?: number // 元，向后兼容
-  inputCostCents?: number // 分
-  inputCost?: number // 元，向后兼容
-  outputCostCents?: number // 分
-  outputCost?: number // 元，向后兼容
-  resolution?: string
-  duration?: number
-  estimated?: boolean
-  /** 是否计入账单 — 失败/取消的任务 billable=false */
-  billable?: boolean
-  /** 费用来源: 'actual' = provider 返回实际用量, 'estimated' = 前端预估值 */
-  source?: 'actual' | 'estimated'
-  /** 失败策略: 'charge' = 仍收费, 'waive' = 免除, 'partial' = 部分收费 */
-  failurePolicy?: 'charge' | 'waive' | 'partial'
 }
 
 /** 文本输出 */

@@ -15,8 +15,12 @@ export * from './domain/provider-health'
 export * from './domain/audit'
 export * from './domain/dialogue'
 
+// ── 跨 wire 层的领域类型（真源在 contracts，re-export 保持单一来源）────
+export type { CostDetail } from '@super-app/contracts/billing'
+
 // ── 顶层 DTO（按业务域）──────────────────────────────────
 export * from './notifications'
+export * from './subtitle'
 export * from './asset-tags'
 export * from './assets'
 export * from './auth'
