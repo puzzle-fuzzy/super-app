@@ -9,18 +9,62 @@ import {
 import { generateVideoHandler } from './handlers/generate-video'
 import { generateImageHandler } from './handlers/generate-image'
 
+// Canvas pipeline phase handlers
+import {
+  handleCanvasAnalyze,
+  handleCanvasAssemble,
+  handleCanvasBgm,
+  handleCanvasCharacterRefs,
+  handleCanvasCharacters,
+  handleCanvasContinuity,
+  handleCanvasDialogue,
+  handleCanvasLocationRefs,
+  handleCanvasLocations,
+  handleCanvasRebuild,
+  handleCanvasStoryboard,
+  handleCanvasVideos,
+} from './canvas-handlers'
+
+// Media handlers
+import { handleMediaExtractAudio, handleMediaBurnSubtitle } from './media-handlers'
+
 /**
  * 任务处理器注册表 — 按 task.type 分发到对应 handler。
  *
- * 5e: 新增 generate.image handler（图片异步生成）。
+ * Canvas 12 阶段 + 现有 generate 2 个 + media 2 个 = 16 handler。
  */
 const definitions: Array<TaskDefinition<Task, WorkerTaskContext, TaskOutput>> = [
+  // 现有
   { type: 'generate.video', handler: generateVideoHandler },
   { type: 'generate.image', handler: generateImageHandler },
+
+  // Canvas 12 阶段 pipeline
+  { type: 'canvas.analyze', handler: handleCanvasAnalyze as any },
+  { type: 'canvas.characters', handler: handleCanvasCharacters as any },
+  { type: 'canvas.locations', handler: handleCanvasLocations as any },
+  { type: 'canvas.character-refs', handler: handleCanvasCharacterRefs as any },
+  { type: 'canvas.location-refs', handler: handleCanvasLocationRefs as any },
+  { type: 'canvas.storyboard', handler: handleCanvasStoryboard as any },
+  { type: 'canvas.continuity', handler: handleCanvasContinuity as any },
+  { type: 'canvas.rebuild', handler: handleCanvasRebuild as any },
+  { type: 'canvas.videos', handler: handleCanvasVideos as any },
+  { type: 'canvas.dialogue', handler: handleCanvasDialogue as any },
+  { type: 'canvas.bgm', handler: handleCanvasBgm as any },
+  { type: 'canvas.assemble', handler: handleCanvasAssemble as any },
+
+  // Media handlers
+  { type: 'media.extract-audio', handler: handleMediaExtractAudio as any },
+  { type: 'media.burn-subtitle', handler: handleMediaBurnSubtitle as any },
 ]
 
 export interface WorkerTaskContext {
   workerId: string
+  /** Worker 配置（media handlers 需要 storageRoot 等） */
+  config?: import('./worker.config').WorkerConfig
+  /** 存储服务（media handlers 需要上传生成文件） */
+  storage?: import('@super-app/storage').StorageProvider
+  /** ASR 客户端（media handlers 需要提交语音识别） */
+  asrClient?: any
 }
 
 export const taskHandlers = createTaskHandlerRegistry<Task, WorkerTaskContext, TaskOutput>(

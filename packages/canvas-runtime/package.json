@@ -1,0 +1,25 @@
+{
+  "name": "@super-app/canvas-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@super-app/canvas-engine": "workspace:*",
+    "@super-app/ffmpeg": "workspace:*",
+    "@super-app/prompt-engine": "workspace:*",
+    "@super-app/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "^5.8.3"
+  }
+}

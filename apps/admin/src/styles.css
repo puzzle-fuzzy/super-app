@@ -1,0 +1,39 @@
+@import 'tailwindcss';
+@source '../../packages/ui-react/';
+
+*,
+*::before,
+*::after {
+  border-color: #2a2a2a;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: #141414;
+  color: #e5e5e5;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid #3a3a3a;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.os-theme-dark {
+  --os-handle-bg: #3a3a3a;
+  --os-handle-bg-hover: #4a4a4a;
+  --os-handle-bg-active: #555;
+}

@@ -119,7 +119,7 @@ export const generateImageHandler: TaskHandler<Task, { workerId: string }, TaskO
       prompt: input.prompt,
     }
 
-    await markGenerationSucceeded(input.generationRecordId, output)
+    await markGenerationSucceeded(input.generationRecordId, output as any)
     await notifyTaskStatusChange(task as Task)
 
     // 结算：扣款（固定价格生成，预估即为实际）

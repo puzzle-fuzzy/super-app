@@ -14,7 +14,7 @@
     "SUPER_PUBLIC_API_BASE_URL",
     "SUPER_PUBLIC_STORAGE_BASE_URL"
   ],
-  "concurrency": "11",
+  "concurrency": "15",
   "tasks": {
     "dev": {
       "cache": false,

@@ -18,6 +18,7 @@ import {
 import type { WorkerConfig } from './worker.config'
 import { taskHandlers, type WorkerTaskContext } from './task-handlers'
 import { startCreditReconciliation } from './credit-reconciliation'
+import { advancePipelineAfterTaskSuccess } from './pipeline-stepper'
 
 // Repository adapter — 注入到 task-engine 的纯函数（adapter 模式：纯包不碰 IO）
 const repoAdapter = {
@@ -66,6 +67,13 @@ export function setupLifecycle(config: WorkerConfig): WorkerLifecycle {
       const output = await taskHandlers.handle(task, context)
       await completeTaskWithAdapter({ task, output, adapter: repoAdapter })
       console.log(`[worker] task ${task.id} succeeded`)
+
+      // TODO: Canvas pipeline auto-advance — 需要 task 类型适配后启用
+      // advancePipelineAfterTaskSuccess(task as any, config).then((nextTaskId) => {
+      //   if (nextTaskId) console.log(`[worker] pipeline auto-advanced: created task ${nextTaskId}`)
+      // }).catch((err) => {
+      //   console.error('[worker] pipeline auto-advance error:', err)
+      // })
     } catch (err) {
       const result = await applyTaskFailureWithAdapter({
         task: {

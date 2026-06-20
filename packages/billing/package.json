@@ -13,6 +13,7 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@super-app/shared": "workspace:*",
     "currency.js": "^2.0.4"
   },
   "devDependencies": {

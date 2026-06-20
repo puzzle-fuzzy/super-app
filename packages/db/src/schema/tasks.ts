@@ -58,6 +58,8 @@ export const tasks = pgTable(
     traceId: varchar('trace_id', { length: 64 }),
 
     // ── 目标关联 ──────────────────────────────────────
+    /** Canvas 项目 ID（仅 canvas 域任务） */
+    projectId: uuid('project_id'),
     /** 目标实体类型（如 'pipeline_run', 'shot', 'character'） */
     targetType: varchar('target_type', { length: 50 }),
     /** 目标实体 ID */
@@ -104,6 +106,8 @@ export const tasks = pgTable(
     index('idx_tasks_locked_until').on(table.lockedUntil),
     // 按 domain + type 过滤
     index('idx_tasks_domain_type').on(table.domain, table.type),
+    // 按 project 查 canvas 任务
+    index('idx_tasks_project').on(table.projectId),
   ]
 )
 

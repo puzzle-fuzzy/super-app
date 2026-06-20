@@ -1,0 +1,54 @@
+import type { LocationProfile, NovelAnalysis } from '@super-app/shared'
+import type { CanvasRuntimeLlmClient, CanvasRuntimeRepoAdapter } from '../adapter-types'
+import type { RunTextLlmOnceDeps } from '../llm-helpers'
+import { locationProfileSchema } from '@super-app/canvas-engine'
+import { buildLocationPrompt, parseLLMJsonWithSchema } from '@super-app/prompt-engine'
+import { runTextLlmOnce } from '../llm-helpers'
+
+type LocationRow = Awaited<ReturnType<CanvasRuntimeRepoAdapter['createCanvasLocation']>>
+
+/**
+ * 场景档案单实体核心：buildLocationPrompt → LLM → 校验 → createCanvasLocation。
+ * 返回创建的行 —— 修复了 server locations.ts 原本用 name 而非 location.id 做 completed 通知的 bug。
+ */
+export interface LocationEntityInput {
+  projectId: string
+  storyText: string
+  analysis: NovelAnalysis
+  name: string
+  client: CanvasRuntimeLlmClient
+  textModel: string
+  repo: CanvasRuntimeRepoAdapter
+  /** 测试用注入点；host 不传则用真实 provider。 */
+  textLlmDeps?: RunTextLlmOnceDeps
+}
+
+export interface LocationEntityResult {
+  location: LocationRow
+  profile: LocationProfile
+}
+
+export async function generateLocationEntity(input: LocationEntityInput): Promise<LocationEntityResult> {
+  const { system, prompt: userPrompt } = buildLocationPrompt(input.storyText, input.analysis, input.name)
+  const text = await runTextLlmOnce({
+    client: input.client,
+    textModel: input.textModel,
+    systemPrompt: system,
+    userPrompt,
+    maxTokens: 4096,
+    failureMessage: '场景档案生成失败',
+    deps: input.textLlmDeps,
+  })
+
+  const profile = parseLLMJsonWithSchema(text, locationProfileSchema) as LocationProfile
+  const location = await input.repo.createCanvasLocation({
+    projectId: input.projectId,
+    name: profile.name || input.name,
+    type: profile.type,
+    profileJson: profile,
+    scenePrompt: profile.scenePrompt,
+    negativePrompt: profile.negativePrompt,
+  })
+
+  return { location, profile }
+}

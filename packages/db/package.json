@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@super-app/env": "workspace:*",
+    "@super-app/shared": "workspace:*",
     "drizzle-orm": "^0.44.2",
     "postgres": "^3.4.7"
   },

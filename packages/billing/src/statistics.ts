@@ -1,44 +1,6 @@
+import type { BillingStatistics, CategoryBreakdown, CostDetail, DailyTrendItem, ModelBreakdown } from '@super-app/shared'
 import currency from 'currency.js'
-import type { CostDetail } from './types'
 import { centsToYuan } from './utils'
-
-// ===== Statistics types =====
-
-export interface CategoryBreakdown {
-  category: string
-  totalCents: number
-  total: number
-  percentage: number
-}
-
-export interface ModelBreakdown {
-  model: string
-  totalCents: number
-  total: number
-  percentage: number
-}
-
-export interface DailyTrendItem {
-  date: string
-  totalCents: number
-  total: number
-}
-
-export interface BillingStatistics {
-  totalCents: number
-  total: number
-  todayCents: number
-  today: number
-  weekCents: number
-  week: number
-  monthCents: number
-  month: number
-  /** 失败/取消任务的费用汇总（仅审计，不实际扣款） */
-  auditFailedCents: number
-  byCategory: CategoryBreakdown[]
-  byModel: ModelBreakdown[]
-  dailyTrend: DailyTrendItem[]
-}
 
 export interface CostRecord {
   model: string
@@ -48,15 +10,11 @@ export interface CostRecord {
   createdAt: string | Date
 }
 
-// ===== Aggregation =====
-
 /**
- * 聚合生成记录的费用统计。
+ * 从生成记录列表中聚合统计计费数据（分计费，支持 sub-cent 小数；currency.js precision 4 累加）
  *
- * 只汇总 billable 记录 (cost.billable !== false)；
- * 不可计费的记录（如失败/取消）归入 auditFailedCents。
- *
- * 所有浮点累加使用 currency.js (precision 4) 避免 IEEE 754 误差。
+ * 只汇总 billable 记录（cost.billable !== false），
+ * 非 billable 记录（失败/取消）单独计入 auditFailedCents
  */
 export function aggregateStatistics(records: CostRecord[]): BillingStatistics {
   const now = new Date()
@@ -79,6 +37,7 @@ export function aggregateStatistics(records: CostRecord[]): BillingStatistics {
     const priceCents = record.cost?.totalPriceCents ?? 0
     const isBillable = record.cost?.billable !== false
 
+    // 非 billable 的记录单独计入审计项
     if (!isBillable) {
       auditFailedCents = currency(auditFailedCents).add(priceCents).value
       continue
@@ -97,8 +56,8 @@ export function aggregateStatistics(records: CostRecord[]): BillingStatistics {
       monthCents = currency(monthCents).add(priceCents).value
     }
 
-    const catTotal = categoryMap.get(record.category) || 0
-    categoryMap.set(record.category, currency(catTotal).add(priceCents).value)
+    const categoryTotal = categoryMap.get(record.category) || 0
+    categoryMap.set(record.category, currency(categoryTotal).add(priceCents).value)
 
     const modelTotal = modelMap.get(record.model) || 0
     modelMap.set(record.model, currency(modelTotal).add(priceCents).value)
