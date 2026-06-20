@@ -1,5 +1,4 @@
 import { serverEnv } from '@super-app/env/server'
-import '@sinclair/typebox' // 初始化 TypeCompiler，消除 exact-mirror Union 警告
 
 import { app } from './app'
 import { startSSEListener } from './services/sse-manager'

@@ -855,8 +855,7 @@ function EditorViewInner({
         // 把 taskId 存到 placeholder 节点，供 SSE handler 匹配
         setNodes((prev) =>
           prev.map((node) =>
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            node.id === nodeId ? { ...node, data: { ...node.data, taskId } as any } : node
+            node.id === nodeId ? { ...node, data: { ...node.data, taskId } } as AppNode : node
           )
         )
       }

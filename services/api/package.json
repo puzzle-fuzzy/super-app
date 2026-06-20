@@ -19,7 +19,7 @@
     "@super-app/canvas-pipeline": "workspace:*",
     "@super-app/contracts": "workspace:*",
     "@super-app/db": "workspace:*",
-    "@sinclair/typebox": "^0.34.49",
+
     "@super-app/env": "workspace:*",
     "@super-app/runtime": "workspace:*",
     "@super-app/sse-hub": "workspace:*",

@@ -6,13 +6,7 @@ export default [
     files: [
       'packages/canvas-runtime/src/phases/**/*.ts',
       'services/worker/src/canvas-*.ts',
-      'services/worker/src/canvas-adapter-factory.ts',
-      'services/worker/src/canvas-handlers.ts',
-      'services/worker/src/media-handlers.ts',
       'services/worker/src/pipeline-stepper.ts',
-      'services/worker/src/task-handlers.ts',
-      'services/worker/src/handlers/generate-image.ts',
-      'services/worker/src/handlers/generate-video.ts',
     ],
     rules: {
       // TODO: tighten after the Excuse canvas runtime/worker adapters are fully typed.
@@ -35,7 +29,6 @@ export default [
     ],
     rules: {
       // TODO: remove when these migrated/stubbed API modules are fully ported.
-      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
     },
   },

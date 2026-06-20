@@ -60,10 +60,13 @@ const PHASE_LABELS: Record<CanvasPipelinePhase, string> = {
   assemble: '合成成片',
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function makePhaseHandler(phase: CanvasPipelinePhase): (ctx: any) => Promise<{ success: boolean; data: unknown }> {
-  return async (ctx: any) => {
-    const result = await triggerPhase({ db: ctx.db, owner: ctx.user!, projectId: ctx.params.id, phase })
+function makePhaseHandler(phase: CanvasPipelinePhase) {
+  return async ({ db, user, params }: {
+    db: Db
+    user: CurrentUser | null
+    params: { id: string }
+  }) => {
+    const result = await triggerPhase({ db, owner: user!, projectId: params.id, phase })
     return { success: true, data: result }
   }
 }
