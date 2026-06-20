@@ -333,11 +333,11 @@ export const pipelineApi = {
     if (params?.limit) qs.set('limit', String(params.limit))
     if (params?.offset) qs.set('offset', String(params.offset))
     const query = qs.toString()
-    return apiFetch<PipelineProjectListResponse>(`/pipeline/projects/${query ? `?${query}` : ''}`)
+    return apiFetch<PipelineProjectListResponse>(`/pipeline/projects${query ? `?${query}` : ''}`)
   },
 
   create(input: { name: string; storyText: string }) {
-    return apiFetch<PipelineProjectSummary>('/pipeline/projects/', {
+    return apiFetch<PipelineProjectSummary>('/pipeline/projects', {
       method: 'POST',
       body: JSON.stringify(input),
     })
