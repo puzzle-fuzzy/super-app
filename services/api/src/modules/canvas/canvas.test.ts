@@ -5,6 +5,8 @@ import {
   canvasDocuments,
   canvasProjects,
   canvasVersions,
+  generationRecords,
+  idempotencyKeys,
   sessions,
   users,
 } from '@super-app/db/schema'
@@ -37,6 +39,8 @@ describe('canvas module', () => {
         await db.delete(canvasDocuments).where(eq(canvasDocuments.projectId, project.id))
       }
       await db.delete(canvasProjects).where(eq(canvasProjects.ownerId, user.id))
+      await db.delete(idempotencyKeys).where(eq(idempotencyKeys.ownerId, user.id))
+      await db.delete(generationRecords).where(eq(generationRecords.ownerId, user.id))
       await db.delete(sessions).where(eq(sessions.userId, user.id))
       await db.delete(users).where(eq(users.id, user.id))
     }

@@ -22,3 +22,19 @@ export interface TaskErrorInfo {
   code?: string
   message: string
 }
+
+/** 生成输入参数 — 结构随 model/category 定义（prompt、参考图等）。 */
+export interface GenerationInputParams {
+  [key: string]: unknown
+}
+
+/** 生成输出结果 — 结构随 model/category 定义（URL、文本等）。 */
+export interface OutputResult {
+  [key: string]: unknown
+}
+
+/** 费用明细 — 5d billing 启用。 */
+export interface CostDetail {
+  totalPriceCents: number
+  [key: string]: unknown
+}
