@@ -42,3 +42,34 @@
 - [x] Continue package boundary hardening: reconcile `@super-app/shared` API response DTOs with `@super-app/contracts` schemas.
 - [ ] Continue package boundary hardening: plan `createLogger` migration out of `@super-app/shared` into a runtime infrastructure package.
 - [ ] Continue package boundary hardening: audit DB-local error sanitizers before deciding whether they should stay repository-specific or move to `@super-app/utils`.
+
+---
+
+## Pipeline 手动工作站 — 待完成项
+
+> 分支: `packages-cleanup` (2026-06-20)  
+> 已完成: 12 阶段触发 API + 前端 React Flow 节点图 + 资产拖拽 + SSE 实时更新
+
+### 高优先级
+
+- [ ] **按钮交互优化**: 父节点完成后显示「下一步」按钮（如 Analysis 完成 → 显示 "生成角色" + "生成场景"），而非当前每个阶段独立节点带自己按钮的模式。文件: `apps/canvas/src/screens/PipelineEditor.tsx`
+- [ ] **端到端集成测试**: 启动 PostgreSQL + Worker，跑通 analyze → characters → … → assemble 全链路，验证 SSE `task_status` 事件更新前端节点
+
+### 中优先级
+
+- [ ] **节点详情面板增强**: 可编辑 identityPrompt / scenePrompt / videoPrompt，显示 AssetHistory 历史版本
+- [ ] **节点内联编辑**: 双击节点名称直接编辑，失焦自动保存
+- [ ] **项目状态机可视化**: 12 阶段色块进度条（类似 excuse PipelineController）
+
+### 低优先级
+
+- [ ] Worker 端 canvas phase handler 输入 Zod 校验
+- [ ] 取消操作增强：支持取消单个 stage (`?phase=analyze`)
+- [ ] Assemble 节点嵌入 project.finalVideoUrl `<video>` 预览
+- [ ] 项目列表卡片缩略图（有 finalVideoUrl 时显示）
+
+### 技术债务
+
+- [ ] `PipelineEditor.tsx` (~870 行) 拆分: `PipelineFlow.tsx` + `PipelineNode.tsx` + `DetailPanel.tsx`
+- [ ] `PipelineNodeData` 索引签名 `[key: string]: unknown` 替换为 branded type
+- [ ] `CanvasApp.tsx` (~1800 行) 考虑 Pipeline 路由独立或 lazy-load
