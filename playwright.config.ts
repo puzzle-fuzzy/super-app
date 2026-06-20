@@ -2,7 +2,10 @@ import { defineConfig, devices } from '@playwright/test'
 
 const loadLocalEnv = 'set -a; . ./.env.example; set +a;'
 
+const isCI = !!process.env.CI
+
 const localEnv = {
+  ...(isCI ? {} : { DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/super' }),
   NODE_ENV: 'development',
   APP_ENV: 'local',
   SUPER_PUBLIC_SITE_URL: 'http://localhost:5101',
@@ -30,7 +33,6 @@ const localEnv = {
   SESSION_COOKIE_NAME: 'super.sid',
   SESSION_SECRET: 'change-me-change-me',
   SESSION_TTL_SECONDS: '604800',
-  DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/super',
   REDIS_URL: 'redis://localhost:6379',
   S3_ENDPOINT: 'http://localhost:9000',
   S3_REGION: 'auto',
@@ -67,45 +69,57 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: `${loadLocalEnv} pnpm db:local:up && ${loadLocalEnv} pnpm db:migrate && ${loadLocalEnv} pnpm --filter @super-app/api dev`,
+      command: isCI
+        ? `cd packages/db && bun run db:migrate && cd ../../services/api && bun run dev`
+        : `${loadLocalEnv} pnpm db:local:up && ${loadLocalEnv} pnpm db:migrate && ${loadLocalEnv} pnpm --filter @super-app/api dev`,
       env: localEnv,
       url: 'http://localhost:5200/api/health',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !isCI,
       timeout: 120_000,
     },
     {
-      command: `${loadLocalEnv} pnpm --filter @super-app/auth dev`,
+      command: isCI
+        ? `cd apps/auth && bun run dev`
+        : `${loadLocalEnv} pnpm --filter @super-app/auth dev`,
       env: localEnv,
       url: 'http://localhost:5100/auth/',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !isCI,
       timeout: 60_000,
     },
     {
-      command: `${loadLocalEnv} pnpm --filter @super-app/workspace dev`,
+      command: isCI
+        ? `cd apps/workspace && bun run dev`
+        : `${loadLocalEnv} pnpm --filter @super-app/workspace dev`,
       env: localEnv,
       url: 'http://localhost:5103/workspace/',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !isCI,
       timeout: 60_000,
     },
     {
-      command: `${loadLocalEnv} pnpm --filter @super-app/canvas dev`,
+      command: isCI
+        ? `cd apps/canvas && bun run dev`
+        : `${loadLocalEnv} pnpm --filter @super-app/canvas dev`,
       env: localEnv,
       url: 'http://localhost:5104/canvas/',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !isCI,
       timeout: 60_000,
     },
     {
-      command: `${loadLocalEnv} pnpm --filter @super-app/assets dev`,
+      command: isCI
+        ? `cd apps/assets && bun run dev`
+        : `${loadLocalEnv} pnpm --filter @super-app/assets dev`,
       env: localEnv,
       url: 'http://localhost:5105/assets/',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !isCI,
       timeout: 60_000,
     },
     {
-      command: `${loadLocalEnv} pnpm --filter @super-app/transfer dev`,
+      command: isCI
+        ? `cd apps/transfer && bun run dev`
+        : `${loadLocalEnv} pnpm --filter @super-app/transfer dev`,
       env: localEnv,
       url: 'http://localhost:5106/transfer/',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !isCI,
       timeout: 60_000,
     },
   ],
