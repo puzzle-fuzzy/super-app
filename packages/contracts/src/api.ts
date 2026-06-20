@@ -33,27 +33,32 @@ export const createApiSuccessSchema = <T extends z.ZodTypeAny>(data: T) =>
     data,
   })
 
+export const createApiResponseSchema = <T extends z.ZodTypeAny>(data: T) =>
+  z.union([createApiSuccessSchema(data), ApiFailureSchema])
+
 export type ApiSuccess<T> = {
   success: true
   data: T
 }
 
-export type MutationOkResponse = {
-  success: true
-}
+export type MutationOkData = Record<string, never>
+
+export type MutationOkResponse = ApiSuccess<MutationOkData>
 
 export type EntityResponse<T> = ApiSuccess<T>
 
-export type ListResponse<T> = {
-  success: true
+export type ListData<T> = {
   items: T[]
   total: number
 }
 
-export type RecordResponse<T> = {
-  success: true
+export type ListResponse<T> = ApiSuccess<ListData<T>>
+
+export type RecordData<T> = {
   record: T
 }
+
+export type RecordResponse<T> = ApiSuccess<RecordData<T>>
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure
 

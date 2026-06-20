@@ -1,6 +1,6 @@
 import { Loader2, Play, RefreshCw } from 'lucide-react'
 import type { NodeProps } from '@xyflow/react'
-import type { CharacterDTO, LocationDTO, ShotDTO } from '@super-app/types'
+import type { PipelineCharacterDto, PipelineLocationDto, PipelineShotDto } from '@super-app/contracts/pipeline'
 
 import type { NodeStatus, PipelineNodeData } from '../pipeline/types'
 
@@ -40,8 +40,11 @@ export function PipelineNode({ data }: NodeProps) {
   const isBgm = d.phase === 'bgm'
   const isAssemble = d.phase === 'assemble'
 
-  const showImage = isCharacterNode && (d.entityData as CharacterDTO)?.referenceImageUrl
-  const showVideo = isShotNode && (d.entityData as ShotDTO)?.videoUrl
+  const character = isCharacterNode ? d.entityData as PipelineCharacterDto | undefined : undefined
+  const location = isLocationNode ? d.entityData as PipelineLocationDto | undefined : undefined
+  const shot = isShotNode ? d.entityData as PipelineShotDto | undefined : undefined
+  const showImage = character?.referenceImageUrl
+  const showVideo = shot?.videoUrl
 
   return (
     <div
@@ -71,51 +74,51 @@ export function PipelineNode({ data }: NodeProps) {
         </div>
       )}
 
-      {isCharacterNode && d.entityData && (
+      {character && (
         <div className="flex items-start gap-3">
           {showImage && (
             <img
-              src={showImage as string}
-              alt={(d.entityData as CharacterDTO).name}
+              src={showImage}
+              alt={character.name}
               className="h-14 w-14 shrink-0 rounded-lg object-cover"
             />
           )}
           <div className="min-w-0 flex-1">
             <p className="m-0 text-[13px] font-medium text-[#e5e5e5]">
-              {(d.entityData as CharacterDTO).name}
+              {character.name}
             </p>
             <p className="m-0 mt-0.5 text-[11px] text-[#888888] line-clamp-2">
-              {(d.entityData as CharacterDTO).description ?? (d.entityData as CharacterDTO).role}
+              {character.description ?? character.role}
             </p>
           </div>
         </div>
       )}
 
-      {isLocationNode && d.entityData && (
+      {location && (
         <div className="flex items-start gap-3">
-          {(d.entityData as LocationDTO).referenceImageUrl && (
+          {location.referenceImageUrl && (
             <img
-              src={(d.entityData as LocationDTO).referenceImageUrl!}
-              alt={(d.entityData as LocationDTO).name}
+              src={location.referenceImageUrl}
+              alt={location.name}
               className="h-14 w-14 shrink-0 rounded-lg object-cover"
             />
           )}
           <div className="min-w-0 flex-1">
             <p className="m-0 text-[13px] font-medium text-[#e5e5e5]">
-              {(d.entityData as LocationDTO).name}
+              {location.name}
             </p>
             <p className="m-0 mt-0.5 text-[11px] text-[#888888]">
-              {(d.entityData as LocationDTO).type}
+              {location.type}
             </p>
           </div>
         </div>
       )}
 
-      {isShotNode && d.entityData && (
+      {shot && (
         <div>
           {showVideo && (
             <video
-              src={showVideo as string}
+              src={showVideo}
               className="mb-2 w-full rounded-lg"
               controls
               muted
@@ -123,10 +126,10 @@ export function PipelineNode({ data }: NodeProps) {
             />
           )}
           <p className="m-0 text-[12px] font-medium text-[#e5e5e5]">
-            镜头 #{(d.entityData as ShotDTO).shotIndex + 1}
+            镜头 #{shot.shotIndex + 1}
           </p>
           <p className="m-0 mt-0.5 text-[11px] text-[#888888] line-clamp-2">
-            {(d.entityData as ShotDTO).narrative?.slice(0, 80)}
+            {shot.narrative.slice(0, 80)}
           </p>
         </div>
       )}

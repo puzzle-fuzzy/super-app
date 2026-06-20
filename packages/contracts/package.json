@@ -12,6 +12,7 @@
     "./auth": "./src/auth.ts",
     "./billing": "./src/billing.ts",
     "./canvas": "./src/canvas.ts",
+    "./pipeline": "./src/pipeline.ts",
     "./records": "./src/records.ts",
     "./style-assets": "./src/style-assets.ts",
     "./subject-assets": "./src/subject-assets.ts",

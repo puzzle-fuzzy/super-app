@@ -2,8 +2,11 @@ import { describe, expectTypeOf, test } from 'bun:test'
 
 import type {
   EntityResponse,
+  ListData,
   ListResponse,
+  MutationOkData,
   MutationOkResponse,
+  RecordData,
   RecordResponse,
 } from '../src/api'
 
@@ -16,13 +19,31 @@ describe('@super-app/contracts api response utility types', () => {
 
     expectTypeOf<ListResponse<{ id: string }>>().toEqualTypeOf<{
       success: true
+      data: {
+        items: Array<{ id: string }>
+        total: number
+      }
+    }>()
+
+    expectTypeOf<ListData<{ id: string }>>().toEqualTypeOf<{
       items: Array<{ id: string }>
       total: number
     }>()
 
-    expectTypeOf<MutationOkResponse>().toEqualTypeOf<{ success: true }>()
+    expectTypeOf<MutationOkData>().toEqualTypeOf<Record<string, never>>()
+    expectTypeOf<MutationOkResponse>().toEqualTypeOf<{
+      success: true
+      data: Record<string, never>
+    }>()
+
     expectTypeOf<RecordResponse<{ id: string }>>().toEqualTypeOf<{
       success: true
+      data: {
+        record: { id: string }
+      }
+    }>()
+
+    expectTypeOf<RecordData<{ id: string }>>().toEqualTypeOf<{
       record: { id: string }
     }>()
   })

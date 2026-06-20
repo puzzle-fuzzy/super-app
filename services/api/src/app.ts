@@ -6,12 +6,14 @@ import { stat } from 'node:fs/promises'
 import path from 'node:path'
 
 import { apiKeysModule } from './modules/api-keys'
+import { adminModule } from './modules/admin'
 import { authModule } from './modules/auth'
 import { assetsModule } from './modules/assets'
 import { canvasModule } from './modules/canvas'
 import { canvasPipelineModule } from './modules/canvas-pipeline'
 import { stylesModule } from './modules/styles'
 import { subjectsModule } from './modules/subjects'
+import { subtitleModule } from './modules/subtitle'
 import { templatesModule } from './modules/templates'
 import { systemModule } from './modules/system'
 import { textsModule } from './modules/texts'
@@ -83,10 +85,12 @@ const baseApp = new Elysia()
   .group('/api', (api) =>
     api
       .use(systemModule)
+      .use(adminModule)
       .use(authModule)
       .use(assetsModule)
       .use(textsModule)
       .use(subjectsModule)
+      .use(subtitleModule)
       .use(stylesModule)
       .use(templatesModule)
       .use(canvasModule)

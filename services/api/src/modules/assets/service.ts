@@ -3,7 +3,7 @@ import type {
   AssetDto,
   AssetFileDto,
   AssetKind,
-  AssetListResponse,
+  AssetListData,
   AssetShareLinkDto,
   AssetSource,
   AssetTransferSessionDto,
@@ -143,7 +143,7 @@ export interface ListAssetsInput {
   cursor?: string | null
 }
 
-export async function listAssets(input: ListAssetsInput): Promise<AssetListResponse> {
+export async function listAssets(input: ListAssetsInput): Promise<AssetListData> {
   const { db, owner, kind, source, limit, cursor } = input
   const effectiveLimit = Math.min(Math.max(limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT)
   const cursorTuple = decodeCursor(cursor)

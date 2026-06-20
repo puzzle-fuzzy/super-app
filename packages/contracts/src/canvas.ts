@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { createApiResponseSchema, createApiSuccessSchema } from './api'
 import { AssetDtoSchema } from './assets'
 
 export const CanvasProjectStatusSchema = z.enum(['active', 'archived'])
@@ -34,10 +35,16 @@ export const CanvasDocumentSchema = z.object({
 
 export type CanvasDocument = z.infer<typeof CanvasDocumentSchema>
 
-export const CanvasProjectListResponseSchema = z.object({
+export const CanvasProjectListDataSchema = z.object({
   items: z.array(CanvasProjectDtoSchema),
   nextCursor: z.string().optional(),
 })
+
+export type CanvasProjectListData = z.infer<typeof CanvasProjectListDataSchema>
+
+export const CanvasProjectListSuccessSchema = createApiSuccessSchema(CanvasProjectListDataSchema)
+
+export const CanvasProjectListResponseSchema = createApiResponseSchema(CanvasProjectListDataSchema)
 
 export type CanvasProjectListResponse = z.infer<typeof CanvasProjectListResponseSchema>
 
@@ -89,8 +96,8 @@ export const CanvasGenerateImageRequestSchema = z.object({
 
 export type CanvasGenerateImageRequest = z.infer<typeof CanvasGenerateImageRequestSchema>
 
-export const CanvasGenerateImageResponseSchema = z.object({
-  kind: z.enum(['image', 'video']).default('image'),
+export const CanvasGenerateImageDataSchema = z.object({
+  kind: z.enum(['image', 'video']),
   prompt: z.string(),
   model: z.string(),
   url: z.string().url().optional(),
@@ -102,6 +109,12 @@ export const CanvasGenerateImageResponseSchema = z.object({
   requestId: z.string().optional(),
   taskId: z.string().optional(),
 })
+
+export type CanvasGenerateImageData = z.infer<typeof CanvasGenerateImageDataSchema>
+
+export const CanvasGenerateImageSuccessSchema = createApiSuccessSchema(CanvasGenerateImageDataSchema)
+
+export const CanvasGenerateImageResponseSchema = createApiResponseSchema(CanvasGenerateImageDataSchema)
 
 export type CanvasGenerateImageResponse = z.infer<typeof CanvasGenerateImageResponseSchema>
 

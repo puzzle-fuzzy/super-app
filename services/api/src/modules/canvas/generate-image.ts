@@ -1,6 +1,6 @@
 import type {
+  CanvasGenerateImageData,
   CanvasGenerateImageRequest,
-  CanvasGenerateImageResponse,
 } from '@super-app/contracts/canvas'
 import type { CurrentUser } from '@super-app/contracts/auth'
 import type { Db } from '@super-app/db'
@@ -61,7 +61,7 @@ export async function generateCanvasImage({
   storage,
   owner,
   input,
-}: GenerateCanvasImageInput): Promise<CanvasGenerateImageResponse> {
+}: GenerateCanvasImageInput): Promise<CanvasGenerateImageData> {
   const apiKey = process.env.DASHSCOPE_API_KEY || serverEnv.DASHSCOPE_API_KEY
   if (!apiKey?.trim()) {
     throw new AppError(503, 'INTERNAL_ERROR', 'DASHSCOPE_API_KEY is not configured')
@@ -85,7 +85,7 @@ async function generateCanvasStillImage({
   input,
   apiKey,
   baseUrl,
-}: GenerateCanvasImageInput & { apiKey: string; baseUrl: string }): Promise<CanvasGenerateImageResponse> {
+}: GenerateCanvasImageInput & { apiKey: string; baseUrl: string }): Promise<CanvasGenerateImageData> {
   const response = await fetch(`${baseUrl}/services/aigc/multimodal-generation/generation`, {
     method: 'POST',
     headers: {
@@ -173,7 +173,7 @@ async function generateCanvasVideo({
   input,
   apiKey,
   baseUrl,
-}: GenerateCanvasImageInput & { apiKey: string; baseUrl: string }): Promise<CanvasGenerateImageResponse> {
+}: GenerateCanvasImageInput & { apiKey: string; baseUrl: string }): Promise<CanvasGenerateImageData> {
   const createResponse = await fetch(`${baseUrl}/services/aigc/video-generation/video-synthesis`, {
     method: 'POST',
     headers: {

@@ -31,6 +31,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@super-app/vite-config": "workspace:*",
     "@tailwindcss/vite": "^4.1.17",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",

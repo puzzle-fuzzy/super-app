@@ -38,6 +38,11 @@
 - [x] Add Canvas generation retry and explicit failure states for longer-running image workflows.
 - [x] Add a first-class generated-image history panel backed by persisted assets.
 - [x] Add backend filtering and pagination for AI-generated image assets so Canvas history does not rely on client-side filtering.
+- [x] Unify frontend Vite config through `@super-app/vite-config` and apply one `/api` dev proxy rule across Vite apps.
+- [x] Fix API module mounting so admin and subtitle routes live under exactly one `/api` prefix.
+- [x] Unify typed response parsing in `@super-app/api-client` and `@super-app/auth-client` with runtime envelope validation.
+- [x] Add pipeline response schemas to `@super-app/contracts` and require every `apiFetch` call to pass a response schema.
+- [ ] Finish JSON API response contract hardening: verify backend pipeline route responses against contract schemas and remove remaining route-level casts.
 - [x] Continue package boundary hardening: move generic error helpers from `@super-app/shared` to `@super-app/utils` and migrate callers directly.
 - [x] Continue package boundary hardening: reconcile `@super-app/shared` API response DTOs with `@super-app/contracts` schemas.
 - [x] Continue package boundary hardening: plan `createLogger` migration out of `@super-app/shared` into a runtime infrastructure package.

@@ -1,18 +1,7 @@
-import path from 'node:path'
+import { createSuperViteAppConfig } from '@super-app/vite-config'
 
-import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
-
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  envDir: path.resolve(__dirname, '../..'),
-  envPrefix: 'SUPER_PUBLIC_',
+export default createSuperViteAppConfig({
+  appUrl: import.meta.url,
   base: '/assets/',
-  build: {
-    assetsDir: '_assets',
-  },
-  server: {
-    port: 5105,
-  },
+  port: 5105,
 })

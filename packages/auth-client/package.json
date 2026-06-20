@@ -11,17 +11,20 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "test": "bun test tests"
   },
   "dependencies": {
     "@super-app/contracts": "workspace:*",
-    "@super-app/env": "workspace:*"
+    "@super-app/env": "workspace:*",
+    "zod": "^3.25.67"
   },
   "peerDependencies": {
     "react": "^19.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.1.8",
+    "bun-types": "latest",
     "react": "^19.1.0",
     "typescript": "^5.8.3"
   }

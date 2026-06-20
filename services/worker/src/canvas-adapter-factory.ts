@@ -56,7 +56,6 @@ import { getModelById, validateAndMerge } from '@super-app/provider'
  *
  * 返回 any 以便赋值到接口方法位；类型安全由接口定义方和调用方共同担保。
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function adapt(fn: (...args: any[]) => any): any {
   return fn
 }

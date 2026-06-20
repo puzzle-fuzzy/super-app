@@ -16,9 +16,14 @@ import {
 import '@xyflow/react/dist/style.css'
 
 import { pipelineApi, SSEClient, type TriggerPhaseResult, type PipelineRunDTO } from '@super-app/api-client'
-import type { ProjectDTO, CharacterDTO, LocationDTO, ShotDTO } from '@super-app/types'
 import { assetsApi } from '@super-app/api-client'
 import type { AssetDto, AssetKind } from '@super-app/contracts/assets'
+import type {
+  PipelineCharacterDto,
+  PipelineLocationDto,
+  PipelineProjectDto,
+  PipelineShotDto,
+} from '@super-app/contracts/pipeline'
 
 import { PipelineNode } from '../components/PipelineNode'
 import type { NodeStatus, PhaseKey, PipelineNodeData } from '../pipeline/types'
@@ -75,7 +80,7 @@ function PipelineEditor({
   const reactFlowInstance = useReactFlow()
   const sseRef = useRef<SSEClient | null>(null)
 
-  const [project, setProject] = useState<ProjectDTO | null>(null)
+  const [project, setProject] = useState<PipelineProjectDto | null>(null)
   const [runs, setRuns] = useState<PipelineRunDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -173,6 +178,8 @@ function PipelineEditor({
           finishedAt: null,
           errorMessage: null,
           createdBy: user.id,
+          inputSnapshotJson: null,
+          outputSummaryJson: null,
           taskId: result.taskId,
           createdAt: new Date().toISOString(),
         },
@@ -236,7 +243,7 @@ function PipelineEditor({
     // 3. Characters
     const charStartY = 550
     if (project.characters.length > 0) {
-      project.characters.forEach((c: CharacterDTO, i: number) => {
+      project.characters.forEach((c: PipelineCharacterDto, i: number) => {
         result.push({
           id: `character-${c.id}`,
           type: 'pipelineNode',
@@ -272,7 +279,7 @@ function PipelineEditor({
     // 4. Locations
     const locStartY = charStartY + 260
     if (project.locations.length > 0) {
-      project.locations.forEach((l: LocationDTO, i: number) => {
+      project.locations.forEach((l: PipelineLocationDto, i: number) => {
         result.push({
           id: `location-${l.id}`,
           type: 'pipelineNode',
@@ -368,7 +375,7 @@ function PipelineEditor({
     // 9. Shots (videos)
     const shotStartY = locStartY + 1300
     if (project.shots.length > 0) {
-      project.shots.slice(0, 6).forEach((s: ShotDTO, i: number) => {
+      project.shots.slice(0, 6).forEach((s: PipelineShotDto, i: number) => {
         const statusMap: Record<string, NodeStatus> = {
           completed: 'succeeded',
           failed: 'failed',
@@ -450,7 +457,7 @@ function PipelineEditor({
 
     // Analysis → Characters/Locations
     if (project.characters.length > 0) {
-      project.characters.forEach((c: CharacterDTO) => {
+      project.characters.forEach((c: PipelineCharacterDto) => {
         result.push({ id: `e-analysis-char-${c.id}`, source: 'analysis', target: `character-${c.id}`, animated: true, style: { stroke: '#3a3a3a' } })
       })
     } else {
@@ -458,7 +465,7 @@ function PipelineEditor({
     }
 
     if (project.locations.length > 0) {
-      project.locations.forEach((l: LocationDTO) => {
+      project.locations.forEach((l: PipelineLocationDto) => {
         result.push({ id: `e-analysis-loc-${l.id}`, source: 'analysis', target: `location-${l.id}`, animated: true, style: { stroke: '#3a3a3a' } })
       })
     } else {
@@ -484,7 +491,7 @@ function PipelineEditor({
     const data = selectedNode.data as unknown as PipelineNodeData
 
     if (data.phase === 'character' && data.entityData) {
-      const c = data.entityData as CharacterDTO
+      const c = data.entityData as PipelineCharacterDto
       return (
         <div className="space-y-4">
           <h3 className="m-0 text-base font-bold">{c.name}</h3>
@@ -504,7 +511,7 @@ function PipelineEditor({
     }
 
     if (data.phase === 'location' && data.entityData) {
-      const l = data.entityData as LocationDTO
+      const l = data.entityData as PipelineLocationDto
       return (
         <div className="space-y-4">
           <h3 className="m-0 text-base font-bold">{l.name}</h3>
@@ -523,7 +530,7 @@ function PipelineEditor({
     }
 
     if (data.phase === 'shot' && data.entityData) {
-      const s = data.entityData as ShotDTO
+      const s = data.entityData as PipelineShotDto
       return (
         <div className="space-y-4">
           <h3 className="m-0 text-base font-bold">镜头 #{s.shotIndex + 1}</h3>

@@ -1,8 +1,8 @@
 import type { CurrentUser } from '@super-app/contracts/auth'
 import type {
   ApiKeyDto,
+  CreateApiKeyData,
   CreateApiKeyRequest,
-  CreateApiKeyResponse,
 } from '@super-app/contracts/api-keys'
 import type { Db } from '@super-app/db'
 import { apiKeys } from '@super-app/db/schema'
@@ -35,7 +35,7 @@ export async function createApiKey({
   db,
   owner,
   input,
-}: CreateApiKeyInput): Promise<CreateApiKeyResponse> {
+}: CreateApiKeyInput): Promise<CreateApiKeyData> {
   const { fullKey, keyHash, keyPrefix } = generateApiKey()
 
   const [row] = await db

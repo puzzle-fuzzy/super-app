@@ -2,7 +2,7 @@ import type { CurrentUser } from '@super-app/contracts/auth'
 import type {
   CanvasProjectDetailDto,
   CanvasProjectDto,
-  CanvasProjectListResponse,
+  CanvasProjectListData,
   CreateCanvasProjectRequest,
   UpdateCanvasProjectRequest,
 } from '@super-app/contracts/canvas'
@@ -77,7 +77,7 @@ export async function listCanvasProjects({
   owner,
   limit = 20,
   cursor,
-}: ListCanvasProjectsInput): Promise<CanvasProjectListResponse> {
+}: ListCanvasProjectsInput): Promise<CanvasProjectListData> {
   const effectiveLimit = Math.min(Math.max(limit, 1), 100)
 
   const conditions = [eq(canvasProjects.ownerId, owner.id), eq(canvasProjects.status, 'active')]

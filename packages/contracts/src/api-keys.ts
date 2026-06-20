@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { createApiResponseSchema, createApiSuccessSchema } from './api'
+
 export const ApiKeyDtoSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -18,8 +20,14 @@ export const CreateApiKeyRequestSchema = z.object({
 
 export type CreateApiKeyRequest = z.infer<typeof CreateApiKeyRequestSchema>
 
-export const CreateApiKeyResponseSchema = ApiKeyDtoSchema.extend({
+export const CreateApiKeyDataSchema = ApiKeyDtoSchema.extend({
   fullKey: z.string(),
 })
+
+export type CreateApiKeyData = z.infer<typeof CreateApiKeyDataSchema>
+
+export const CreateApiKeySuccessSchema = createApiSuccessSchema(CreateApiKeyDataSchema)
+
+export const CreateApiKeyResponseSchema = createApiResponseSchema(CreateApiKeyDataSchema)
 
 export type CreateApiKeyResponse = z.infer<typeof CreateApiKeyResponseSchema>

@@ -1,4 +1,4 @@
-import type { CharacterDTO, LocationDTO, ShotDTO } from '@super-app/types'
+import type { PipelineCharacterDto, PipelineLocationDto, PipelineShotDto } from '@super-app/contracts/pipeline'
 
 // ── Phase Metadata ─────────────────────────────────────────────────
 
@@ -52,7 +52,7 @@ export interface PipelineNodeData {
     | 'assemble'
   status: NodeStatus
   entityId?: string
-  entityData?: CharacterDTO | LocationDTO | ShotDTO | null
+  entityData?: PipelineCharacterDto | PipelineLocationDto | PipelineShotDto | null
   storyText?: string
   analysis?: Record<string, unknown> | null
   onTrigger?: () => void

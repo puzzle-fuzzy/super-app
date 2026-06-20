@@ -1,6 +1,11 @@
-import type { ApiResponse } from '@super-app/contracts/api'
+import type { ZodType } from 'zod'
+import { z } from 'zod'
+import { ApiFailureSchema } from '@super-app/contracts/api'
 import type { CurrentUser, LoginRequest, RegisterRequest } from '@super-app/contracts/auth'
+import { CurrentUserSchema } from '@super-app/contracts/auth'
 import { clientEnv } from '@super-app/env/client'
+
+const ApiSuccessHeaderSchema = z.object({ success: z.literal(true) })
 
 export interface RedirectToLoginOptions {
   returnTo?: string
@@ -16,7 +21,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       return null
     }
 
-    const payload = await parseApiResponse<CurrentUser>(response)
+    const payload = await parseApiResponse<CurrentUser>(response, CurrentUserSchema)
     return payload
   } catch {
     // 网络错误或 CORS 失败 → 视为未认证，触发登录跳转
@@ -36,11 +41,11 @@ export async function requireAuth(): Promise<CurrentUser> {
 }
 
 export async function login(input: LoginRequest): Promise<CurrentUser> {
-  return sendAuthRequest<CurrentUser>('/auth/login', input)
+  return sendAuthRequest<CurrentUser>('/auth/login', input, CurrentUserSchema)
 }
 
 export async function register(input: RegisterRequest): Promise<CurrentUser> {
-  return sendAuthRequest<CurrentUser>('/auth/register', input)
+  return sendAuthRequest<CurrentUser>('/auth/register', input, CurrentUserSchema)
 }
 
 export async function logout(): Promise<void> {
@@ -75,7 +80,7 @@ export function getLoginUrl(returnTo?: string): string {
   return loginUrl.toString()
 }
 
-async function sendAuthRequest<T>(path: string, body: unknown): Promise<T> {
+async function sendAuthRequest<T>(path: string, body: unknown, dataSchema: ZodType<T>): Promise<T> {
   const response = await fetch(`${clientEnv.SUPER_PUBLIC_API_BASE_URL}${path}`, {
     method: 'POST',
     credentials: 'include',
@@ -85,21 +90,30 @@ async function sendAuthRequest<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   })
 
-  return parseApiResponse<T>(response)
+  return parseApiResponse<T>(response, dataSchema)
 }
 
-async function parseApiResponse<T>(response: Response): Promise<T> {
-  const payload = (await response.json().catch(() => null)) as ApiResponse<T> | null
+async function parseApiResponse<T>(response: Response, dataSchema: ZodType<T>): Promise<T> {
+  const rawPayload = await response.json().catch(() => null)
+  const failurePayload = ApiFailureSchema.safeParse(rawPayload)
 
-  if (!payload) {
+  if (failurePayload.success) {
+    throw new Error(failurePayload.data.error.message)
+  }
+
+  const successHeader = ApiSuccessHeaderSchema.safeParse(rawPayload)
+
+  if (!successHeader.success) {
     throw new Error(`Invalid API response: ${response.status}`)
   }
 
-  if (!payload.success) {
-    throw new Error(payload.error.message)
+  const successData = dataSchema.safeParse(rawPayload.data)
+
+  if (!successData.success) {
+    throw new Error(`Invalid API response: ${response.status}`)
   }
 
-  return payload.data
+  return successData.data
 }
 
 function normalizeReturnTo(returnTo?: string) {

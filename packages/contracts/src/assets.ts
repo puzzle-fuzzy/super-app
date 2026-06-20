@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { createApiResponseSchema, createApiSuccessSchema } from './api'
+
 export const AssetKindSchema = z.enum([
   'subject',
   'image',
@@ -77,10 +79,16 @@ export const AssetDtoSchema = z.object({
 
 export type AssetDto = z.infer<typeof AssetDtoSchema>
 
-export const AssetListResponseSchema = z.object({
+export const AssetListDataSchema = z.object({
   items: z.array(AssetDtoSchema),
   nextCursor: z.string().nullable(),
 })
+
+export type AssetListData = z.infer<typeof AssetListDataSchema>
+
+export const AssetListSuccessSchema = createApiSuccessSchema(AssetListDataSchema)
+
+export const AssetListResponseSchema = createApiResponseSchema(AssetListDataSchema)
 
 export type AssetListResponse = z.infer<typeof AssetListResponseSchema>
 
