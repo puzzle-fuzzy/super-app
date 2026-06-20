@@ -1,0 +1,23 @@
+{
+  "name": "@super-app/types",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "裸 TS 业务类型单一真源 — 领域 DTO、interface、type 联合（L1 类型层）",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "bun test tests"
+  },
+  "dependencies": {
+    "@super-app/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "^5.8.3"
+  }
+}
