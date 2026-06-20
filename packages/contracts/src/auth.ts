@@ -26,3 +26,16 @@ export const RegisterRequestSchema = z.object({
 })
 
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>
+
+export const ForgotPasswordRequestSchema = z.object({
+  email: z.string().email(),
+})
+
+export type ForgotPasswordRequest = z.infer<typeof ForgotPasswordRequestSchema>
+
+export const ResetPasswordRequestSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(8),
+})
+
+export type ResetPasswordRequest = z.infer<typeof ResetPasswordRequestSchema>

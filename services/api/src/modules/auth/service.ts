@@ -147,7 +147,16 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
 }
 
-async function findUserByEmail(db: Db, email: string) {
+/** 按邮箱查找用户（导出供 forgot-password 使用） */
+export async function findUserByEmail(db: Db, email: string) {
   const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1)
   return user ?? null
+}
+
+/** 更新用户密码（导出供 reset-password 使用） */
+export async function updateUserPassword(db: Db, userId: string, hashedPassword: string) {
+  await db
+    .update(users)
+    .set({ passwordHash: hashedPassword })
+    .where(eq(users.id, userId))
 }
