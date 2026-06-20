@@ -1,4 +1,4 @@
-import type { BillingStatistics, CategoryBreakdown, CostDetail, DailyTrendItem, ModelBreakdown } from '@super-app/shared'
+import type { BillingStatistics, CategoryBreakdown, CostDetail, DailyTrendItem, ModelBreakdown } from '@super-app/types'
 import currency from 'currency.js'
 import { centsToYuan } from './utils'
 

@@ -16,7 +16,8 @@
     "@super-app/canvas-engine": "workspace:*",
     "@super-app/ffmpeg": "workspace:*",
     "@super-app/prompt-engine": "workspace:*",
-    "@super-app/shared": "workspace:*"
+    "@super-app/shared": "workspace:*",
+    "@super-app/types": "workspace:*"
   },
   "devDependencies": {
     "bun-types": "latest",

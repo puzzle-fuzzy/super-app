@@ -1,5 +1,10 @@
 // ===== 模型相关类型定义 =====
 
+import type { ModelPricing } from '@super-app/types'
+
+// ModelPricing 真源在 @super-app/types（消除历史多份漂移），此处 re-export 保持 provider 既有 import 路径。
+export type { ModelPricing } from '@super-app/types'
+
 export interface ModelParameter {
   name: string
   type: 'text' | 'number' | 'select' | 'boolean'
@@ -11,14 +16,6 @@ export interface ModelParameter {
   max?: number
   /** 存在则渲染为上传控件而非文本框。accept 为 MIME 类型（如 'image/*'） */
   mediaUpload?: { accept: string, multiple?: boolean }
-}
-
-export interface ModelPricing {
-  inputPriceCents: number // 文本：每百万 Token 价格（分）；图片：每张价格（分）；视频：720P 每秒价格（分）
-  outputPriceCents?: number // 文本输出：每百万 Token 价格（分）
-  inputPrice1080Cents?: number // 视频：1080P 每秒价格（分）
-  unit?: 'token' | 'image' | 'video' | 'audio'
-  note?: string
 }
 
 /**

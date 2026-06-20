@@ -1,48 +1,7 @@
-// ===== 计费参数 =====
+// ===== 计费相关类型 — 单一真源在 @super-app/types 与 @super-app/contracts =====
+// 本文件仅 re-export，消除历史上 billing 自定义的 BillingParams/ModelPricing/CostDetail 漂移定义。
+// CostDetail 真源在 contracts/billing（被 wire 层 GenerationRecordDTO.cost 引用）；
+// BillingParams/ModelPricing 真源在 types（纯业务类型）。
 
-export interface BillingParams {
-  n?: number
-  duration?: number
-  resolution?: string
-}
-
-// ===== 模型定价 =====
-
-export interface ModelPricing {
-  unit: 'token' | 'image' | 'video' | 'audio'
-  inputPriceCents: number
-  outputPriceCents?: number
-  inputPrice1080Cents?: number
-}
-
-// ===== 费用明细 =====
-
-export interface CostDetail {
-  unit: ModelPricing['unit']
-  /** 是否仅为预估（非实际消耗） */
-  estimated?: boolean
-  /** 是否为可计费记录（false 表示仅审计不计费） */
-  billable?: boolean
-  /** 费用来源：'estimated' | 'actual' */
-  source?: string
-  // Token 计费
-  inputTokens?: number
-  outputTokens?: number
-  inputUnitPriceCents?: number
-  inputUnitPrice?: number
-  outputUnitPriceCents?: number
-  outputUnitPrice?: number
-  inputCostCents?: number
-  inputCost?: number
-  outputCostCents?: number
-  outputCost?: number
-  // 数量计费（图片/视频/音频）
-  quantity?: number
-  duration?: number
-  resolution?: string
-  unitPriceCents?: number
-  unitPrice?: number
-  // 最终费用
-  totalPriceCents: number
-  totalPrice: number
-}
+export type { BillingParams, ModelPricing } from '@super-app/types'
+export type { CostDetail } from '@super-app/contracts/billing'

@@ -1,6 +1,6 @@
 // ===== OpenAI → DashScope 协议转换 =====
 
-import type { ModelPricing } from '@super-app/billing'
+import type { ModelPricing } from '@super-app/types'
 
 // ---- OpenAI 输入类型 ----
 

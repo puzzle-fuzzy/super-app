@@ -535,9 +535,12 @@ importers:
 
   packages/billing:
     dependencies:
-      '@super-app/shared':
+      '@super-app/contracts':
         specifier: workspace:*
-        version: link:../shared
+        version: link:../contracts
+      '@super-app/types':
+        specifier: workspace:*
+        version: link:../types
       currency.js:
         specifier: ^2.0.4
         version: 2.0.4
@@ -579,6 +582,9 @@ importers:
       '@super-app/shared':
         specifier: workspace:*
         version: link:../shared
+      '@super-app/types':
+        specifier: workspace:*
+        version: link:../types
     devDependencies:
       bun-types:
         specifier: latest
@@ -685,9 +691,9 @@ importers:
 
   packages/gateway:
     dependencies:
-      '@super-app/billing':
+      '@super-app/types':
         specifier: workspace:*
-        version: link:../billing
+        version: link:../types
     devDependencies:
       bun-types:
         specifier: latest
@@ -729,6 +735,9 @@ importers:
       '@super-app/subtitle-engine':
         specifier: workspace:*
         version: link:../subtitle-engine
+      '@super-app/types':
+        specifier: workspace:*
+        version: link:../types
       '@super-app/utils':
         specifier: workspace:*
         version: link:../utils

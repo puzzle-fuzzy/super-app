@@ -15,6 +15,7 @@
   "dependencies": {
     "@super-app/shared": "workspace:*",
     "@super-app/subtitle-engine": "workspace:*",
+    "@super-app/types": "workspace:*",
     "@super-app/utils": "workspace:*"
   },
   "devDependencies": {

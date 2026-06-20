@@ -50,3 +50,4 @@ export type { BuildR2VRequestInput } from './pure/r2v'
 // 纯逻辑
 export { resolveShotVideoReferences, toPromptReferenceEntries } from './pure/references'
 export type { ResolveShotVideoReferencesInput } from './pure/references'
+export { hasDialogueAudio, recommendCanvasVideoVariant } from './pure/canvas-rules'

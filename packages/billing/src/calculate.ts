@@ -1,4 +1,4 @@
-import type { BillingParams, CostDetail, ModelPricing } from '@super-app/shared'
+import type { BillingParams, CostDetail, ModelPricing } from '@super-app/types'
 import currency from 'currency.js'
 import { centsToYuan } from './utils'
 
