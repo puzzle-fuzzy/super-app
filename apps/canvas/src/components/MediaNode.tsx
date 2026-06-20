@@ -9,6 +9,8 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
   const isVideo = type === 'videoNode'
   const videoRef = useRef<HTMLVideoElement>(null)
   const [imageError, setImageError] = useState(false)
+  const nodeWidth = typeof data.width === 'number' ? data.width : 320
+  const nodeHeight = typeof data.height === 'number' ? data.height : 200
 
   // src 变化时重置错误状态
   useEffect(() => setImageError(false), [data.src])
@@ -33,8 +35,8 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
       <div
         className="media-node"
         style={{
-          width: 320,
-          height: 200,
+          width: nodeWidth,
+          height: nodeHeight,
         }}
       >
         <div
@@ -62,6 +64,11 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
           >
             {data.uploading.fileName}
           </span>
+          {data.uploading.fileName === '正在生成图片...' ? (
+            <span style={{ fontSize: 12, color: '#9ca3af' }}>
+              保持画布比例，生成完成后自动替换。
+            </span>
+          ) : null}
           <div
             style={{
               width: '100%',
@@ -93,7 +100,7 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
     <div
       className="media-node"
       style={{
-        width: 320,
+        width: nodeWidth,
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',

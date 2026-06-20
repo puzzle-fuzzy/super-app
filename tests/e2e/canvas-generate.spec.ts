@@ -8,15 +8,20 @@ const authUrl = 'http://localhost:5100/auth/'
 const canvasUrl = 'http://localhost:5104/canvas/'
 const samplePng = path.resolve(here, 'fixtures/sample.png')
 
-test('generates an image node from the canvas chat panel', async ({ page }) => {
+test('generates an image node from the canvas bottom prompt bar', async ({ page }) => {
   const email = `e2e-canvas-generate-${Date.now()}-${test.info().parallelIndex}@super.test`
   const password = 'super-e2e-password'
   const prompt = '赛博城市夜景，霓虹灯，电影感'
   const generatedUrl = 'https://fake-provider.local/generated.png'
   const requests: unknown[] = []
+  let releaseGeneration!: () => void
+  const generationReady = new Promise<void>((resolve) => {
+    releaseGeneration = resolve
+  })
 
   await page.route('**/api/canvas/generate-image', async (route) => {
     requests.push(route.request().postDataJSON())
+    await generationReady
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -51,8 +56,11 @@ test('generates an image node from the canvas chat panel', async ({ page }) => {
   await page.getByText('生成测试画布').click()
 
   await page.getByPlaceholder('描述你想生成的图片...').fill(prompt)
+  await expect(page.getByRole('button', { name: '高级参数' })).toBeVisible()
   await page.getByRole('button', { name: '生成图片' }).click()
 
+  await expect(page.getByText('正在生成图片...')).toBeVisible()
+  releaseGeneration()
   await expect(page.getByAltText(prompt)).toBeVisible()
   expect(requests).toEqual([{ prompt, model: 'qwen-image-2.0-pro', size: '2048*2048' }])
 })
@@ -184,7 +192,7 @@ test('adds a generated image from persisted history', async ({ page }) => {
   await page.getByRole('button', { name: '创建' }).click()
   await page.getByText('生成历史测试画布').click()
 
-  await page.getByRole('button', { name: '历史' }).click()
+  await page.getByRole('button', { name: '生成历史' }).click()
   await expect(page.getByText(prompt)).toBeVisible()
   await page.getByRole('button', { name: `添加 ${prompt}` }).click()
 

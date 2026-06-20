@@ -4,6 +4,7 @@ import {
   ChevronDown,
   File as FileIcon,
   Film,
+  History,
   House,
   ImageIcon,
   LogOut,
@@ -15,6 +16,7 @@ import {
   PenLine,
   Plus,
   RotateCcw,
+  SlidersHorizontal,
   StickyNote,
   Trash2,
   Type as TypeIcon,
@@ -37,7 +39,11 @@ import {
 import '@xyflow/react/dist/style.css'
 
 import type { AssetDto, AssetKind } from '@super-app/contracts/assets'
-import type { CanvasProjectDetailDto, CanvasProjectDto } from '@super-app/contracts/canvas'
+import type {
+  CanvasGenerateImageRequest,
+  CanvasProjectDetailDto,
+  CanvasProjectDto,
+} from '@super-app/contracts/canvas'
 import { assetsApi, canvasApi } from '@super-app/api-client'
 import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
@@ -726,27 +732,67 @@ function EditorViewInner({
   const nodeCount = nodes.length
   const edgeCount = edges.length
 
-  async function handleGenerateImage(prompt: string) {
-    const result = await canvasApi.generateImage({
-      prompt,
-      model: 'qwen-image-2.0-pro',
-      size: '2048*2048',
-    })
+  async function handleGenerateImage(input: CanvasGenerateImageRequest) {
+    const dimensions = imageNodeDimensionsFromSize(input.size)
+    const nodeId = `generating-image-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     const position = screenToFlowPosition({
       x: window.innerWidth / 2,
       y: window.innerHeight / 2,
     })
-    const node: ImageNodeType = {
-      id: `generated-image-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    const placeholder: ImageNodeType = {
+      id: nodeId,
       type: 'imageNode',
       position,
       data: {
-        src: result.imageUrl,
-        fileName: result.prompt,
+        src: '',
+        fileName: input.prompt,
+        width: dimensions.width,
+        height: dimensions.height,
+        uploading: { progress: 0.35, fileName: '正在生成图片...' },
       },
     }
-    setNodes((prev) => [...prev, node])
-    return result
+    setNodes((prev) => [...prev, placeholder])
+
+    try {
+      const result = await canvasApi.generateImage({
+        prompt: input.prompt,
+        model: input.model,
+        size: input.size,
+      })
+      setNodes((prev) =>
+        prev.map((node) =>
+          node.id === nodeId
+            ? ({
+                ...node,
+                data: {
+                  src: result.imageUrl,
+                  fileName: result.prompt,
+                  width: dimensions.width,
+                  height: dimensions.height,
+                  assetId: result.asset?.id,
+                },
+              } as ImageNodeType)
+            : node
+        )
+      )
+      return result
+    } catch (error) {
+      setNodes((prev) =>
+        prev.map((node) =>
+          node.id === nodeId
+            ? ({
+                ...node,
+                data: {
+                  ...node.data,
+                  uploading: undefined,
+                  fileName: '生成失败',
+                },
+              } as ImageNodeType)
+            : node
+        )
+      )
+      throw error
+    }
   }
 
   function handleAddGeneratedAsset(asset: AssetDto) {
@@ -806,6 +852,8 @@ function EditorViewInner({
           >
             <House size={16} aria-hidden="true" />
           </a>
+
+          <GeneratedImageHistory onAddAsset={handleAddGeneratedAsset} />
 
           <UserMenu user={user} open={userMenuOpen} setOpen={setUserMenuOpen} onLogout={onLogout} />
         </div>
@@ -903,7 +951,7 @@ function EditorViewInner({
 
       {/* ModeToolbar 使用 fixed 定位，不受容器影响 */}
       <ModeToolbar userName={user.name ?? user.email} />
-      <ImageGenerationChat onGenerate={handleGenerateImage} onAddAsset={handleAddGeneratedAsset} />
+      <ImageGenerationPromptBar onGenerate={handleGenerateImage} />
 
       {/* 弹窗 */}
       <GroupNameModal />
@@ -916,32 +964,157 @@ function EditorViewInner({
   )
 }
 
-function ImageGenerationChat({
+function ImageGenerationPromptBar({
   onGenerate,
-  onAddAsset,
 }: {
-  onGenerate: (prompt: string) => Promise<{ prompt: string; imageUrl: string }>
-  onAddAsset: (asset: AssetDto) => void
+  onGenerate: (input: CanvasGenerateImageRequest) => Promise<{ prompt: string; imageUrl: string }>
 }) {
-  const [activeTab, setActiveTab] = useState<'create' | 'history'>('create')
   const [prompt, setPrompt] = useState('')
-  const [messages, setMessages] = useState<
-    Array<{
-      id: string
-      role: 'user' | 'assistant'
-      text: string
-      imageUrl?: string
-      status?: 'error'
-      retryPrompt?: string
-    }>
-  >([])
+  const [model, setModel] = useState('qwen-image-2.0-pro')
+  const [size, setSize] = useState<CanvasGenerateImageRequest['size']>('2048*2048')
+  const [advancedOpen, setAdvancedOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
+  const [status, setStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [lastInput, setLastInput] = useState<CanvasGenerateImageRequest | null>(null)
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const trimmed = prompt.trim()
+    if (!trimmed || generating) return
+
+    const input = { prompt: trimmed, model, size }
+    setLastInput(input)
+    setStatus(null)
+    await runGeneration(input)
+  }
+
+  async function retryLast() {
+    if (!lastInput || generating) return
+    setStatus(null)
+    await runGeneration(lastInput)
+  }
+
+  async function runGeneration(input: CanvasGenerateImageRequest) {
+    setGenerating(true)
+    try {
+      await onGenerate(input)
+      setPrompt('')
+      setStatus({ type: 'success', text: '图片已生成，并添加到画布。' })
+    } catch (err) {
+      setStatus({
+        type: 'error',
+        text: err instanceof Error ? err.message : '生成失败',
+      })
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  return (
+    <section className="pointer-events-none fixed right-6 bottom-6 left-6 z-40 flex justify-center">
+      <form
+        onSubmit={submit}
+        className="pointer-events-auto w-full max-w-[860px] overflow-hidden rounded-2xl border border-[#343434] bg-[#191919] shadow-[0_14px_42px_rgba(0,0,0,0.36)]"
+      >
+        <div className="grid gap-3 p-3">
+          <textarea
+            value={prompt}
+            onChange={(event) => setPrompt(event.target.value)}
+            placeholder="描述你想生成的图片..."
+            rows={3}
+            className="min-h-24 resize-none rounded-xl border border-[#303030] bg-[#101010] px-4 py-3 text-[14px] leading-relaxed text-[#eeeeee] outline-none transition-colors placeholder:text-[#8a8a8a] focus:border-[#686868]"
+          />
+
+          {advancedOpen ? (
+            <div className="grid gap-3 rounded-xl border border-[#2a2a2a] bg-[#141414] p-3 sm:grid-cols-[1fr_180px]">
+              <label className="grid gap-1.5">
+                <span className="text-xs font-medium text-[#a3a3a3]">模型</span>
+                <input
+                  value={model}
+                  onChange={(event) => setModel(event.target.value)}
+                  className="h-9 rounded-lg border border-[#303030] bg-[#101010] px-3 text-[13px] text-[#eeeeee] outline-none focus:border-[#686868]"
+                />
+              </label>
+              <label className="grid gap-1.5">
+                <span className="text-xs font-medium text-[#a3a3a3]">尺寸</span>
+                <select
+                  value={size}
+                  onChange={(event) =>
+                    setSize(event.target.value as CanvasGenerateImageRequest['size'])
+                  }
+                  className="h-9 rounded-lg border border-[#303030] bg-[#101010] px-3 text-[13px] text-[#eeeeee] outline-none focus:border-[#686868]"
+                >
+                  <option value="2048*2048">1:1 2048</option>
+                  <option value="2368*1728">4:3 横图</option>
+                  <option value="1728*2368">3:4 竖图</option>
+                  <option value="2688*1536">16:9 横图</option>
+                  <option value="1536*2688">9:16 竖图</option>
+                </select>
+              </label>
+            </div>
+          ) : null}
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex min-h-9 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setAdvancedOpen((open) => !open)}
+                className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-[#303030] bg-[#202020] px-3 text-[13px] font-medium text-[#d4d4d4] transition-colors hover:border-[#4a4a4a] hover:bg-[#282828]"
+              >
+                <SlidersHorizontal size={14} aria-hidden="true" />
+                高级参数
+              </button>
+              {status ? (
+                <p
+                  className={`m-0 text-[13px] ${
+                    status.type === 'error' ? 'text-[#ffaaa3]' : 'text-[#b8e6c2]'
+                  }`}
+                >
+                  {status.text}
+                </p>
+              ) : (
+                <p className="m-0 hidden text-[13px] text-[#777777] sm:block">
+                  输入提示词后生成，结果会自动落在画布中心。
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {status?.type === 'error' && lastInput ? (
+                <button
+                  type="button"
+                  disabled={generating}
+                  onClick={retryLast}
+                  className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-[#7a3831] bg-[#3a2420] px-4 text-[13px] font-semibold text-[#ffd4cf] transition-colors hover:border-[#b9564b] hover:bg-[#4a2b25] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <RotateCcw size={14} aria-hidden="true" />
+                  重试
+                </button>
+              ) : null}
+              <button
+                type="submit"
+                disabled={!prompt.trim() || generating}
+                className="inline-flex h-10 min-w-28 cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-[#e5e5e5] px-5 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ImageIcon size={15} aria-hidden="true" />
+                {generating ? '生成中...' : '生成图片'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </section>
+  )
+}
+
+function GeneratedImageHistory({ onAddAsset }: { onAddAsset: (asset: AssetDto) => void }) {
+  const [open, setOpen] = useState(false)
   const [historyItems, setHistoryItems] = useState<AssetDto[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyError, setHistoryError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (activeTab !== 'history') return
+    if (!open) return
 
     let cancelled = false
     setHistoryLoading(true)
@@ -963,166 +1136,26 @@ function ImageGenerationChat({
     return () => {
       cancelled = true
     }
-  }, [activeTab])
-
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const trimmed = prompt.trim()
-    if (!trimmed || generating) return
-
-    setPrompt('')
-    await runGeneration(trimmed)
-  }
-
-  async function runGeneration(
-    trimmed: string,
-    options: { appendUser?: boolean; retryMessageId?: string } = {}
-  ) {
-    setGenerating(true)
-    if (options.appendUser !== false) {
-      setMessages((prev) => [...prev, { id: messageId(), role: 'user', text: trimmed }])
-    }
-    if (options.retryMessageId) {
-      setMessages((prev) =>
-        prev.map((message) =>
-          message.id === options.retryMessageId
-            ? { ...message, text: '正在重新生成...', status: undefined, retryPrompt: undefined }
-            : message
-        )
-      )
-    }
-
-    try {
-      const result = await onGenerate(trimmed)
-      const successMessage = {
-        id: options.retryMessageId ?? messageId(),
-        role: 'assistant' as const,
-        text: '图片已生成，并放入画布。',
-        imageUrl: result.imageUrl,
-      }
-      setMessages((prev) =>
-        options.retryMessageId
-          ? prev.map((message) =>
-              message.id === options.retryMessageId ? successMessage : message
-            )
-          : [...prev, successMessage]
-      )
-    } catch (err) {
-      const message = err instanceof Error ? err.message : '生成失败'
-      const failureMessage = {
-        id: options.retryMessageId ?? messageId(),
-        role: 'assistant' as const,
-        text: message,
-        status: 'error' as const,
-        retryPrompt: trimmed,
-      }
-      setMessages((prev) =>
-        options.retryMessageId
-          ? prev.map((item) => (item.id === options.retryMessageId ? failureMessage : item))
-          : [...prev, failureMessage]
-      )
-    } finally {
-      setGenerating(false)
-    }
-  }
+  }, [open])
 
   return (
-    <aside className="fixed right-20 bottom-5 z-40 flex w-[360px] max-w-[calc(100vw-40px)] flex-col overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
-      <div className="border-b border-[#2a2a2a] px-4 py-3">
-        <p className="m-0 text-[13px] font-semibold text-[#e5e5e5]">对话生成图片</p>
-        <p className="m-0 mt-1 text-xs text-[#777777]">输入描述，生成后自动添加到当前画布。</p>
-        <div className="mt-3 grid grid-cols-2 rounded-xl bg-[#141414] p-1">
-          <button
-            type="button"
-            onClick={() => setActiveTab('create')}
-            className={`h-8 cursor-pointer rounded-lg border-0 text-[12px] font-semibold transition-colors ${
-              activeTab === 'create'
-                ? 'bg-[#e5e5e5] text-[#141414]'
-                : 'bg-transparent text-[#888888] hover:text-[#e5e5e5]'
-            }`}
-          >
-            生成
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('history')}
-            className={`h-8 cursor-pointer rounded-lg border-0 text-[12px] font-semibold transition-colors ${
-              activeTab === 'history'
-                ? 'bg-[#e5e5e5] text-[#141414]'
-                : 'bg-transparent text-[#888888] hover:text-[#e5e5e5]'
-            }`}
-          >
-            历史
-          </button>
-        </div>
-      </div>
-      {activeTab === 'create' ? (
-        <>
-          <div className="flex max-h-52 flex-col gap-2 overflow-y-auto px-3 py-3">
-            {messages.length === 0 ? (
-              <p className="m-0 rounded-xl bg-[#242424] px-3 py-2 text-[13px] leading-relaxed text-[#999999]">
-                例如：一张电影感海报，雨夜街道，暖色霓虹，高反差光影。
-              </p>
-            ) : (
-              messages.map((message, index) => (
-                <div
-                  key={`${message.id}-${index}`}
-                  className={`max-w-[88%] rounded-xl px-3 py-2 text-[13px] leading-relaxed ${
-                    message.role === 'user'
-                      ? 'ml-auto bg-[#e5e5e5] text-[#141414]'
-                      : message.status === 'error'
-                        ? 'mr-auto border border-[#5a2a27] bg-[#2a1d1b] text-[#ffaaa3]'
-                        : 'mr-auto bg-[#242424] text-[#d4d4d4]'
-                  }`}
-                >
-                  <p className="m-0">{message.text}</p>
-                  {message.retryPrompt ? (
-                    <button
-                      type="button"
-                      disabled={generating}
-                      onClick={() =>
-                        runGeneration(message.retryPrompt!, {
-                          appendUser: false,
-                          retryMessageId: message.id,
-                        })
-                      }
-                      className="mt-2 inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#7a3831] bg-[#3a2420] px-3 text-xs font-semibold text-[#ffd4cf] transition-colors hover:border-[#b9564b] hover:bg-[#4a2b25] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <RotateCcw size={13} aria-hidden="true" />
-                      重试
-                    </button>
-                  ) : null}
-                  {message.imageUrl ? (
-                    <img
-                      className="mt-2 aspect-square w-full rounded-lg object-cover"
-                      src={message.imageUrl}
-                      alt="生成结果预览"
-                    />
-                  ) : null}
-                </div>
-              ))
-            )}
-          </div>
-          <form onSubmit={submit} className="grid gap-2 border-t border-[#2a2a2a] p-3">
-            <textarea
-              value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
-              placeholder="描述你想生成的图片..."
-              rows={3}
-              className="max-h-28 min-h-20 resize-none rounded-xl border border-[#2a2a2a] bg-[#141414] px-3 py-2.5 text-[13px] leading-relaxed text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] focus:border-[#555555]"
-            />
-            <button
-              type="submit"
-              disabled={!prompt.trim() || generating}
-              className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-[#e5e5e5] px-4 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <ImageIcon size={15} aria-hidden="true" />
-              {generating ? '生成中...' : '生成图片'}
-            </button>
-          </form>
-        </>
-      ) : (
-        <div className="flex max-h-80 min-h-56 flex-col gap-2 overflow-y-auto px-3 py-3">
+    <div className="relative">
+      <button
+        type="button"
+        aria-label="生成历史"
+        onClick={() => setOpen((value) => !value)}
+        className={`inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border px-3 text-[13px] font-medium transition-colors ${
+          open
+            ? 'border-[#4a4a4a] bg-[#2a2a2a] text-[#e5e5e5]'
+            : 'border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]'
+        }`}
+      >
+        <History size={15} aria-hidden="true" />
+        <span className="hidden sm:inline">生成历史</span>
+      </button>
+
+      {open ? (
+        <div className="absolute top-12 right-0 z-50 flex w-[360px] max-h-80 min-h-56 flex-col gap-2 overflow-y-auto rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] px-3 py-3 shadow-[0_18px_48px_rgba(0,0,0,0.4)]">
           {historyLoading ? (
             <p className="m-0 rounded-xl bg-[#242424] px-3 py-2 text-[13px] text-[#999999]">
               正在加载生成历史...
@@ -1144,7 +1177,10 @@ function ImageGenerationChat({
                   key={asset.id}
                   type="button"
                   aria-label={`添加 ${label}`}
-                  onClick={() => onAddAsset(asset)}
+                  onClick={() => {
+                    onAddAsset(asset)
+                    setOpen(false)
+                  }}
                   className="grid cursor-pointer grid-cols-[56px_1fr] gap-3 rounded-xl border border-[#2a2a2a] bg-[#202020] p-2 text-left transition-colors hover:border-[#4a4a4a] hover:bg-[#262626]"
                 >
                   {imageUrl ? (
@@ -1170,13 +1206,9 @@ function ImageGenerationChat({
             })
           )}
         </div>
-      )}
-    </aside>
+      ) : null}
+    </div>
   )
-}
-
-function messageId(): string {
-  return `message-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
 function isGeneratedImageAsset(asset: AssetDto): boolean {
@@ -1192,6 +1224,19 @@ function generatedAssetPrompt(asset: AssetDto): string {
   return typeof asset.metadata?.prompt === 'string' && asset.metadata.prompt.trim()
     ? asset.metadata.prompt.trim()
     : asset.title
+}
+
+function imageNodeDimensionsFromSize(size: CanvasGenerateImageRequest['size']): {
+  width: number
+  height: number
+} {
+  const [rawWidth, rawHeight] = size.split('*').map(Number)
+  const ratio = rawWidth > 0 && rawHeight > 0 ? rawHeight / rawWidth : 1
+  const width = 320
+  return {
+    width,
+    height: Math.round(width * ratio),
+  }
 }
 
 /* ---- Helpers ---- */

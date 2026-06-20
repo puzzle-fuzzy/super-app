@@ -10,6 +10,8 @@ export interface UploadState {
 export interface ImageNodeData {
   src: string
   fileName: string
+  width?: number
+  height?: number
   uploading?: UploadState
   groupId?: string
   assetId?: string
@@ -21,6 +23,8 @@ export type ImageNodeType = Node<ImageNodeData, 'imageNode'>
 export interface VideoNodeData {
   src: string
   fileName: string
+  width?: number
+  height?: number
   uploading?: UploadState
   groupId?: string
   assetId?: string
