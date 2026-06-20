@@ -107,11 +107,11 @@ billing/     ← 又重新定义 ModelPricing / BillingParams / CostDetail
 | **L0** | `eslint-config` | 不动 |
 | **L0** | `tailwind-config` | **正名**：补 `package.json` + 源码，消除幽灵包状态 |
 | **L1** | `contracts` | **吸收** shared 11 个纯类型文件的 DTO 部分（非 schema）；保持纯 Zod wire 层定位；修正 `records.ts` 的 `cost: unknown` 占位为精确类型引用 |
-| **L1** | `types` **(新)** | 收口全部裸 TS 业务类型，成为类型单一真源。吸收 `domain-types.ts`（拆成 7 个领域模块）、`admin`/`assets`/`asset-tags`/`auth`/`api-keys`/`billing`(DTO)/`notifications`/`subtitle`(DTO)/`upload`/`user-tasks` |
+| **L1** | `types` **(新)** | 收口全部裸 TS 业务类型，成为类型单一真源。吸收 `domain-types.ts`（拆成 8 个领域模块：canvas-layout/task/generation/notification/subtitle/provider-health/audit/dialogue）、`admin`/`assets`/`asset-tags`/`auth`/`api-keys`/`billing`(DTO)/`notifications`/`subtitle`(DTO)/`upload`/`user-tasks` |
 | **L2 胶水** | `runtime` **(新)** | 收口跨领域运行时。吸收 `logger`/`input-limits`/`error`(pg 错误检测)/`canvas-phases`(跨层注册表)/`generation`(运行时解析器)/`sse`(运行时解析器)/`webhooks`(含 `WEBHOOK_EVENTS` 常量与派生类型，整体进 runtime) |
 | **L2 逻辑** | `billing` | **修复漂移**：删除自身 `types.ts` 的 `ModelPricing`/`BillingParams`/`CostDetail` 定义，改从 `types` re-export；**吸收** shared 的 `billing-params.ts`（`extractBillingParams`） |
 | **L2 逻辑** | `provider` | **吸收** shared 的 `models.ts`（`ModelConfig`/`MODEL_CATEGORIES`/`CATEGORY_META`） |
-| **L2 逻辑** | `gateway` | **吸收** shared 的 `openai-gateway.ts`（`MODEL_ALIASES`/`resolveModelId`）；类型改引 `types` |
+| **L2 逻辑** | `gateway` | ~~吸收 shared 的 `openai-gateway.ts`~~ **（实现时修订）**：经核实该文件与 `gateway/protocol.ts` 有 6 个重复 OpenAI wire 类型，且独有符号 `MODEL_ALIASES`/`resolveModelId`/`OpenAIGatewayUsage*` **零消费者**，属 stale 重复文件。未迁移，随 `shared` 删除时消失（符合「只在真实复用时才提取」）。`protocol.ts` 的 `ModelPricing` 类型改引 `types` |
 | **L2 逻辑** | `canvas-engine` | 不动（纯 schema + 连续性校验） |
 | **L2 逻辑** | `prompt-engine` | 不动 |
 | **L2 逻辑** | `subtitle-engine` | 不动 |

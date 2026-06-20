@@ -83,6 +83,20 @@ export const MODEL_CATEGORIES = [
 export type ModelCategory = typeof MODEL_CATEGORIES[number]['id']
 
 /**
+ * 编译期双向断言：本包派生的 ModelCategory 与 @super-app/types 的 ModelCategory 同源。
+ * 若任一方新增/移除 category，此处编译失败，强制双向同步（避免 drift）。
+ * types 版本是 L1 层的权威字面量联合（因 types 不得依赖 provider L2）。
+ */
+type _AssertModelCategorySync<
+  A extends ModelCategory,
+  B extends import('@super-app/types').ModelCategory,
+  // 逆向断言：types 的版本也能赋值给本地派生版本
+  _Reverse extends import('@super-app/types').ModelCategory = ModelCategory,
+> = A extends B ? (B extends A ? true : never) : never
+const _modelCategorySync: _AssertModelCategorySync<ModelCategory, import('@super-app/types').ModelCategory> = true
+void _modelCategorySync
+
+/**
  * Category 元数据注册表 — 消除散弹式 category switch/if-else（§3.2）。
  *
  * 新增 category 时只需在此表新增一行，所有消费方通过 `CATEGORY_META[category]` 取值。
