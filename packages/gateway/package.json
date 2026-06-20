@@ -1,5 +1,6 @@
 {
   "name": "@super-app/gateway",
+  "description": "OpenAI 兼容网关 — 协议转换与模型别名（L2 领域逻辑）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

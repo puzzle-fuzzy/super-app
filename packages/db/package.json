@@ -1,5 +1,6 @@
 {
   "name": "@super-app/db",
+  "description": "Drizzle ORM 客户端 + schema + repositories（L3 运行时/IO）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

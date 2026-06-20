@@ -1,5 +1,6 @@
 {
   "name": "@super-app/canvas-runtime",
+  "description": "Canvas 多阶段执行编排，IO 走 adapter 注入（L3 运行时/IO）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

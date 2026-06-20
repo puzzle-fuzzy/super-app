@@ -1,5 +1,6 @@
 {
   "name": "@super-app/metrics",
+  "description": "Prometheus 指标聚合与访问策略（L2 领域逻辑，待启用）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

@@ -1,5 +1,6 @@
 {
   "name": "@super-app/canvas-engine",
+  "description": "Canvas 管道 schema + 连续性校验纯规则（L2 领域逻辑）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

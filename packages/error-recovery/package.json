@@ -1,5 +1,6 @@
 {
   "name": "@super-app/error-recovery",
+  "description": "失败 → 用户恢复策略纯规则（L0 基础设施）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

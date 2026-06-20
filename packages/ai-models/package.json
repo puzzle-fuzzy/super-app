@@ -1,5 +1,6 @@
 {
   "name": "@super-app/ai-models",
+  "description": "AI 模型注册表 / 目录（L2 领域逻辑）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

@@ -1,5 +1,6 @@
 {
   "name": "@super-app/auth-client",
+  "description": "客户端鉴权工具 + React 绑定（L4 客户端）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

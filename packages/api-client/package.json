@@ -1,5 +1,6 @@
 {
   "name": "@super-app/api-client",
+  "description": "前端 HTTP/SSE 客户端，对接后端 API（L4 客户端）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

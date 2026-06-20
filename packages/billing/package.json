@@ -1,5 +1,6 @@
 {
   "name": "@super-app/billing",
+  "description": "计费计算、定价表、信用台账策略（L2 领域逻辑）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

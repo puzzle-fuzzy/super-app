@@ -1,5 +1,6 @@
 {
   "name": "@super-app/contracts",
+  "description": "纯 Zod wire schema — 线上传输契约与边界校验（L1 类型契约）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

@@ -1,5 +1,6 @@
 {
   "name": "@super-app/prompt-engine",
+  "description": "LLM prompt 构建 + JSON 解析（L2 领域逻辑）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

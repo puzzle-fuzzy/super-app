@@ -1,5 +1,6 @@
 {
   "name": "@super-app/utils",
+  "description": "通用格式化 / HTTP / 错误工具（L0 基础设施）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

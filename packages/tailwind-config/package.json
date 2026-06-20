@@ -1,20 +1,18 @@
 {
-  "name": "@super-app/task-engine",
-  "description": "任务队列生命周期纯规则 + handler 注册（L2 领域逻辑）",
+  "name": "@super-app/tailwind-config",
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "description": "共享 Tailwind CSS 配置（L0 前端构建配置，待启用）",
   "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "test": "bun test tests"
+    "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
-    "bun-types": "latest",
     "typescript": "^5.8.3"
   }
 }

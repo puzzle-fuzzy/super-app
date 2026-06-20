@@ -1,9 +1,11 @@
 {
   "name": "@super-app/design-tokens",
+  "description": "设计令牌（CSS 自定义属性）（L0 基础设施）",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": {
+    ".": "./src/index.ts",
     "./css": "./src/tokens.css"
   },
   "scripts": {

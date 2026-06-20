@@ -1,5 +1,6 @@
 {
   "name": "@super-app/provider",
+  "description": "DashScope / ASR provider 客户端 + 模型配置（L3 运行时/IO）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

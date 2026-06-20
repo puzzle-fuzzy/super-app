@@ -1,9 +1,11 @@
 {
   "name": "@super-app/env",
+  "description": "Zod 校验的环境变量，client/public/server 三态（L0 基础设施）",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "exports": {
+    ".": "./src/index.ts",
     "./client": "./src/client.ts",
     "./public": "./src/public.ts",
     "./server": "./src/server.ts",

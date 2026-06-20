@@ -1,5 +1,6 @@
 {
   "name": "@super-app/ui-react",
+  "description": "React UI 原语 — Modal / Select / cn（L4 客户端）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

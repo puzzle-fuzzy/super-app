@@ -1,5 +1,6 @@
 {
   "name": "@super-app/storage",
+  "description": "对象存储抽象 — OSS / 本地文件（L3 运行时/IO）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

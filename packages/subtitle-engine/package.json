@@ -1,5 +1,6 @@
 {
   "name": "@super-app/subtitle-engine",
+  "description": "字幕生成纯规则 — ASR 转 ASS（L2 领域逻辑）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

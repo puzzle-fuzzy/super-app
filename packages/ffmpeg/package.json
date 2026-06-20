@@ -1,5 +1,6 @@
 {
   "name": "@super-app/ffmpeg",
+  "description": "ffmpeg 封装 — 音频提取/合成/字幕烧录（L3 运行时/IO）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

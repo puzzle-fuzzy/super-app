@@ -1,5 +1,6 @@
 {
   "name": "@super-app/workflow-engine",
+  "description": "Canvas pipeline 自动推进决策纯规则（L2 领域逻辑）",
   "version": "0.1.0",
   "private": true,
   "type": "module",

@@ -1,5 +1,6 @@
 {
   "name": "@super-app/eslint-config",
+  "description": "共享 ESLint flat 配置（L0 工具配置）",
   "version": "0.1.0",
   "private": true,
   "type": "module",
