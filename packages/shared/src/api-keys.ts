@@ -1,4 +1,4 @@
-import type { EntityResponse, ListResponse } from './api-response'
+import type { EntityResponse, ListResponse } from '@super-app/contracts/api'
 
 export type ApiKeyScope = 'all' | 'gateway'
 

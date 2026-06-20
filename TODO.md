@@ -38,6 +38,7 @@
 - [x] Add Canvas generation retry and explicit failure states for longer-running image workflows.
 - [x] Add a first-class generated-image history panel backed by persisted assets.
 - [ ] Add backend filtering and pagination for AI-generated image assets so Canvas history does not rely on client-side filtering.
-- [ ] Continue package boundary hardening: move generic error helpers from `@super-app/shared` to `@super-app/utils` with compatibility re-exports and unit tests.
-- [ ] Continue package boundary hardening: reconcile `@super-app/shared` API response DTOs with `@super-app/contracts` schemas.
+- [x] Continue package boundary hardening: move generic error helpers from `@super-app/shared` to `@super-app/utils` and migrate callers directly.
+- [x] Continue package boundary hardening: reconcile `@super-app/shared` API response DTOs with `@super-app/contracts` schemas.
 - [ ] Continue package boundary hardening: plan `createLogger` migration out of `@super-app/shared` into a runtime infrastructure package.
+- [ ] Continue package boundary hardening: audit DB-local error sanitizers before deciding whether they should stay repository-specific or move to `@super-app/utils`.

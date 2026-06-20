@@ -4,7 +4,7 @@
  * 涵盖认证、模型、限流、内容审核、参数、服务端、文件等常见错误。
  */
 
-import { sanitizeErrorMessage } from '@super-app/shared'
+import { sanitizeErrorMessage } from '@super-app/utils'
 
 const DASHSCOPE_ERROR_MESSAGES: Record<string, string> = {
   // ── 认证 / 授权 ──

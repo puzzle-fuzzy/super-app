@@ -1,4 +1,4 @@
-import type { EntityResponse, ListResponse, MutationOkResponse } from './api-response'
+import type { EntityResponse, ListResponse, MutationOkResponse } from '@super-app/contracts/api'
 import type { SubtitleSentence, SubtitleStyleConfig } from './domain-types'
 
 export type { SubtitleSentence, SubtitleStyleConfig } from './domain-types'

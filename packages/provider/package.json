@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@super-app/shared": "workspace:*",
-    "@super-app/subtitle-engine": "workspace:*"
+    "@super-app/subtitle-engine": "workspace:*",
+    "@super-app/utils": "workspace:*"
   },
   "devDependencies": {
     "bun-types": "latest",

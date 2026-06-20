@@ -1,4 +1,4 @@
-import type { EntityResponse } from './api-response'
+import type { EntityResponse } from '@super-app/contracts/api'
 
 /**
  * API 返回的上传文件类型（Date → string）

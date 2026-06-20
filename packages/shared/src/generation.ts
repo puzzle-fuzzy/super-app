@@ -1,5 +1,5 @@
 import type { RecoveryClassification } from '@super-app/error-recovery'
-import type { ListResponse, MutationOkResponse, RecordResponse } from './api-response'
+import type { ListResponse, MutationOkResponse, RecordResponse } from '@super-app/contracts/api'
 import type {
   CostDetail,
   GenerationInputParams,

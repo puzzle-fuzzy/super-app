@@ -18,12 +18,14 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "test": "bun test tests"
   },
   "dependencies": {
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "bun-types": "latest",
     "typescript": "^5.8.3"
   }
 }

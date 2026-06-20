@@ -1,4 +1,4 @@
-import type { EntityResponse } from './api-response'
+import type { EntityResponse } from '@super-app/contracts/api'
 
 /**
  * API 返回的用户信息类型（password 已剥离，Date → string）

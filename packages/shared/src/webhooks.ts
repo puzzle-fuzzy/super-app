@@ -1,4 +1,4 @@
-import type { EntityResponse, ListResponse, MutationOkResponse } from './api-response'
+import type { EntityResponse, ListResponse, MutationOkResponse } from '@super-app/contracts/api'
 
 /** Webhook 可订阅的事件类型 */
 export const WEBHOOK_EVENTS = [

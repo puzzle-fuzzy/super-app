@@ -38,6 +38,23 @@ export type ApiSuccess<T> = {
   data: T
 }
 
+export type MutationOkResponse = {
+  success: true
+}
+
+export type EntityResponse<T> = ApiSuccess<T>
+
+export type ListResponse<T> = {
+  success: true
+  items: T[]
+  total: number
+}
+
+export type RecordResponse<T> = {
+  success: true
+  record: T
+}
+
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure
 
 export function ok<T>(data: T): ApiSuccess<T> {

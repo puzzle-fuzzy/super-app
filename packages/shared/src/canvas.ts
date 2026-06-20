@@ -1,4 +1,4 @@
-import type { EntityResponse, ListResponse, MutationOkResponse } from './api-response'
+import type { EntityResponse, ListResponse, MutationOkResponse } from '@super-app/contracts/api'
 import type { CanvasFailureKind } from './canvas-failure'
 import type { CanvasPipelinePhase } from './canvas-phases'
 import type {

@@ -1,4 +1,4 @@
-import type { EntityResponse, ListResponse } from './api-response'
+import type { EntityResponse, ListResponse } from '@super-app/contracts/api'
 import type { NotificationMeta } from './domain-types'
 
 export interface NotificationDTO {

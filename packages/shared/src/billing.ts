@@ -1,4 +1,4 @@
-import type { EntityResponse, ListResponse } from './api-response'
+import type { EntityResponse, ListResponse } from '@super-app/contracts/api'
 
 // ===== 计费相关类型定义 =====
 
