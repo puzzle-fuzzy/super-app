@@ -1,6 +1,5 @@
 import type { BillingParams, CostDetail, ModelPricing } from '@super-app/types'
 import currency from 'currency.js'
-import { centsToYuan } from './utils'
 
 /**
  * currency.js 精度配置 — 4 位小数确保分→元转换和乘法累加时不丢精度
@@ -52,15 +51,10 @@ export function calculateCost(
         inputTokens,
         outputTokens,
         inputUnitPriceCents: pricing.inputPriceCents,
-        inputUnitPrice: centsToYuan(pricing.inputPriceCents),
         outputUnitPriceCents: pricing.outputPriceCents,
-        outputUnitPrice: pricing.outputPriceCents ? centsToYuan(pricing.outputPriceCents) : undefined,
         inputCostCents,
-        inputCost: centsToYuan(inputCostCents),
         outputCostCents,
-        outputCost: centsToYuan(outputCostCents),
         totalPriceCents: totalCents,
-        totalPrice: centsToYuan(totalCents),
       }
     }
 
@@ -73,9 +67,7 @@ export function calculateCost(
         unit: 'image',
         quantity: count,
         unitPriceCents: pricing.inputPriceCents,
-        unitPrice: centsToYuan(pricing.inputPriceCents),
         totalPriceCents: totalCents,
-        totalPrice: centsToYuan(totalCents),
       }
     }
 
@@ -93,9 +85,7 @@ export function calculateCost(
         duration,
         resolution,
         unitPriceCents,
-        unitPrice: centsToYuan(unitPriceCents),
         totalPriceCents: totalCents,
-        totalPrice: centsToYuan(totalCents),
       }
     }
 
@@ -110,9 +100,7 @@ export function calculateCost(
         unit: 'audio',
         duration,
         unitPriceCents,
-        unitPrice: centsToYuan(unitPriceCents),
         totalPriceCents: totalCents,
-        totalPrice: centsToYuan(totalCents),
       }
     }
 

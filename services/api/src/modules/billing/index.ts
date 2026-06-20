@@ -34,7 +34,7 @@ export const billingModule = new Elysia({ name: 'billing' })
               model: r.model,
               category: r.category,
               status: r.status,
-              cost: r.cost as CostRecord['cost'],
+              cost: r.cost,
               createdAt: r.createdAt,
             })
           )

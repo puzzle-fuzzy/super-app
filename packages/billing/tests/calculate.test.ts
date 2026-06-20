@@ -16,7 +16,6 @@ describe('calculateCost', () => {
     expect(cost.inputCostCents).toBe(0.2962)
     expect(cost.outputCostCents).toBe(5.4509)
     expect(cost.totalPriceCents).toBe(5.7471)
-    expect(cost.totalPrice).toBe(0.0575)
   })
 
   test('uses model parameters for image and video estimates', () => {

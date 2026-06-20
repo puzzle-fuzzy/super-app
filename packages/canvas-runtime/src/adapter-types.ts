@@ -248,7 +248,6 @@ export interface CanvasRuntimeBillingAdapter {
   ) => {
     unit: string
     totalPriceCents: number
-    totalPrice: number
     estimated?: boolean
     [key: string]: unknown
   }
