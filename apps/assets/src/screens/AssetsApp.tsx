@@ -218,6 +218,7 @@ export function AssetsApp() {
   const [items, setItems] = useState<AssetDto[]>([])
   const [isListLoading, setIsListLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [listError, setListError] = useState<string | null>(null)
   const [editor, setEditor] = useState<EditorState>(null)
@@ -363,24 +364,53 @@ export function AssetsApp() {
   }
 
   async function handleUpload(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const files = Array.from(event.target.files ?? [])
+    if (files.length === 0) return
 
     setUploading(true)
+    setUploadProgress(files.length > 1 ? `0/${files.length}` : null)
     setListError(null)
 
     try {
-      const created = await assetsApi.upload(file)
-      if (kind && created.kind !== kind) {
+      const createdAssets: AssetDto[] = []
+      let failedCount = 0
+      let shouldReloadList = false
+
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index]!
+        setUploadProgress(files.length > 1 ? `${index + 1}/${files.length}` : null)
+
+        try {
+          const created = await assetsApi.upload(file)
+          if (kind && created.kind !== kind) {
+            shouldReloadList = true
+          } else {
+            createdAssets.push(created)
+          }
+        } catch {
+          failedCount += 1
+        }
+      }
+
+      if (shouldReloadList) {
         const res = await assetsApi.list({ kind })
         setItems(res.items)
-      } else {
-        setItems((prev) => [created, ...prev])
+      } else if (createdAssets.length > 0) {
+        setItems((prev) => [...createdAssets.reverse(), ...prev])
+      }
+
+      if (failedCount > 0) {
+        setListError(
+          files.length === failedCount
+            ? '上传失败'
+            : `${files.length} 个文件中有 ${failedCount} 个上传失败`
+        )
       }
     } catch (err) {
       setListError(err instanceof Error ? err.message : '上传失败')
     } finally {
       setUploading(false)
+      setUploadProgress(null)
       if (fileInput.current) fileInput.current.value = ''
     }
   }
@@ -724,7 +754,11 @@ export function AssetsApp() {
                 disabled={uploading}
               >
                 <Upload size={16} aria-hidden="true" />
-                {uploading ? '上传中...' : '上传素材'}
+                {uploading
+                  ? uploadProgress
+                    ? `上传中 ${uploadProgress}`
+                    : '上传中...'
+                  : '上传素材'}
               </button>
               <button type="button" className={secondaryButton} onClick={openNewText}>
                 <FileText size={16} aria-hidden="true" />
@@ -803,6 +837,7 @@ export function AssetsApp() {
             ref={fileInput}
             className="absolute h-px w-px overflow-hidden whitespace-nowrap [clip:rect(0_0_0_0)]"
             type="file"
+            multiple
             onChange={handleUpload}
             disabled={uploading}
           />

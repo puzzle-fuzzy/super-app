@@ -1,5 +1,6 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { readFileSync } from 'node:fs'
 
 import { expect, test } from '@playwright/test'
 
@@ -7,6 +8,7 @@ const here = path.dirname(fileURLToPath(import.meta.url))
 const authUrl = 'http://localhost:5100/auth/'
 const assetsUrl = 'http://localhost:5105/assets/'
 const samplePng = path.resolve(here, 'fixtures/sample.png')
+const samplePngBuffer = readFileSync(samplePng)
 
 test('uploads an asset from the assets app after registering', async ({ context, page }) => {
   const email = `e2e-assets-${Date.now()}-${test.info().parallelIndex}@super.test`
@@ -67,4 +69,34 @@ test('uploads an asset from the assets app after registering', async ({ context,
   // The deletion persists after a reload (soft-deleted, excluded from list).
   await page.reload()
   await expect(page.getByText('sample.png')).toHaveCount(0)
+})
+
+test('uploads multiple selected assets from the assets app', async ({ page }) => {
+  const email = `e2e-assets-multi-${Date.now()}-${test.info().parallelIndex}@super.test`
+  const password = 'super-e2e-password'
+
+  await page.goto(assetsUrl)
+  await page.getByRole('tab', { name: '注册' }).click()
+  await page.getByLabel('名称').fill('E2E Multi Assets User')
+  await page.getByLabel('邮箱').fill(email)
+  await page.getByLabel('密码').fill(password)
+  await page.getByRole('button', { name: '创建并进入' }).click()
+
+  await expect(page).toHaveURL(assetsUrl)
+  await page.setInputFiles('input[type=file]', [
+    {
+      name: 'multi-one.png',
+      mimeType: 'image/png',
+      buffer: samplePngBuffer,
+    },
+    {
+      name: 'multi-two.png',
+      mimeType: 'image/png',
+      buffer: samplePngBuffer,
+    },
+  ])
+
+  await expect(page.getByText('multi-one.png').first()).toBeVisible()
+  await expect(page.getByText('multi-two.png').first()).toBeVisible()
+  await expect(page.getByText('正在浏览').locator('..')).toContainText('2 个素材')
 })
