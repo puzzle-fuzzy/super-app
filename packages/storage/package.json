@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@super-app/env": "workspace:*",
-    "ali-oss": "^6.23.0"
+    "ali-oss": "^6.23.0",
+    "proxy-agent": "^5.0.0"
   },
   "devDependencies": {
     "@types/ali-oss": "^6.23.3",

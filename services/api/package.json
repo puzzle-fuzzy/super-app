@@ -19,6 +19,7 @@
     "@super-app/canvas-pipeline": "workspace:*",
     "@super-app/contracts": "workspace:*",
     "@super-app/db": "workspace:*",
+    "@sinclair/typebox": "^0.34.49",
     "@super-app/env": "workspace:*",
     "@super-app/runtime": "workspace:*",
     "@super-app/sse-hub": "workspace:*",
@@ -27,7 +28,7 @@
     "@super-app/types": "workspace:*",
     "@super-app/utils": "workspace:*",
     "drizzle-orm": "^0.44.2",
-    "elysia": "latest",
+    "elysia": "^1.4.29",
     "nodemailer": "^9.0.1",
     "sharp": "^0.34.2"
   },
