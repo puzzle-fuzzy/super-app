@@ -1,4 +1,5 @@
 export * from './api-keys'
+export * from './audit-logs'
 export * from './assets'
 export * from './canvas'
 export * from './canvas-pipeline-assets'

@@ -1,4 +1,5 @@
 import type { CurrentUser } from '@super-app/contracts/auth'
+import { serverEnv } from '@super-app/env/server'
 import { Elysia } from 'elysia'
 
 import { fail } from '../shared/response'
@@ -40,5 +41,22 @@ export function requireUser({ user, set }: AuthGuardContext) {
   if (!user) {
     set.status = 401
     return fail('UNAUTHORIZED', 'Unauthorized')
+  }
+}
+
+/**
+ * Admin 鉴权守卫：先校验登录态，再检查用户是否在管理员名单中。
+ * 管理员名单通过 ADMIN_USER_IDS 环境变量配置（逗号分隔的 UUID 列表）。
+ * 非管理员直接 403，handler 不再手写守卫。
+ */
+export function requireAdmin({ user, set }: AuthGuardContext) {
+  if (!user) {
+    set.status = 401
+    return fail('UNAUTHORIZED', 'Unauthorized')
+  }
+  const adminIds = serverEnv.ADMIN_USER_IDS?.split(',').map((s) => s.trim()).filter(Boolean) ?? []
+  if (!adminIds.includes(user.id)) {
+    set.status = 403
+    return fail('FORBIDDEN', 'Forbidden')
   }
 }

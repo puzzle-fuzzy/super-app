@@ -61,6 +61,8 @@ export const serverEnvSchema = publicEnvSchema.extend({
   FEATURE_CANVAS_ENABLED: booleanString.default('true'),
   FEATURE_TRANSFER_ENABLED: booleanString.default('false'),
   FEATURE_API_CONSOLE_ENABLED: booleanString.default('false'),
+
+  ADMIN_USER_IDS: z.string().optional(),
 }).superRefine((env, ctx) => {
   if (env.STORAGE_DRIVER !== 'oss') {
     return
