@@ -39,6 +39,9 @@ import type { CurrentUser, LoginRequest, RegisterRequest } from '@super-app/cont
 import { redirectToLogin } from '@super-app/auth-client'
 import { clientEnv } from '@super-app/env/client'
 
+export { SSEClient } from './sse-client'
+export type { TaskStatusEvent } from './sse-client'
+
 export interface ApiFetchOptions extends RequestInit {
   redirectOnUnauthorized?: boolean
 }

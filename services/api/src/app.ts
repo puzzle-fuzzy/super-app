@@ -15,8 +15,10 @@ import { templatesModule } from './modules/templates'
 import { systemModule } from './modules/system'
 import { textsModule } from './modules/texts'
 import { transfersModule } from './modules/transfers'
+import { sseModule } from './modules/sse'
 import { corsPlugin } from './plugins/cors'
 import { errorHandler } from './middlewares/error-handler'
+import { startSSEListener } from './services/sse-manager'
 
 const storageRoot = path.resolve(serverEnv.STORAGE_DIR)
 
@@ -77,6 +79,7 @@ const baseApp = new Elysia()
       .use(canvasModule)
       .use(apiKeysModule)
       .use(transfersModule)
+      .use(sseModule)
   )
 
 export const app =

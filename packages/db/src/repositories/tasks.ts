@@ -221,10 +221,15 @@ export async function sweepOrphanTasks(timeoutMinutes = 5): Promise<number> {
 // ===== SSE 通知（5a stub，5b 实现 LISTEN/NOTIFY） =====
 
 /**
- * 任务状态变更通知 — 5a 为 no-op stub。
- * 5b 引入 PostgreSQL LISTEN/NOTIFY 后，这里会 pg NOTIFY 'generation_status' 频道，
- * 由 server 的 SSE listener 接收并推送到客户端。
+ * 任务状态变更通知 — 通过 PG NOTIFY 推送到 SSE listener。
  */
-export async function notifyTaskStatusChange(_task: Task): Promise<void> {
-  // 5b: await pgClient.notify('generation_status', JSON.stringify({ taskId: _task.id, ... }))
+export async function notifyTaskStatusChange(task: Task): Promise<void> {
+  const { notifyTaskStatus } = await import('../notify')
+  await notifyTaskStatus({
+    taskId: task.id,
+    ownerId: task.ownerId,
+    status: task.status,
+    output: task.output,
+    error: task.errorMessage ? { message: task.errorMessage } : undefined,
+  })
 }

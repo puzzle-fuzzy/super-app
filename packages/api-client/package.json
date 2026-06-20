@@ -12,6 +12,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@microsoft/fetch-event-source": "^2.0.1",
     "@super-app/auth-client": "workspace:*",
     "@super-app/contracts": "workspace:*",
     "@super-app/env": "workspace:*"

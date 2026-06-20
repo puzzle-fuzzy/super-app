@@ -17,6 +17,7 @@
     "@super-app/ai-models": "workspace:*",
     "@super-app/contracts": "workspace:*",
     "@super-app/db": "workspace:*",
+    "@super-app/events": "workspace:*",
     "@super-app/env": "workspace:*",
     "@super-app/storage": "workspace:*",
     "drizzle-orm": "^0.44.2",

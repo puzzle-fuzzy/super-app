@@ -44,7 +44,7 @@ import type {
   CanvasProjectDetailDto,
   CanvasProjectDto,
 } from '@super-app/contracts/canvas'
-import { assetsApi, canvasApi } from '@super-app/api-client'
+import { assetsApi, canvasApi, SSEClient } from '@super-app/api-client'
 import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
 import { clientEnv } from '@super-app/env/client'
@@ -149,6 +149,22 @@ interface CanvasData {
 
 export function CanvasApp() {
   const { user, isLoading, error } = useRequireAuth()
+  const sseRef = useRef<SSEClient | null>(null)
+
+  // SSE 连接 — 5b demo，5e 接真实 UI
+  useEffect(() => {
+    if (!user) return
+    const sse = new SSEClient()
+    sse.on('task_status', (data) => {
+      console.log('[SSE] task_status:', data)
+    })
+    sse.connect()
+    sseRef.current = sse
+    return () => {
+      sse.disconnect()
+      sseRef.current = null
+    }
+  }, [user])
 
   if (isLoading) {
     return <ScreenState title="正在确认登录状态" description="Super 正在连接你的云端工作区。" />

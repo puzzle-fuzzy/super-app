@@ -55,7 +55,7 @@ import type {
   TextType,
   UpdateTextAssetRequest,
 } from '@super-app/contracts/text-assets'
-import { assetsApi, stylesApi, subjectsApi, templatesApi, textsApi } from '@super-app/api-client'
+import { assetsApi, stylesApi, subjectsApi, templatesApi, textsApi, SSEClient } from '@super-app/api-client'
 import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
 import { clientEnv } from '@super-app/env/client'
@@ -213,6 +213,22 @@ interface TransferNotice {
 
 export function AssetsApp() {
   const { user, isLoading, error } = useRequireAuth()
+  const sseRef = useRef<SSEClient | null>(null)
+
+  // SSE 连接 — 5b demo，5e 接真实 UI
+  useEffect(() => {
+    if (!user) return
+    const sse = new SSEClient()
+    sse.on('task_status', (data) => {
+      console.log('[SSE] task_status:', data)
+    })
+    sse.connect()
+    sseRef.current = sse
+    return () => {
+      sse.disconnect()
+      sseRef.current = null
+    }
+  }, [user])
   const [filter, setFilter] = useState<FilterKind>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [items, setItems] = useState<AssetDto[]>([])
