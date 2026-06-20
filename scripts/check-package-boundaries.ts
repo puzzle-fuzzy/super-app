@@ -43,7 +43,7 @@ export const DEFAULT_BOUNDARY_RULES: BoundaryRule[] = [
   {
     roots: [
       'packages/task-engine/src',
-      'packages/workflow-engine/src',
+      'packages/canvas-pipeline/src',
       'packages/gateway/src',
       'packages/metrics/src',
       'packages/provider-health/src',

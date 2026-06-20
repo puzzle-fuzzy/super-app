@@ -568,6 +568,25 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
+  packages/canvas-pipeline:
+    dependencies:
+      '@super-app/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@super-app/task-engine':
+        specifier: workspace:*
+        version: link:../task-engine
+      '@super-app/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      bun-types:
+        specifier: latest
+        version: 1.3.14
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+
   packages/canvas-runtime:
     dependencies:
       '@super-app/billing':
@@ -893,25 +912,6 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
-  packages/workflow-engine:
-    dependencies:
-      '@super-app/runtime':
-        specifier: workspace:*
-        version: link:../runtime
-      '@super-app/task-engine':
-        specifier: workspace:*
-        version: link:../task-engine
-      '@super-app/types':
-        specifier: workspace:*
-        version: link:../types
-    devDependencies:
-      bun-types:
-        specifier: latest
-        version: 1.3.14
-      typescript:
-        specifier: ^5.8.3
-        version: 5.9.3
-
   services/api:
     dependencies:
       '@elysia/cors':
@@ -975,6 +975,9 @@ importers:
       '@super-app/billing':
         specifier: workspace:*
         version: link:../../packages/billing
+      '@super-app/canvas-pipeline':
+        specifier: workspace:*
+        version: link:../../packages/canvas-pipeline
       '@super-app/canvas-runtime':
         specifier: workspace:*
         version: link:../../packages/canvas-runtime
@@ -1011,9 +1014,6 @@ importers:
       '@super-app/types':
         specifier: workspace:*
         version: link:../../packages/types
-      '@super-app/workflow-engine':
-        specifier: workspace:*
-        version: link:../../packages/workflow-engine
       drizzle-orm:
         specifier: ^0.44.2
         version: 0.44.7(bun-types@1.3.14)(postgres@3.4.9)

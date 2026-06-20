@@ -10,7 +10,7 @@ import {
 import { getTaskPriority } from '@super-app/task-engine'
 
 // 阶段注册表的权威源在 @super-app/runtime（canvas-phases 常量）+ @super-app/types（类型）。
-// 此处 re-export 保持 workflow-engine 的公开 API，消费者无需改 import 路径。
+// 此处 re-export 保持 canvas-pipeline 的公开 API，消费者无需改 import 路径。
 export {
   CANVAS_PAUSE_BEFORE,
   CANVAS_PHASE_ORDER,

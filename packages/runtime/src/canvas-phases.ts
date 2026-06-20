@@ -2,7 +2,7 @@
  * Canvas 流水线阶段单一权威注册表（运行时常量 + 映射函数）。
  *
  * 这是阶段顺序、pause-before、task-type 映射的**唯一运行时来源**：
- *  - `@super-app/workflow-engine` 由此派生阶段推进规则（不再手抄）。
+ *  - `@super-app/canvas-pipeline` 由此派生阶段推进规则（不再手抄）。
  *  - `@super-app/db` 的 `canvas_pipeline_phase` pgEnum 与本注册表双向断言同源（见 db/types.ts）。
  *  - 前端 `PipelineController` / `CostPanel` 由此派生展示顺序与 pauseBefore（不再手抄）。
  *

@@ -1,7 +1,7 @@
 /**
  * Canvas Pipeline Service — 业务逻辑层
  *
- * 调用 @super-app/db repository 函数和 @super-app/workflow-engine 决策函数。
+ * 调用 @super-app/db repository 函数和 @super-app/canvas-pipeline 决策函数。
  * 当前为骨架实现，返回 mock 数据。完整实现需要 DB repository 函数。
  */
 
@@ -39,7 +39,7 @@ export async function deleteProject(id: string, userId: string) {
 
 export async function startPipeline(projectId: string, userId: string) {
   // TODO: Create first pipeline_run + task (canvas.analyze)
-  // Use @super-app/workflow-engine createNextCanvasPipelineTask
+  // Use @super-app/canvas-pipeline createNextCanvasPipelineTask
   return { phase: 'analyze', runId: 'run_1', taskId: 'task_1' }
 }
 

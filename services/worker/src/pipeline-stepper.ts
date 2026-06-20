@@ -10,7 +10,7 @@
  * PAUSE_BEFORE 定义了需要用户确认才能继续的阶段。
  */
 
-import type { CanvasPipelinePhase } from '@super-app/workflow-engine'
+import type { CanvasPipelinePhase } from '@super-app/canvas-pipeline'
 import type { WorkerConfig } from './worker.config'
 import {
   createPipelineRun,
@@ -26,7 +26,7 @@ import {
   CANVAS_PHASE_ORDER,
   createNextCanvasPipelineTask,
   decideCanvasAutoAdvance,
-} from '@super-app/workflow-engine'
+} from '@super-app/canvas-pipeline'
 
 const logger = createLogger('pipeline-stepper')
 
@@ -83,7 +83,7 @@ export async function advancePipelineAfterTaskSuccess(
     return null
 
   // 6. 并发守卫 — 下一个 phase 没有 active run
-  // 复用 workflow-engine 的推进守卫（pause-before 理论上已被 decideCanvasAutoAdvance 拦截，
+  // 复用 canvas-pipeline 的推进守卫（pause-before 理论上已被 decideCanvasAutoAdvance 拦截，
   // 这里 hasActiveRun 是真正的并发防护）
   const activeRun = await findActiveRunForPhase(projectId, nextPhase)
   if (!canAdvanceToPhase(nextPhase, { hasActiveRun: Boolean(activeRun) })) {
