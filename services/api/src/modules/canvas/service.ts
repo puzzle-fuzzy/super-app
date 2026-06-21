@@ -6,6 +6,7 @@ import type {
   CreateCanvasProjectRequest,
   UpdateCanvasProjectRequest,
 } from '@super-app/contracts/canvas'
+import type { CanvasDocumentData } from '@super-app/contracts/canvas-document'
 import type { Db } from '@super-app/db'
 import { canvasDocuments, canvasProjects, canvasVersions } from '@super-app/db/schema'
 import { and, desc, eq, isNull, sql } from 'drizzle-orm'
@@ -343,7 +344,7 @@ function toCanvasProjectDetailDto(
 ): CanvasProjectDetailDto {
   return {
     ...toCanvasProjectSummaryDto(project),
-    data: document.data,
+    data: (document.data ?? null) as unknown as CanvasDocumentData | null,
     version: document.version,
   }
 }

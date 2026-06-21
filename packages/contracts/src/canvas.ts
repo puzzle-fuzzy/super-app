@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { createApiResponseSchema, createApiSuccessSchema } from './api'
 import { AssetDtoSchema } from './assets'
+import { CanvasDocumentDataSchema } from './canvas-document'
 
 export const CanvasProjectStatusSchema = z.enum(['active', 'archived'])
 
@@ -20,7 +21,7 @@ export const CanvasProjectDtoSchema = z.object({
 export type CanvasProjectDto = z.infer<typeof CanvasProjectDtoSchema>
 
 export const CanvasProjectDetailDtoSchema = CanvasProjectDtoSchema.extend({
-  data: z.record(z.unknown()),
+  data: CanvasDocumentDataSchema.nullable(),
   version: z.number().int().positive(),
 })
 
@@ -28,7 +29,7 @@ export type CanvasProjectDetailDto = z.infer<typeof CanvasProjectDetailDtoSchema
 
 export const CanvasDocumentSchema = z.object({
   projectId: z.string(),
-  data: z.record(z.unknown()),
+  data: CanvasDocumentDataSchema.nullable(),
   version: z.number().int().positive(),
   updatedAt: z.string(),
 })
@@ -121,7 +122,7 @@ export type CanvasGenerateImageResponse = z.infer<typeof CanvasGenerateImageResp
 export const SaveCanvasProjectRequestSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional(),
-  data: z.record(z.unknown()),
+  data: CanvasDocumentDataSchema.optional(),
 })
 
 export type SaveCanvasProjectRequest = z.infer<typeof SaveCanvasProjectRequestSchema>
