@@ -43,30 +43,12 @@
 
 ## P2 - 文件单一职责与前端可维护性
 
-### 5. 多个前端入口组件过大，状态、视图、IO、协议逻辑混在一起
+### 5. ~~多个前端入口组件过大，状态、视图、IO、协议逻辑混在一起~~ ✅ `2820a21`
 
-**问题**
-
-- `apps/assets/src/screens/AssetsApp.tsx` 约 1902 行，包含资产列表、编辑表单、弹窗、分享、WebRTC 传输、剪贴板、信令解析等职责。
-- `apps/canvas/src/screens/CanvasApp.tsx` 约 1798 行，包含项目列表、编辑器路由、React Flow、自动保存、资产侧栏、生成图片、用户菜单等职责。
-- `apps/canvas/src/screens/PipelineEditor.tsx` 约 773 行，仍承担 pipeline 数据加载、SSE、节点渲染、操作按钮、详情面板等职责。
-
-**解决办法**
-
-- `AssetsApp.tsx` 拆分：
-  - `AssetListView` / `AssetCard` / `AssetEditorDialog` / `TransferNoticeDialog`
-  - `useAssetsData` / `useAssetMutations`
-  - `useAssetTransferSender`，把 WebRTC 与 signaling message 解析移出 UI 文件。
-- `CanvasApp.tsx` 拆分：
-  - `CanvasProjectList` / `CanvasEditorShell` / `CanvasToolbar` / `CanvasAssetSidebar`
-  - `useCanvasProjectLoader` / `useCanvasAutosave` / `useGeneratedAssets`
-- `PipelineEditor.tsx` 拆分：
-  - `usePipelineProject` / `usePipelineSse` / `PipelineGraph` / `PipelineDetailPanel`。
-
-**完成标准**
-
-- 单个 screen 文件尽量控制在 400-600 行以内。
-- 纯 UI 组件不直接调用 API；API/SSE/WebRTC 放到 hook 或 service。
+- `AssetsApp.tsx`：1903→310 行。提取 7 个组件文件、1 个 hook 文件、2 个 util 文件
+- `CanvasApp.tsx`：1798→106 行。提取 7 个组件文件、2 个 hook 文件
+- 纯 UI 组件不再直接调用 API — 数据层全部收进 hooks
+- `PipelineEditor.tsx`（~773 行）留给后续轮次拆分
 
 ### 6. Pipeline 手动工作站交互仍未按阶段依赖关系收敛
 
