@@ -9,6 +9,7 @@ import type { StorageProvider } from '@super-app/storage'
 import { getGenerationModel, isVideoGenerationModel } from '@super-app/ai-models'
 
 import { AppError } from '../../shared/errors'
+import { createGenerationRecord } from '@super-app/db'
 import { maxUploadBytes, uploadAsset } from '../assets/service'
 
 const DEFAULT_DASHSCOPE_BASE_URL = 'https://dashscope.aliyuncs.com/api/v1'
@@ -127,8 +128,18 @@ async function generateCanvasStillImage({
     throw new AppError(502, 'INTERNAL_ERROR', 'DashScope did not return an image URL', payload)
   }
 
-  const downloaded = await downloadGeneratedMedia(imageUrl, 'image')
   const requestId = payload?.request_id
+
+  // 创建 generation record 用于追溯
+  const generationRecord = await createGenerationRecord({
+    ownerId: owner.id,
+    model: input.model,
+    category: 'image',
+    status: 'succeeded',
+    inputParams: { prompt: input.prompt, ...(input.negativePrompt ? { negativePrompt: input.negativePrompt } : {}) },
+  })
+
+  const downloaded = await downloadGeneratedMedia(imageUrl, 'image')
   const asset = await uploadAsset({
     db,
     storage,
@@ -148,6 +159,7 @@ async function generateCanvasStillImage({
       seed: input.seed ?? null,
       promptExtend: input.promptExtend ?? true,
       watermark: input.watermark ?? false,
+      generationRecordId: generationRecord.id,
     },
     mimeType: downloaded.mimeType,
     size: downloaded.body.byteLength,
@@ -178,6 +190,14 @@ async function generateCanvasVideo({
   apiKey,
   baseUrl,
 }: GenerateCanvasImageInput & { apiKey: string; baseUrl: string }): Promise<CanvasGenerateImageData> {
+  const generationRecord = await createGenerationRecord({
+    ownerId: owner.id,
+    model: input.model,
+    category: 'video',
+    status: 'processing',
+    inputParams: { prompt: input.prompt, ...(input.negativePrompt ? { negativePrompt: input.negativePrompt } : {}) },
+  })
+
   const createResponse = await fetch(`${baseUrl}/services/aigc/video-generation/video-synthesis`, {
     method: 'POST',
     headers: {
@@ -246,6 +266,7 @@ async function generateCanvasVideo({
       seed: input.seed ?? null,
       promptExtend: input.promptExtend ?? true,
       watermark: input.watermark ?? false,
+      generationRecordId: generationRecord.id,
     },
     mimeType: downloaded.mimeType,
     size: downloaded.body.byteLength,
