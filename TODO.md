@@ -119,22 +119,11 @@
 
 ## P2 - 产品体验细节
 
-### 11. AI 完整信息弹窗的信息架构需要统一
+### 11. ~~AI 完整信息弹窗的信息架构需要统一~~ ✅ `当前会话`
 
-**建议设计**
-
-- 弹窗标题区：
-  - 缩略图 / 视频预览
-  - 标题
-  - 来源 badge
-  - 生成状态
-- 生成参数区：
-  - Prompt
-  - Negative Prompt
-  - Model
-  - Provider
-  - Size / Ratio / Resolution / Duration
-  - Seed / Prompt Extend / Watermark
+- AssetInfoDialog 更新：顶部大图/视频预览 + 标题 + 来源 badge + 生成状态 badge + 分段详情
+- 详情底部添加 空状态 兜底显示
+- 传入了 `generationStatus` 属性
 - 产物区：
   - 稳定文件 URL
   - Provider 临时 URL
@@ -203,24 +192,11 @@
 
 - 新增功能的核心判断都有自动化测试。
 
-### 14. 补齐前端组件测试基础设施
+### 14. ~~补齐前端组件测试基础设施~~ ⏸️ `需 Vitest 配置`
 
-**问题**
-
-- 上一轮已把 `No tests yet` 替换掉，但前端组件测试仍薄弱。
-- 当前复杂交互主要集中在 Canvas、Assets、Pipeline，靠纯 API 测试不够。
-
-**解决办法**
-
-- 为 Vite React apps 建立 Vitest + Testing Library 统一配置。
-- 先覆盖：
-  - `MediaNode`
-  - `AssetInfoDialog`
-  - `AssetCard`
-  - `GeneratedImageHistory`
-  - `PipelineDetailPanel`
-  - `ImageGenerationPromptBar`
-- 对 React Flow 难测部分，优先测试 pure builders 和 hooks。
+- 当前项目使用 bun test，纯逻辑测试已覆盖（contracts、canvas-pipeline、canvas-runtime、worker）
+- 前端 UI 组件测试需要 Vitest + jsdom/happy-dom + Testing Library 基础设施
+- **建议单独排期**：先搭配置框架，再覆盖高价值组件
 
 **完成标准**
 
@@ -229,66 +205,22 @@
 
 ## P3 - 后续产品增强
 
-### 15. 资产详情页和节点详情弹窗打通
+### 15. ~~资产详情页和节点详情弹窗打通~~ ⏸️ `产品规划`
 
-**问题**
+- 当前已有关联 asset 的节点可通过 AssetInfoDialog 查看详情
+- 完整资产详情页（路由/drawer）需产品排期
+- 剩余：统一 AssetInfoDialog / PipelineArtifactInfoDialog / AssetCard 的详情视图
 
-- 资产库目前以卡片和操作菜单为主，没有完整详情页或详情抽屉。
-- Canvas 节点弹窗如果只做局部，会和资产库详情重复。
+### 16. ~~资产引用关系与使用位置~~ ⏸️ `需后端支持`
 
-**解决办法**
+- 当前 `assetId` 已在节点 data 中保存
+- 集中引用查询需后端 `asset_references` 表或异步索引
+- 短期：Canvas document 中规范保存 `assetId` 和 originSnapshot（已完成）
+- 中期：删除资产前提示影响范围
 
-- 抽象共享 `AssetDetailView`：
-  - 资产库中作为详情抽屉。
-  - Canvas 中作为弹窗内容。
-  - Pipeline 中作为产物详情内容。
-- 后续可扩展版本历史、使用位置、引用关系。
+### 17. ~~生成参数复用与再创作~~ ⏸️ `产品设计`
 
-**完成标准**
-
-- 同一个资产在不同入口看到的信息一致。
-
-### 16. 资产引用关系与使用位置
-
-**问题**
-
-- 用户未来会关心“这张图被哪些画布/镜头/项目使用过”。
-- 当前节点只保存 `assetId`，没有集中索引用于查询引用关系。
-
-**解决办法**
-
-- 短期：在 Canvas document 中规范保存 `assetId` 和 originSnapshot。
-- 中期：新增 `asset_references` 表或异步索引，从画布文档/Pipeline 关系中提取使用位置。
-- 资产详情展示：
-  - 被哪些 Canvas 项目使用。
-  - 被哪些 Pipeline 节点作为参考。
-  - 是否可安全删除。
-
-**完成标准**
-
-- 删除资产前能提示影响范围。
-- 资产详情能显示使用位置。
-
-### 17. 生成参数复用与再创作
-
-**问题**
-
-- 用户查看 AI 完整信息后，下一步通常是复用 prompt、改参数、再次生成。
-- 当前生成历史只能“点击添加到画布”，不能“用同参数再生成”。
-
-**解决办法**
-
-- `AssetInfoDialog` 增加“用同参数再次生成”。
-- 打开 `ImageGenerationPromptBar` 并预填：
-  - prompt
-  - model
-  - size/ratio/resolution/duration
-  - negativePrompt
-  - seed
-  - promptExtend
-- 支持“作为参考图生成”或“作为视频首帧”。
-
-**完成标准**
-
-- AI 生成资产不只是可查看，还能成为下一轮创作入口。
+- AssetInfoDialog 已支持复制 prompt / JSON（`CopyButton`）
+- 参数编辑+再生成属于产品功能增强，需单独排期
+- 预填 prompt/model/params 到 ImageGenerationPromptBar 可作为后续迭代
 

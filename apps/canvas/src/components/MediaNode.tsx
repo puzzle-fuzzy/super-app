@@ -238,6 +238,7 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
         height={data.height}
         assetId={data.assetId}
         taskId={data.taskId}
+        generationStatus={data.generationStatus}
       />
     </>
   )

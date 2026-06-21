@@ -1,6 +1,7 @@
-import { Copy } from 'lucide-react'
+import { Copy, ImageIcon, Video } from 'lucide-react'
 import type { AssetOrigin } from '@super-app/contracts/assets'
 import { Modal } from '@super-app/ui-react'
+import type { GenerationStatus } from '../types'
 
 export interface AssetInfoDialogProps {
   open: boolean
@@ -12,6 +13,7 @@ export interface AssetInfoDialogProps {
   height?: number
   assetId?: string
   taskId?: string
+  generationStatus?: GenerationStatus
 }
 
 function copyToClipboard(text: string) {
@@ -49,6 +51,34 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
+function SourceBadge({ kind }: { kind: AssetOrigin['kind'] }) {
+  const labels: Record<AssetOrigin['kind'], string> = {
+    uploaded: '上传', ai_generated: 'AI 生成', canvas_pipeline: 'Pipeline 产物',
+    canvas_export: '画布导出', transfer: '传输', manual: '手动创建', imported: '导入',
+  }
+  return (
+    <span className="inline-flex rounded-md bg-[#2a2a2a] px-2 py-0.5 text-[10px] font-medium text-[#999999]">
+      {labels[kind]}
+    </span>
+  )
+}
+
+function StatusBadge({ status }: { status: GenerationStatus }) {
+  const colors: Record<GenerationStatus, string> = {
+    queued: '#666666', submitting: '#666666', generating: '#3b82f6',
+    saving: '#666666', succeeded: '#22c55e', failed: '#ef4444',
+  }
+  const labels: Record<GenerationStatus, string> = {
+    queued: '排队中', submitting: '提交中', generating: '生成中',
+    saving: '保存中', succeeded: '已完成', failed: '失败',
+  }
+  return (
+    <span className="inline-flex rounded-md bg-[#2a2a2a] px-2 py-0.5 text-[10px] font-medium" style={{ color: colors[status] }}>
+      {labels[status]}
+    </span>
+  )
+}
+
 function AiGeneratedPanel({ origin, taskId }: { origin: Extract<AssetOrigin, { kind: 'ai_generated' }>; taskId?: string }) {
   return (
     <div>
@@ -82,14 +112,7 @@ function AiGeneratedPanel({ origin, taskId }: { origin: Extract<AssetOrigin, { k
         {origin.costCents != null && <DetailRow label="费用">{origin.costCents} 分</DetailRow>}
         {origin.providerUrl && (
           <DetailRow label="原始 URL">
-            <a
-              href={origin.providerUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-400 underline"
-            >
-              打开
-            </a>
+            <a href={origin.providerUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">打开</a>
           </DetailRow>
         )}
       </Section>
@@ -99,10 +122,7 @@ function AiGeneratedPanel({ origin, taskId }: { origin: Extract<AssetOrigin, { k
 
 function UploadedPanel({ origin, fileName, width, height, assetId }: {
   origin: Extract<AssetOrigin, { kind: 'uploaded' }>
-  fileName?: string
-  width?: number
-  height?: number
-  assetId?: string
+  fileName?: string; width?: number; height?: number; assetId?: string
 }) {
   return (
     <div>
@@ -124,35 +144,47 @@ function UploadedPanel({ origin, fileName, width, height, assetId }: {
 }
 
 function FallbackPanel({ fileName, src, assetId, taskId }: {
-  fileName?: string
-  src?: string
-  assetId?: string
-  taskId?: string
+  fileName?: string; src?: string; assetId?: string; taskId?: string
 }) {
   return (
-    <div>
-      <Section title="基本信息">
-        {fileName && <DetailRow label="文件名">{fileName}</DetailRow>}
-        {src && <DetailRow label="URL">{src}</DetailRow>}
-        {assetId && <DetailRow label="资产 ID">{assetId}</DetailRow>}
-        {taskId && <DetailRow label="Task ID">{taskId}</DetailRow>}
-      </Section>
-    </div>
+    <Section title="基本信息">
+      {fileName && <DetailRow label="文件名">{fileName}</DetailRow>}
+      {src && <DetailRow label="URL">{src}</DetailRow>}
+      {assetId && <DetailRow label="资产 ID">{assetId}</DetailRow>}
+      {taskId && <DetailRow label="Task ID">{taskId}</DetailRow>}
+    </Section>
   )
 }
 
-export function AssetInfoDialog({ open, onClose, origin, fileName, src, width, height, assetId, taskId }: AssetInfoDialogProps) {
+export function AssetInfoDialog({ open, onClose, origin, fileName, src, width, height, assetId, taskId, generationStatus }: AssetInfoDialogProps) {
+  const isVideo = src?.match(/\.(mp4|webm|mov)/i) ?? false
+
   return (
     <Modal open={open} onClose={onClose}>
       <Modal.Header title="资产详情" />
       <Modal.Body>
+        {/* 预览 + 元信息条 */}
+        {src && (
+          <div className="mb-4 overflow-hidden rounded-xl bg-[#242424]">
+            {isVideo ? (
+              <video src={src} controls className="w-full max-h-48 object-contain" preload="metadata" />
+            ) : (
+              <img src={src} alt="" className="w-full max-h-48 object-contain" />
+            )}
+          </div>
+        )}
+
+        {/* 标题 + 来源 + 状态 */}
+        <div className="mb-4 flex items-center gap-2">
+          {fileName && <h3 className="m-0 text-base font-bold text-[#e5e5e5]">{fileName}</h3>}
+          {origin && <SourceBadge kind={origin.kind} />}
+          {generationStatus && <StatusBadge status={generationStatus} />}
+        </div>
+
+        {/* 详情面板 */}
         <div className="space-y-4">
-          {origin?.kind === 'ai_generated' && (
-            <AiGeneratedPanel origin={origin} taskId={taskId} />
-          )}
-          {origin?.kind === 'uploaded' && (
-            <UploadedPanel origin={origin} fileName={fileName} width={width} height={height} assetId={assetId} />
-          )}
+          {origin?.kind === 'ai_generated' && <AiGeneratedPanel origin={origin} taskId={taskId} />}
+          {origin?.kind === 'uploaded' && <UploadedPanel origin={origin} fileName={fileName} width={width} height={height} assetId={assetId} />}
           {(!origin || (origin.kind !== 'ai_generated' && origin.kind !== 'uploaded')) && (
             <FallbackPanel fileName={fileName} src={src} assetId={assetId} taskId={taskId} />
           )}
