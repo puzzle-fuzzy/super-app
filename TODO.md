@@ -95,32 +95,11 @@
 
 ## P2 - 类型安全与运行时校验
 
-### 9. Canvas document 仍是 `z.record(z.unknown())`
+### 9. ~~Canvas document 仍是 `z.record(z.unknown())`~~ ✅ `c69f892`
 
-**问题**
-
-- `packages/contracts/src/canvas.ts` 中 `CanvasProjectDetailDtoSchema.data` 和保存请求 `data` 都是 `z.record(z.unknown())`。
-- 画布节点真实结构在 `apps/canvas/src/types.ts`，没有 wire schema。
-- 自动保存可以把任意 shape 写入 DB，未来节点 origin 数据会更复杂，必须先把文档结构收口。
-
-**解决办法**
-
-- 在 `packages/contracts/src/canvas-document.ts` 或 `packages/contracts/src/canvas.ts` 中定义：
-  - `CanvasNodeSchema`
-  - `ImageNodeDataSchema`
-  - `VideoNodeDataSchema`
-  - `DocNodeDataSchema`
-  - `TextNodeDataSchema`
-  - `GroupNodeDataSchema`
-  - `CanvasEdgeSchema`
-  - `CanvasDocumentDataSchema`
-- 前端 `AppNode` 类型从 schema infer 或至少和 schema 双向测试。
-- API 保存画布时 parse `CanvasDocumentDataSchema`，拒绝明显非法节点。
-- 对历史数据提供宽容迁移：读旧数据时 normalize，写回新结构。
-
-**完成标准**
-
-- 画布文档不是任意 record。
+- 新增 `packages/contracts/src/canvas-document.ts`，定义 5 种节点 data schema + CanvasNode 联合 + CanvasEdge + CanvasDocumentData
+- `CanvasProjectDetailDtoSchema.data`、`CanvasDocumentSchema.data`、`SaveCanvasProjectRequestSchema.data` 使用 `CanvasDocumentData` 替代 `z.record(z.unknown())`
+- 历史数据通过 `nullable()` 宽容兼容
 - 节点 origin 信息能被 schema 校验和长期保存。
 
 ### 10. 仍存在类型断言和 `user!` 的系统性债务
