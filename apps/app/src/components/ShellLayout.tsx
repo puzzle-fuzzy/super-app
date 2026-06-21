@@ -54,7 +54,7 @@ function ShellLayoutInner({ user }: { user: CurrentUser }) {
       <div className="min-h-screen bg-[#141414] text-[#e5e5e5]">
         {/* ── Top Navigation Bar ─────────────────────────── */}
         <header className="sticky top-0 z-50 border-b border-[#2a2a2a] bg-[#141414]/95 backdrop-blur-sm">
-          <div className="mx-auto flex h-14 max-w-[1800px] items-center gap-6 px-8 max-[920px]:px-[18px] max-[620px]:px-3.5">
+          <div className="mx-auto flex h-14 max-w-[1800px] items-center gap-6 px-8 max-[920px]:px-4.5 max-[620px]:px-3.5">
             {/* Brand */}
             <Link to="/workspace" className="flex shrink-0 items-center gap-3 no-underline">
               <span className="grid h-8 w-8 place-items-center rounded-[10px] border border-[#3a3a3a] text-xs font-bold text-[#999999]">
@@ -117,7 +117,7 @@ function ShellLayoutInner({ user }: { user: CurrentUser }) {
                     <UserRound size={12} aria-hidden="true" />
                   </span>
                 )}
-                <span className="max-w-[100px] truncate text-[12px] font-medium text-[#e5e5e5]">
+                <span className="max-w-25 truncate text-[12px] font-medium text-[#e5e5e5]">
                   {user.name ?? user.email}
                 </span>
                 <ChevronDown
@@ -126,7 +126,7 @@ function ShellLayoutInner({ user }: { user: CurrentUser }) {
                 />
               </button>
               <div
-                className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
+                className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0/0.42)] ${
                   userMenuOpen ? 'grid' : 'hidden'
                 }`}
               >
@@ -167,7 +167,7 @@ export function ShellLayout() {
   if (isLoading) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#141414] p-6">
-        <div className="w-full max-w-[560px] rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8">
+        <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8">
           <h1 className="m-0 mb-3 text-[34px] font-bold text-[#e5e5e5]">
             正在确认登录状态
           </h1>
@@ -180,7 +180,7 @@ export function ShellLayout() {
   if (error || !user) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#141414] p-6">
-        <div className="w-full max-w-[560px] rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8">
+        <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8">
           <h1 className="m-0 mb-3 text-[34px] font-bold text-[#e5e5e5]">需要登录</h1>
           <p className="m-0 text-[#999999]">正在跳转到统一登录中心。</p>
         </div>
