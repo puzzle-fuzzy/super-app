@@ -27,6 +27,7 @@ import type {
 
 import type { CanvasPipelinePhase } from '@super-app/types'
 import { computeAvailableActions, PHASE_LABEL } from '@super-app/canvas-pipeline'
+import { PipelineArtifactInfoButtonWithDialog } from '../components/PipelineArtifactInfoButton'
 import { PipelineNode } from '../components/PipelineNode'
 import type { NodeStatus, PipelineNodeData } from '../pipeline/types'
 
@@ -481,6 +482,18 @@ function PipelineEditor({
               <pre className="mt-2 whitespace-pre-wrap text-[11px]">{c.identityPrompt}</pre>
             </details>
           )}
+          <PipelineArtifactInfoButtonWithDialog
+            title={c.name}
+            fields={[
+              { label: '角色名', value: c.name, copyable: true },
+              { label: '角色', value: c.role },
+              { label: '描述', value: c.description },
+              { label: 'Identity Prompt', value: c.identityPrompt, copyable: true },
+              { label: 'Negative Prompt', value: c.negativePrompt, copyable: true },
+              { label: '参考图 URL', value: c.referenceImageUrl },
+              { label: '三视图 URL', value: c.turnaroundSheetUrl },
+            ]}
+          />
         </div>
       )
     }
@@ -500,6 +513,16 @@ function PipelineEditor({
               <pre className="mt-2 whitespace-pre-wrap text-[11px]">{l.scenePrompt}</pre>
             </details>
           )}
+          <PipelineArtifactInfoButtonWithDialog
+            title={l.name}
+            fields={[
+              { label: '场景名', value: l.name, copyable: true },
+              { label: '类型', value: l.type },
+              { label: 'Scene Prompt', value: l.scenePrompt, copyable: true },
+              { label: 'Negative Prompt', value: l.negativePrompt, copyable: true },
+              { label: '参考图 URL', value: l.referenceImageUrl },
+            ]}
+          />
         </div>
       )
     }
@@ -520,6 +543,17 @@ function PipelineEditor({
               <pre className="mt-2 whitespace-pre-wrap text-[11px]">{s.videoPrompt}</pre>
             </details>
           )}
+          <PipelineArtifactInfoButtonWithDialog
+            title={`镜头 #${s.shotIndex + 1}`}
+            fields={[
+              { label: '镜头编号', value: String(s.shotIndex + 1) },
+              { label: '叙事', value: s.narrative },
+              { label: '时长', value: `${s.duration ?? 5}s` },
+              { label: 'Video Prompt', value: s.videoPrompt, copyable: true },
+              { label: 'Negative Prompt', value: s.negativePrompt, copyable: true },
+              { label: '视频 URL', value: s.videoUrl },
+            ]}
+          />
         </div>
       )
     }
