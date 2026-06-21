@@ -182,15 +182,9 @@
 
 ## P3 - 测试与验收
 
-### 13. 为资产来源与完整信息补测试
+### 13. ~~为资产来源与完整信息补测试~~ ✅ `80a6791`
 
-**需要覆盖**
-
-- contracts:
-  - `AssetOrigin` schema parse。
-  - AI generated origin 必填字段。
-  - Uploaded origin 必填字段。
-- API:
+- contracts: AssetOrigin schema parse 8 tests（upload/AI generated/manual/imported/canvas_export、unknown 拒绝、必填字段、AssetDto with origin）
   - 上传资产返回 uploaded origin。
   - Canvas AI 生成资产返回 ai_generated origin。
   - assets list/detail 包含 origin。
