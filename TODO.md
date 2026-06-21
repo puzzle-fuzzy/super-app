@@ -14,84 +14,13 @@
 
 ## P1 - 资产来源与 AI 生成完整信息
 
-### 2. 建立资产来源的清晰产品语义
+### 2. ~~建立资产来源的清晰产品语义~~ ✅ `77886c4`
 
-**背景理解**
-
-- 一个图片或视频可能来自用户上传，也可能来自 AI 生成。
-- 用户上传资产和 AI 生成资产不应该在画布节点上完全等价展示。
-- AI 生成资产需要能查看完整生成信息，例如 prompt、negativePrompt、model、provider、尺寸、比例、seed、requestId/taskId、费用、生成时间、原始 provider URL、稳定存储 URL、关联任务状态等。
-- 用户上传资产则应该展示上传信息，例如文件名、MIME、大小、尺寸、时长、上传时间、来源、所属资产 ID、存储文件等。
-
-**当前已有基础**
-
-- `packages/db/src/schema/assets.ts` 已有 `source`：`upload`、`ai_generation`、`canvas_export`、`transfer`、`manual`、`import`。
-- `packages/contracts/src/assets.ts` 已有 `AssetSourceSchema` 和 `AssetDto.metadata`。
-- `services/api/src/modules/canvas/generate-image.ts` 生成图片/视频时已把 `prompt`、`model`、`provider`、`providerImageUrl` / `providerVideoUrl`、`requestId` / `taskId` 写入 `metadata`。
-
-**问题**
-
-- `metadata` 仍是 `z.record(z.unknown())`，前端无法稳定知道哪些字段存在。
-- `AssetDto` 没有类型化的 `provenance` / `origin` 结构，UI 只能临时读取 `metadata.prompt`。
-- `ai_generation` 与 `canvas_export` 的边界不够明确：普通画布 prompt 生成、Pipeline 阶段生成、最终成片导出都属于生成资产，但需要不同溯源信息。
-- `generation_records`、`canvas_pipeline_assets`、`tasks` 与 `assets` 没有统一的可展示关联字段，用户从资产卡片或画布节点无法一路追到完整任务信息。
-
-**解决办法**
-
-- 在 contracts 中新增资产溯源结构，例如：
-  - `AssetOriginKind = 'uploaded' | 'ai_generated' | 'canvas_pipeline' | 'canvas_export' | 'transfer' | 'manual' | 'imported'`
-  - `UploadedAssetOrigin`
-  - `AiGeneratedAssetOrigin`
-  - `CanvasPipelineAssetOrigin`
-  - `CanvasExportAssetOrigin`
-- 在 `AssetDtoSchema` 中新增 `origin` 字段，保留 `metadata` 作为兼容原始扩展字段。
-- 后端 `toAssetDto()` 统一把 DB 行和 metadata 转换为 typed origin。
-- AI 生成资产必须包含：
-  - `prompt`
-  - `negativePrompt`
-  - `model`
-  - `provider`
-  - `kind`
-  - `size` / `ratio` / `resolution` / `duration`
-  - `seed`
-  - `promptExtend`
-  - `watermark`
-  - `requestId`
-  - `providerTaskId`
-  - `generationRecordId`
-  - `taskId`
-  - `cost`
-  - `createdAt`
-  - `storedFileUrl`
-  - `providerUrl`
-- 上传资产必须包含：
-  - `originalFileName`
-  - `mimeType`
-  - `size`
-  - `width`
-  - `height`
-  - `duration`
-  - `uploadedAt`
-  - `storageBucket`
-  - `storageKey`
-- Canvas Pipeline 资产必须包含：
-  - `projectId`
-  - `projectTitle`
-  - `phase`
-  - `targetEntityType`
-  - `targetEntityId`
-  - `pipelineRunId`
-  - `canvasPipelineAssetId`
-  - `inputSnapshot`
-  - `outputSummary`
-  - `model`
-  - `cost`
-
-**完成标准**
-
-- 前端不再通过散落的 `asset.metadata?.prompt` 判断 AI 生成信息。
-- 任意资产都能通过 `asset.origin.kind` 知道它来自哪里。
-- AI 生成资产和用户上传资产在 UI 中有不同的信息展示。
+- contracts 新增 7-variant discriminated union `AssetOrigin`（uploaded/ai_generated/canvas_pipeline/canvas_export/transfer/manual/imported）
+- `AssetDtoSchema.origin` — 类型化溯源字段，不再靠前端猜 `metadata.prompt`
+- `toAssetDto()` 新增 `buildAssetOrigin()`，根据 `asset.source` + `metadata` + `asset_files` 自动构造
+- 图片/视频生成 metadata 补充 `negativePrompt`、`seed`、`promptExtend`、`watermark`
+- 剩余：Canvas Pipeline 资产原点构造（需访问 canvas-asset 关联表）；前端 MediaNode 展示 origin
 
 ### 3. 画布媒体节点增加“查看完整信息”按钮
 
