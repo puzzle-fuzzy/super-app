@@ -6,11 +6,12 @@ import { defineConfig } from 'vite'
 
 const appDir = fileURLToPath(new URL('.', import.meta.url))
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react(), tailwindcss()],
   envDir: path.resolve(appDir, '../..'),
   envPrefix: 'SUPER_PUBLIC_',
-  base: '/app/',
+  // dev: 直接从 / 提供资源；prod: 构建到 /app/_assets/，由 nginx 路由
+  base: command === 'serve' ? '/' : '/app/',
   build: {
     assetsDir: '_assets',
     rollupOptions: {
@@ -40,4 +41,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))
