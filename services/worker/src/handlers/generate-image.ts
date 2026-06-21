@@ -1,5 +1,6 @@
 import type { Task } from '@super-app/db'
 import type { ImageOutputResult, TaskOutput } from '@super-app/types'
+import { calculateCost, getModelPricing } from '@super-app/billing'
 import { createStorage } from '@super-app/storage'
 import { TaskInputError, type TaskHandler } from '@super-app/task-engine'
 import { serverEnv } from '@super-app/env/server'
@@ -13,6 +14,7 @@ import {
   refundCredit,
   CreditError,
 } from '@super-app/db'
+import { notifyProviderCallObservers } from '@super-app/provider'
 
 import { AppError } from '../errors'
 
@@ -64,6 +66,7 @@ export const generateImageHandler: TaskHandler<Task, { workerId: string }, TaskO
 
   try {
     // 调用 DashScope 图片生成
+    const providerStart = Date.now()
     const response = await fetch(`${baseUrl}/services/aigc/multimodal-generation/generation`, {
       method: 'POST',
       headers: {
@@ -84,8 +87,12 @@ export const generateImageHandler: TaskHandler<Task, { workerId: string }, TaskO
         },
       }),
     })
+    const providerDurationMs = Date.now() - providerStart
 
     const payload = (await response.json().catch(() => null)) as DashScopeImageResponse | null
+    const providerSuccess = response.ok && !!payload
+    notifyProviderCallObservers(input.model, providerDurationMs, providerSuccess)
+
     if (!response.ok) {
       throw new AppError(
         payload?.message || payload?.code || 'DashScope image generation failed'
@@ -127,18 +134,30 @@ export const generateImageHandler: TaskHandler<Task, { workerId: string }, TaskO
       generationRecordId: input.generationRecordId,
     }
 
-    await markGenerationSucceeded(input.generationRecordId, generationOutput)
+    // 计算真实成本（基于定价表和实际参数）
+    const pricing = getModelPricing(input.model)
+    const costDetail = pricing
+      ? calculateCost({ pricing }, { n: 1 })
+      : undefined
+
+    await markGenerationSucceeded(
+      input.generationRecordId,
+      generationOutput,
+      costDetail ? { ...costDetail, source: 'actual' as const, billable: true } : undefined,
+    )
     await notifyTaskStatusChange(task as Task)
 
-    // 结算：扣款（固定价格生成，预估即为实际）
-    if (input.estimatedCostCents > 0) {
-      // TODO(Step 11): 当有真实定价时，用 calculateCost() 计算 actualCents，
-      // 并与 estimatedCostCents * 1.5 做超额保护比较
+    // 结算：扣款
+    const actualCents = costDetail?.totalPriceCents ?? input.estimatedCostCents
+    if (actualCents > 0) {
+      // 超额保护：实际成本 > 预估 1.5 倍时，仅扣预估 × 1.5（差额由系统吸收）
+      const maxDebit = Math.ceil(input.estimatedCostCents * 1.5)
+      const debitCents = Math.min(actualCents, maxDebit)
       try {
         await debitCredit({
           ownerId: input.ownerId,
           generationRecordId: input.generationRecordId,
-          actualCents: input.estimatedCostCents,
+          actualCents: debitCents,
           description: `图片生成扣款: ${input.model}`,
         })
       } catch (err) {

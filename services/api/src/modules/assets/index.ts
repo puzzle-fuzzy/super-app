@@ -12,6 +12,7 @@ import {
   createAssetTransferSession,
   deleteAsset,
   getAsset,
+  getAssetReferences,
   listAssets,
   loadSharedAssetFile,
   maxUploadBytes,
@@ -117,11 +118,21 @@ export const assetsModule = new Elysia({ name: 'assets', detail: { tags: ['资�
           }, {
             detail: { summary: '创建资产传输会话', tags: ['资产'] },
           })
-          .delete('/:id', async ({ user, db, params }) => {
-            await deleteAsset({ db, owner: getRequiredUser(user), id: params.id })
-            return ok({ deleted: true })
+          .delete('/:id', async ({ user, db, params, query }) => {
+            const force = query.force === 'true'
+            const result = await deleteAsset({ db, owner: getRequiredUser(user), id: params.id, force })
+            return ok(result)
           }, {
             detail: { summary: '删除资产', tags: ['资产'] },
+            query: t.Object({
+              force: t.Optional(t.String()),
+            }),
+          })
+          .get('/:id/references', async ({ user, db, params }) => {
+            const refs = await getAssetReferences({ db, owner: getRequiredUser(user), assetId: params.id })
+            return ok({ references: refs })
+          }, {
+            detail: { summary: '查询资产引用关系', tags: ['资产'] },
           })
       )
   )

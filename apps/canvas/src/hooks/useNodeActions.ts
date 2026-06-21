@@ -7,6 +7,7 @@ import { useInputStore } from '../stores/inputStore'
 import { isDangerousFile } from '../utils/validation'
 import { localWaterfallLayout } from '../utils/layout'
 import { NODE_WIDTH } from '../utils/constants'
+import { buildNodeDataFromAsset } from '../utils/assetNodeMapping'
 import type { AppNode, ImageNodeType, VideoNodeType, DocNodeType, TextNodeType } from '../types'
 
 // ========== 媒体维度预计算 ==========
@@ -125,6 +126,7 @@ export function useNodeActions() {
         try {
           const asset: AssetDto = await assetsApi.upload(file)
           const fileUrl = asset.files?.[0]?.url ?? asset.thumbnailUrl ?? ''
+          const mapping = buildNodeDataFromAsset(asset)
 
           // 替换占位节点为最终节点
           store.setNodes((nds) =>
@@ -133,18 +135,30 @@ export function useNodeActions() {
               if (isImage) {
                 return {
                   ...n,
-                  data: { src: fileUrl, fileName: file.name, assetId: asset.id },
+                  data: {
+                    src: fileUrl,
+                    fileName: file.name,
+                    assetId: mapping.assetId,
+                    assetSource: mapping.assetSource,
+                    assetOrigin: mapping.assetOrigin,
+                  },
                 } as ImageNodeType
               }
               if (isVideo) {
                 return {
                   ...n,
-                  data: { src: fileUrl, fileName: file.name, assetId: asset.id },
+                  data: {
+                    src: fileUrl,
+                    fileName: file.name,
+                    assetId: mapping.assetId,
+                    assetSource: mapping.assetSource,
+                    assetOrigin: mapping.assetOrigin,
+                  },
                 } as VideoNodeType
               }
               return {
                 ...n,
-                data: { src: fileUrl, fileName: file.name, fileSize: file.size, assetId: asset.id },
+                data: { src: fileUrl, fileName: file.name, fileSize: file.size, assetId: mapping.assetId },
               } as DocNodeType
             })
           )
@@ -164,6 +178,7 @@ export function useNodeActions() {
     const fileUrl = asset.files?.[0]?.url ?? asset.thumbnailUrl ?? ''
     const kind = asset.kind
     const nodeId = `asset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const mapping = buildNodeDataFromAsset(asset)
 
     let node: AppNode
 
@@ -175,9 +190,12 @@ export function useNodeActions() {
         data: {
           src: fileUrl,
           fileName: asset.title,
-          assetId: asset.id,
-          assetSource: asset.source,
-          assetOrigin: asset.origin,
+          assetId: mapping.assetId,
+          assetSource: mapping.assetSource,
+          assetOrigin: mapping.assetOrigin,
+          generationRecordId: mapping.generationRecordId,
+          taskId: mapping.taskId,
+          generationStatus: mapping.generationStatus,
         },
       } as ImageNodeType
     } else if (kind === 'video') {
@@ -188,9 +206,12 @@ export function useNodeActions() {
         data: {
           src: fileUrl,
           fileName: asset.title,
-          assetId: asset.id,
-          assetSource: asset.source,
-          assetOrigin: asset.origin,
+          assetId: mapping.assetId,
+          assetSource: mapping.assetSource,
+          assetOrigin: mapping.assetOrigin,
+          generationRecordId: mapping.generationRecordId,
+          taskId: mapping.taskId,
+          generationStatus: mapping.generationStatus,
         },
       } as VideoNodeType
     } else if (kind === 'text') {

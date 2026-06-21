@@ -4,7 +4,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Background, Controls, ReactFlow, ReactFlowProvider, useReactFlow } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
-import type { AssetDto, AssetKind } from '@super-app/contracts/assets'
+import { AssetDtoSchema } from '@super-app/contracts/assets'
+import type { AssetKind } from '@super-app/contracts/assets'
 import { pipelineApi } from '@super-app/api-client'
 
 import { PipelineNode } from '../components/PipelineNode'
@@ -101,9 +102,14 @@ function PipelineEditor({
       const rawData = event.dataTransfer.getData('application/json')
       if (!rawData) return
 
-      let asset: AssetDto
+      let asset
       try {
-        asset = JSON.parse(rawData) as AssetDto
+        const parsed = AssetDtoSchema.safeParse(JSON.parse(rawData))
+        if (!parsed.success) {
+          console.warn('[PipelineEditor] invalid drag payload:', parsed.error.issues)
+          return
+        }
+        asset = parsed.data
       } catch {
         return
       }
@@ -150,6 +156,8 @@ function PipelineEditor({
                 role: 'reference_image',
                 label: asset.title,
                 source: 'asset_library',
+                assetSource: asset.source,
+                assetOriginKind: asset.origin?.kind,
               },
             ],
           } as Record<string, unknown>)

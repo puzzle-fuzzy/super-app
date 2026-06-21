@@ -922,6 +922,9 @@ importers:
 
   packages/ui-react:
     dependencies:
+      '@super-app/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -1008,6 +1011,9 @@ importers:
       '@super-app/gateway':
         specifier: workspace:*
         version: link:../../packages/gateway
+      '@super-app/metrics':
+        specifier: workspace:*
+        version: link:../../packages/metrics
       '@super-app/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
@@ -1035,6 +1041,9 @@ importers:
       sharp:
         specifier: ^0.34.2
         version: 0.34.5
+      zod:
+        specifier: ^3.25.67
+        version: 3.25.76
     devDependencies:
       '@types/nodemailer':
         specifier: ^8.0.1
@@ -1069,6 +1078,9 @@ importers:
       '@super-app/ffmpeg':
         specifier: workspace:*
         version: link:../../packages/ffmpeg
+      '@super-app/metrics':
+        specifier: workspace:*
+        version: link:../../packages/metrics
       '@super-app/provider':
         specifier: workspace:*
         version: link:../../packages/provider

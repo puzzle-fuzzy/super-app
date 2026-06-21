@@ -24,13 +24,15 @@
     "@super-app/runtime": "workspace:*",
     "@super-app/sse-hub": "workspace:*",
     "@super-app/gateway": "workspace:*",
+    "@super-app/metrics": "workspace:*",
     "@super-app/storage": "workspace:*",
     "@super-app/types": "workspace:*",
     "@super-app/utils": "workspace:*",
     "drizzle-orm": "^0.44.2",
     "elysia": "^1.4.29",
     "nodemailer": "^9.0.1",
-    "sharp": "^0.34.2"
+    "sharp": "^0.34.2",
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@types/nodemailer": "^8.0.1",

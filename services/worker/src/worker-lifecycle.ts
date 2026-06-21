@@ -16,7 +16,9 @@ import {
 } from '@super-app/db'
 import { serverEnv } from '@super-app/env/server'
 import { ASRClient, DashScopeClient } from '@super-app/provider'
+import { registerProviderCallObserver } from '@super-app/provider'
 import { createStorage } from '@super-app/storage'
+import { MetricsCollector } from '@super-app/metrics'
 
 import type { WorkerConfig } from './worker.config'
 import { taskHandlers, type WorkerTaskContext } from './task-handlers'
@@ -57,6 +59,12 @@ export function setupLifecycle(config: WorkerConfig): WorkerLifecycle {
     storage: createStorage(),
     asrClient: new ASRClient({ apiKey, baseUrl }),
   }
+
+  // ── Provider metrics collector ──────────────────────
+  const metricsCollector = new MetricsCollector()
+  registerProviderCallObserver((model, durationMs, success) => {
+    metricsCollector.recordProviderCall(model, durationMs, success)
+  })
 
   /** 处理单个任务：启动 heartbeat → 执行 handler → 完成/失败 → 清除 heartbeat。 */
   const processTask = async (task: NonNullable<Awaited<ReturnType<typeof claimNextTask>>>) => {
@@ -149,7 +157,14 @@ export function setupLifecycle(config: WorkerConfig): WorkerLifecycle {
   // ── Health server ───────────────────────────────────
   healthServer = Bun.serve({
     port: config.healthPort,
-    fetch: () => Response.json({ ok: true, workerId: config.workerId, inFlight, running }),
+    fetch: (req) => {
+      const url = new URL(req.url)
+      if (url.pathname === '/provider-calls') {
+        const snapshot = metricsCollector.snapshot(0, process.uptime())
+        return Response.json({ ok: true, providerCalls: snapshot.providerCalls })
+      }
+      return Response.json({ ok: true, workerId: config.workerId, inFlight, running })
+    },
   })
   console.log(`[worker] health server on http://localhost:${config.healthPort}`)
 

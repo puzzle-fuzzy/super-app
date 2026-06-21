@@ -19,6 +19,7 @@
     "@super-app/env": "workspace:*",
     "@super-app/error-recovery": "workspace:*",
     "@super-app/ffmpeg": "workspace:*",
+    "@super-app/metrics": "workspace:*",
     "@super-app/provider": "workspace:*",
     "@super-app/provider-health": "workspace:*",
     "@super-app/runtime": "workspace:*",

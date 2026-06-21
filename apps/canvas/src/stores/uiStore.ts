@@ -6,6 +6,20 @@ interface FullscreenPreview {
   mediaType: 'image' | 'video'
 }
 
+/** 从资产详情填入生成栏的可复用参数 */
+export interface GenerationPrefill {
+  prompt?: string
+  negativePrompt?: string
+  model?: string
+  size?: string
+  ratio?: string
+  resolution?: string
+  duration?: number
+  seed?: number
+  promptExtend?: boolean
+  watermark?: boolean
+}
+
 interface UIState {
   // 暗色模式（super-app 固定暗色，但保留存储位）
   darkMode: boolean
@@ -19,6 +33,8 @@ interface UIState {
   fullscreenPreview: FullscreenPreview | null
   // 文本预览
   textPreview: string | null
+  // 生成参数预填充（从资产详情视图触发）
+  generationPrefill: GenerationPrefill | null
 
   setDarkMode: (v: boolean) => void
   toggleDarkMode: () => void
@@ -28,6 +44,7 @@ interface UIState {
   closeGroupNameModal: () => void
   setFullscreenPreview: (preview: FullscreenPreview | null) => void
   setTextPreview: (text: string | null) => void
+  setGenerationPrefill: (params: GenerationPrefill | null) => void
 }
 
 let errorTimer: ReturnType<typeof setTimeout> | null = null
@@ -40,6 +57,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   groupNameModalTarget: null,
   fullscreenPreview: null,
   textPreview: null,
+  generationPrefill: null,
 
   setDarkMode: (v) => {
     set({ darkMode: v })
@@ -80,4 +98,5 @@ export const useUIStore = create<UIState>((set, get) => ({
 
   setFullscreenPreview: (preview) => set({ fullscreenPreview: preview }),
   setTextPreview: (text) => set({ textPreview: text }),
+  setGenerationPrefill: (params) => set({ generationPrefill: params }),
 }))

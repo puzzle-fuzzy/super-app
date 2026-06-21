@@ -198,6 +198,63 @@ export const assetShareLinksRelations = relations(assetShareLinks, ({ one }) => 
   }),
 }))
 
+// ── 资产引用关系 ──────────────────────────────────────────────
+
+export const assetRefOwnerTypeEnum = assetsSchema.enum('asset_ref_owner_type', [
+  'canvas',
+  'pipeline',
+  'subject',
+  'style',
+  'text',
+  'template',
+])
+
+export const assetRefUsageTypeEnum = assetsSchema.enum('asset_ref_usage_type', [
+  'source',
+  'reference',
+  'output',
+  'thumbnail',
+])
+
+export const assetReferences = assetsSchema.table(
+  'asset_references',
+  {
+    id: idColumn(),
+    assetId: uuid('asset_id')
+      .notNull()
+      .references(() => assets.id, { onDelete: 'cascade' }),
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    ownerType: assetRefOwnerTypeEnum('owner_type').notNull(),
+    /** 拥有者实体 ID（画布项目 ID、Pipeline 项目 ID 等） */
+    ownerEntityId: uuid('owner_entity_id').notNull(),
+    /** 具体节点 ID 或实体 ID */
+    nodeId: text('node_id'),
+    usageType: assetRefUsageTypeEnum('usage_type').notNull().default('source'),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
+  },
+  (table) => ({
+    assetIdIndex: index('asset_refs_asset_id_idx').on(table.assetId),
+    ownerEntityIndex: index('asset_refs_owner_entity_idx').on(table.ownerType, table.ownerEntityId),
+    uniqueRef: uniqueIndex('asset_refs_unique').on(
+      table.assetId,
+      table.ownerType,
+      table.ownerEntityId,
+      table.nodeId,
+      table.usageType
+    ),
+  })
+)
+
+export const assetReferencesRelations = relations(assetReferences, ({ one }) => ({
+  asset: one(assets, {
+    fields: [assetReferences.assetId],
+    references: [assets.id],
+  }),
+}))
+
 export type Asset = typeof assets.$inferSelect
 export type NewAsset = typeof assets.$inferInsert
 export type AssetTag = typeof assetTags.$inferSelect
@@ -206,3 +263,5 @@ export type AssetFile = typeof assetFiles.$inferSelect
 export type NewAssetFile = typeof assetFiles.$inferInsert
 export type AssetShareLink = typeof assetShareLinks.$inferSelect
 export type NewAssetShareLink = typeof assetShareLinks.$inferInsert
+export type AssetReference = typeof assetReferences.$inferSelect
+export type NewAssetReference = typeof assetReferences.$inferInsert

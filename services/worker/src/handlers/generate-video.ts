@@ -1,5 +1,6 @@
 import type { Task } from '@super-app/db'
 import type { TaskOutput, VideoOutputResult } from '@super-app/types'
+import { calculateCost, getModelPricing } from '@super-app/billing'
 import { createStorage } from '@super-app/storage'
 import { TaskInputError, type TaskHandler } from '@super-app/task-engine'
 import { serverEnv } from '@super-app/env/server'
@@ -13,6 +14,7 @@ import {
   refundCredit,
   CreditError,
 } from '@super-app/db'
+import { notifyProviderCallObservers } from '@super-app/provider'
 
 import { AppError } from '../errors'
 
@@ -73,6 +75,7 @@ export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskO
 
   try {
     // 1. 创建 DashScope 视频任务
+    const providerStart = Date.now()
     const createResponse = await fetch(
       `${baseUrl}/services/aigc/video-generation/video-synthesis`,
       {
@@ -98,6 +101,10 @@ export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskO
     )
 
     const created = (await createResponse.json().catch(() => null)) as DashScopeVideoCreateResponse | null
+    const submitDurationMs = Date.now() - providerStart
+    const submitSuccess = createResponse.ok && !!created
+    notifyProviderCallObservers(input.model, submitDurationMs, submitSuccess)
+
     if (!createResponse.ok) {
       throw new AppError(
         created?.message || created?.code || 'DashScope video task creation failed'
@@ -143,18 +150,31 @@ export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskO
       generationRecordId: input.generationRecordId,
     }
 
-    await markGenerationSucceeded(input.generationRecordId, generationOutput)
+    // 计算真实成本（基于定价表和实际视频时长）
+    const pricing = getModelPricing(input.model)
+    const actualDuration = input.duration ?? 5
+    const costDetail = pricing
+      ? calculateCost({ pricing }, { duration: actualDuration, resolution: input.resolution ?? '720P' })
+      : undefined
+
+    await markGenerationSucceeded(
+      input.generationRecordId,
+      generationOutput,
+      costDetail ? { ...costDetail, source: 'actual' as const, billable: true } : undefined,
+    )
     await notifyTaskStatusChange(task as Task)
 
-    // 结算：扣款（固定价格生成，预估即为实际）
-    if (input.estimatedCostCents > 0) {
-      // TODO(Step 11): 当有真实定价时，用 calculateCost() + 实际视频时长计算 actualCents，
-      // 并与 estimatedCostCents * 1.5 做超额保护比较
+    // 结算：扣款
+    const actualCents = costDetail?.totalPriceCents ?? input.estimatedCostCents
+    if (actualCents > 0) {
+      // 超额保护：实际成本 > 预估 1.5 倍时，仅扣预估 × 1.5（差额由系统吸收）
+      const maxDebit = Math.ceil(input.estimatedCostCents * 1.5)
+      const debitCents = Math.min(actualCents, maxDebit)
       try {
         await debitCredit({
           ownerId: input.ownerId,
           generationRecordId: input.generationRecordId,
-          actualCents: input.estimatedCostCents,
+          actualCents: debitCents,
           description: `视频生成扣款: ${input.model}`,
         })
       } catch (err) {

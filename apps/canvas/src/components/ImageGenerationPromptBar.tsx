@@ -17,6 +17,8 @@ import {
 import type { CanvasGenerateImageRequest } from '@super-app/contracts/canvas'
 import { Select } from '@super-app/ui-react'
 
+import { useUIStore } from '../stores/uiStore'
+
 /* ---- Pure helpers ---- */
 
 export function buildGenerationInput(input: {
@@ -127,6 +129,28 @@ export function ImageGenerationPromptBar({
     setPromptExtend(modelConfig.supportsPromptExtend)
     setWatermark(false)
   }, [modelConfig])
+
+  // 监听 generationPrefill，从资产详情视图回填生成参数
+  const generationPrefill = useUIStore((s) => s.generationPrefill)
+  const setGenerationPrefill = useUIStore((s) => s.setGenerationPrefill)
+  useEffect(() => {
+    if (!generationPrefill) return
+    if (generationPrefill.prompt) setPrompt(generationPrefill.prompt)
+    if (generationPrefill.negativePrompt) setNegativePrompt(generationPrefill.negativePrompt)
+    if (generationPrefill.model) {
+      const modelId = generationPrefill.model as GenerationModelId
+      if (getGenerationModel(modelId)) setModel(modelId)
+    }
+    if (generationPrefill.size) setSize(generationPrefill.size as ImageSize)
+    if (generationPrefill.ratio) setRatio(generationPrefill.ratio as VideoRatio)
+    if (generationPrefill.resolution) setResolution(generationPrefill.resolution as VideoResolution)
+    if (generationPrefill.duration != null) setDuration(generationPrefill.duration)
+    if (generationPrefill.seed != null) setSeed(String(generationPrefill.seed))
+    if (generationPrefill.promptExtend != null) setPromptExtend(generationPrefill.promptExtend)
+    if (generationPrefill.watermark != null) setWatermark(generationPrefill.watermark)
+    // 消费后清除，避免重复触发
+    setGenerationPrefill(null)
+  }, [generationPrefill, setGenerationPrefill])
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()

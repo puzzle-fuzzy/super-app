@@ -9,9 +9,9 @@ import type {
   AssetTransferSessionDto,
 } from '@super-app/contracts/assets'
 import type { Db } from '@super-app/db'
-import { assetFiles, assetShareLinks, assets } from '@super-app/db/schema'
+import { assetFiles, assetReferences, assetShareLinks, assets } from '@super-app/db/schema'
 import type { StorageProvider } from '@super-app/storage'
-import { and, desc, eq, inArray, isNull, lt, or, type SQL } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-orm'
 
 import { serverEnv } from '@super-app/env/server'
 
@@ -71,7 +71,10 @@ export async function uploadAsset(input: UploadAssetInput): Promise<AssetDto> {
       source: source ?? 'upload',
       status: 'active',
       visibility: 'private',
-      metadata: metadata ?? {},
+      metadata: {
+        ...(metadata ?? {}),
+        originalFileName: fileName,
+      },
     })
     .returning()
 
@@ -214,8 +217,21 @@ export async function deleteAsset(input: {
   db: Db
   owner: CurrentUser
   id: string
-}): Promise<void> {
-  const { db, owner, id } = input
+  force?: boolean
+}): Promise<{ deleted: boolean; referenceCount?: number }> {
+  const { db, owner, id, force } = input
+
+  // 检查引用关系
+  const refs = await db
+    .select({ count: assetReferences.id })
+    .from(assetReferences)
+    .where(eq(assetReferences.assetId, id))
+  const referenceCount = refs.length
+
+  if (referenceCount > 0 && !force) {
+    return { deleted: false, referenceCount }
+  }
+
   const [updated] = await db
     .update(assets)
     .set({ status: 'deleted', deletedAt: new Date() })
@@ -225,6 +241,106 @@ export async function deleteAsset(input: {
   if (!updated) {
     throw new AppError(404, 'NOT_FOUND', 'Asset not found')
   }
+
+  // 删除引用记录
+  if (referenceCount > 0) {
+    await db.delete(assetReferences).where(eq(assetReferences.assetId, id))
+  }
+
+  return { deleted: true, referenceCount }
+}
+
+// ── 资产引用关系 ────────────────────────────────────────────
+
+export interface AssetReferenceDto {
+  id: string
+  ownerType: string
+  ownerEntityId: string
+  nodeId: string | null
+  usageType: string
+  createdAt: string
+}
+
+export async function getAssetReferences(input: {
+  db: Db
+  owner: CurrentUser
+  assetId: string
+}): Promise<AssetReferenceDto[]> {
+  const { db, owner, assetId } = input
+
+  // 验证资产存在且属于该用户
+  const asset = await db
+    .select({ id: assets.id })
+    .from(assets)
+    .where(and(eq(assets.id, assetId), eq(assets.ownerId, owner.id)))
+    .limit(1)
+  if (asset.length === 0) {
+    throw new AppError(404, 'NOT_FOUND', 'Asset not found')
+  }
+
+  const refs = await db
+    .select({
+      id: assetReferences.id,
+      ownerType: assetReferences.ownerType,
+      ownerEntityId: assetReferences.ownerEntityId,
+      nodeId: assetReferences.nodeId,
+      usageType: assetReferences.usageType,
+      createdAt: assetReferences.createdAt,
+    })
+    .from(assetReferences)
+    .where(eq(assetReferences.assetId, assetId))
+
+  return refs.map((r) => ({
+    id: r.id,
+    ownerType: r.ownerType,
+    ownerEntityId: r.ownerEntityId,
+    nodeId: r.nodeId,
+    usageType: r.usageType,
+    createdAt: r.createdAt.toISOString(),
+  }))
+}
+
+export async function upsertAssetReference(input: {
+  db: Db
+  assetId: string
+  ownerId: string
+  ownerType: 'canvas' | 'pipeline' | 'subject' | 'style' | 'text' | 'template'
+  ownerEntityId: string
+  nodeId?: string | null
+  usageType?: 'source' | 'reference' | 'output' | 'thumbnail'
+}): Promise<void> {
+  const { db, assetId, ownerId, ownerType, ownerEntityId, nodeId, usageType } = input
+  const usage = usageType ?? 'source'
+  const node = nodeId ?? null
+
+  // Use ON CONFLICT DO UPDATE for upsert
+  await db.execute(sql`
+    INSERT INTO assets.asset_references (asset_id, owner_id, owner_type, owner_entity_id, node_id, usage_type)
+    VALUES (${assetId}, ${ownerId}, ${ownerType}, ${ownerEntityId}, ${node}, ${usage})
+    ON CONFLICT (asset_id, owner_type, owner_entity_id, node_id, usage_type)
+    DO UPDATE SET updated_at = NOW()
+  `)
+}
+
+export async function deleteAssetReference(input: {
+  db: Db
+  assetId: string
+  ownerType: string
+  ownerEntityId: string
+  nodeId?: string | null
+}): Promise<void> {
+  const { db, assetId, ownerType, ownerEntityId, nodeId } = input
+  const conditions = [
+    eq(assetReferences.assetId, assetId),
+    eq(assetReferences.ownerType, ownerType as typeof assetReferences.ownerType.enumValues[number]),
+    eq(assetReferences.ownerEntityId, ownerEntityId),
+  ]
+  if (nodeId != null) {
+    conditions.push(eq(assetReferences.nodeId, nodeId))
+  } else {
+    conditions.push(isNull(assetReferences.nodeId))
+  }
+  await db.delete(assetReferences).where(and(...conditions))
 }
 
 export async function createAssetShareLink(input: {
@@ -487,19 +603,68 @@ function decodeCursor(cursor: string | null | undefined): [Date, string] | null 
 
 // ── Asset Origin 构建 ────────────────────────────────────────
 import type { AssetOrigin } from '@super-app/contracts/assets'
+import { z } from 'zod'
+
+// Metadata 解析 schemas — 宽松解析，缺失字段使用默认值
+const AiGenerationMetaSchema = z.object({
+  prompt: z.string().default(''),
+  negativePrompt: z.string().nullable().default(null),
+  model: z.string().default(''),
+  provider: z.string().default('dashscope'),
+  kind: z.string().default('image'),
+  size: z.string().nullable().default(null),
+  ratio: z.string().nullable().default(null),
+  resolution: z.string().nullable().default(null),
+  duration: z.number().nullable().default(null),
+  seed: z.number().nullable().default(null),
+  promptExtend: z.boolean().default(false),
+  watermark: z.boolean().default(false),
+  requestId: z.string().nullable().default(null),
+  providerTaskId: z.string().nullable().default(null),
+  generationRecordId: z.string().nullable().default(null),
+  taskId: z.string().nullable().default(null),
+  costCents: z.number().nullable().default(null),
+  providerImageUrl: z.string().nullable().default(null),
+  providerVideoUrl: z.string().nullable().default(null),
+}).passthrough()
+
+const CanvasPipelineMetaSchema = z.object({
+  projectId: z.string().default(''),
+  projectTitle: z.string().nullable().default(null),
+  phase: z.string().default(''),
+  targetEntityType: z.string().default(''),
+  targetEntityId: z.string().default(''),
+  pipelineRunId: z.string().nullable().default(null),
+  canvasPipelineAssetId: z.string().nullable().default(null),
+  model: z.string().nullable().default(null),
+  costCents: z.number().nullable().default(null),
+}).passthrough()
+
+const TransferMetaSchema = z.object({
+  roomId: z.string().default(''),
+}).passthrough()
+
+function safeStr(val: unknown): string | null {
+  return typeof val === 'string' ? val : null
+}
 
 function buildAssetOrigin(
   asset: typeof assets.$inferSelect,
   files: (typeof assetFiles.$inferSelect)[],
 ): AssetOrigin {
-  const meta = asset.metadata ?? {} as Record<string, unknown>
+  const meta = (asset.metadata ?? {}) as Record<string, unknown>
   const originalFile = files.find((f) => f.role === 'original')
 
   switch (asset.source) {
     case 'upload': {
+      // 优先使用上传时保存的原始文件名，然后 fallback 到 metadata
+      const originalFileName =
+        safeStr(meta.originalFileName) ??
+        safeStr(meta.fileName) ??
+        asset.title
       return {
         kind: 'uploaded',
-        originalFileName: originalFile?.storageKey ?? (meta.fileName as string) ?? asset.title,
+        originalFileName,
         mimeType: originalFile?.mimeType ?? '',
         size: originalFile?.size ?? 0,
         width: originalFile?.width ?? null,
@@ -509,49 +674,62 @@ function buildAssetOrigin(
     }
 
     case 'ai_generation': {
+      const parsed = AiGenerationMetaSchema.safeParse(meta)
+      if (!parsed.success) {
+        console.warn('[buildAssetOrigin] ai_generation meta parse failed:', parsed.error.issues)
+      }
+      const m = parsed.success ? parsed.data : AiGenerationMetaSchema.parse({})
       return {
         kind: 'ai_generated',
-        prompt: (meta.prompt as string) ?? '',
-        negativePrompt: (meta.negativePrompt as string | null) ?? null,
-        model: (meta.model as string) ?? '',
-        provider: (meta.provider as string) ?? 'dashscope',
-        mediaKind: (meta.kind as string) ?? 'image',
-        size: (meta.size as string | null) ?? null,
-        ratio: (meta.ratio as string | null) ?? null,
-        resolution: (meta.resolution as string | null) ?? null,
-        duration: (meta.duration as number | null) ?? null,
-        seed: (meta.seed as number | null) ?? null,
-        promptExtend: (meta.promptExtend as boolean) ?? false,
-        watermark: (meta.watermark as boolean) ?? false,
-        requestId: (meta.requestId as string | null) ?? null,
-        providerTaskId: (meta.providerTaskId as string | null) ?? null,
-        generationRecordId: (meta.generationRecordId as string | null) ?? null,
-        taskId: (meta.taskId as string | null) ?? null,
-        costCents: (meta.costCents as number | null) ?? null,
-        providerUrl: ((meta.providerImageUrl ?? meta.providerVideoUrl) as string | null) ?? null,
+        prompt: m.prompt,
+        negativePrompt: m.negativePrompt,
+        model: m.model,
+        provider: m.provider,
+        mediaKind: m.kind,
+        size: m.size,
+        ratio: m.ratio,
+        resolution: m.resolution,
+        duration: m.duration,
+        seed: m.seed,
+        promptExtend: m.promptExtend,
+        watermark: m.watermark,
+        requestId: m.requestId,
+        providerTaskId: m.providerTaskId,
+        generationRecordId: m.generationRecordId,
+        taskId: m.taskId,
+        costCents: m.costCents,
+        providerUrl: m.providerImageUrl ?? m.providerVideoUrl ?? null,
       }
     }
 
     case 'canvas_pipeline': {
+      const parsed = CanvasPipelineMetaSchema.safeParse(meta)
+      if (!parsed.success) {
+        console.warn('[buildAssetOrigin] canvas_pipeline meta parse failed:', parsed.error.issues)
+      }
+      const m = parsed.success ? parsed.data : CanvasPipelineMetaSchema.parse({})
       return {
         kind: 'canvas_pipeline',
-        projectId: (meta.projectId as string) ?? '',
-        projectTitle: (meta.projectTitle as string | null) ?? null,
-        phase: (meta.phase as string) ?? '',
-        targetEntityType: (meta.targetEntityType as string) ?? '',
-        targetEntityId: (meta.targetEntityId as string) ?? '',
-        pipelineRunId: (meta.pipelineRunId as string | null) ?? null,
-        canvasPipelineAssetId: (meta.canvasPipelineAssetId as string | null) ?? null,
-        model: (meta.model as string | null) ?? null,
-        costCents: (meta.costCents as number | null) ?? null,
+        projectId: m.projectId,
+        projectTitle: m.projectTitle,
+        phase: m.phase,
+        targetEntityType: m.targetEntityType,
+        targetEntityId: m.targetEntityId,
+        pipelineRunId: m.pipelineRunId,
+        canvasPipelineAssetId: m.canvasPipelineAssetId,
+        model: m.model,
+        costCents: m.costCents,
       }
     }
 
     case 'canvas_export':
       return { kind: 'canvas_export' }
 
-    case 'transfer':
-      return { kind: 'transfer', roomId: (meta.roomId as string) ?? '' }
+    case 'transfer': {
+      const parsed = TransferMetaSchema.safeParse(meta)
+      const m = parsed.success ? parsed.data : { roomId: '' }
+      return { kind: 'transfer', roomId: m.roomId }
+    }
 
     case 'manual':
       return { kind: 'manual' }

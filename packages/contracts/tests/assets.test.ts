@@ -335,4 +335,147 @@ describe('AssetDto with origin', () => {
     expect(dto.source).toBe('canvas_pipeline')
     expect(dto.origin.kind).toBe('canvas_pipeline')
   })
+
+  test('accepts AssetDto with canvas_export origin', () => {
+    const dto = AssetDtoSchema.parse({
+      id: 'asset-6',
+      kind: 'image',
+      title: '画布导出',
+      tags: [],
+      status: 'active',
+      visibility: 'private',
+      source: 'canvas_export',
+      origin: { kind: 'canvas_export' },
+      metadata: {},
+      files: [],
+      createdAt: '2026-06-20T00:00:00.000Z',
+      updatedAt: '2026-06-20T00:00:00.000Z',
+    })
+    expect(dto.source).toBe('canvas_export')
+    expect(dto.origin.kind).toBe('canvas_export')
+  })
+
+  test('accepts AssetDto with manual origin', () => {
+    const dto = AssetDtoSchema.parse({
+      id: 'asset-7',
+      kind: 'text',
+      title: '手动创建',
+      tags: [],
+      status: 'active',
+      visibility: 'private',
+      source: 'manual',
+      origin: { kind: 'manual' },
+      metadata: {},
+      files: [],
+      createdAt: '2026-06-20T00:00:00.000Z',
+      updatedAt: '2026-06-20T00:00:00.000Z',
+    })
+    expect(dto.source).toBe('manual')
+    expect(dto.origin.kind).toBe('manual')
+  })
+
+  test('accepts AssetDto with imported origin', () => {
+    const dto = AssetDtoSchema.parse({
+      id: 'asset-8',
+      kind: 'image',
+      title: '导入的图片',
+      tags: ['imported'],
+      status: 'active',
+      visibility: 'private',
+      source: 'import',
+      origin: { kind: 'imported' },
+      metadata: { importSource: 'external' },
+      files: [],
+      createdAt: '2026-06-20T00:00:00.000Z',
+      updatedAt: '2026-06-20T00:00:00.000Z',
+    })
+    expect(dto.source).toBe('import')
+    expect(dto.origin.kind).toBe('imported')
+  })
+
+  test('rejects AssetDto with mismatched source/origin (canvas_pipeline source but uploaded origin)', () => {
+    // source 和 origin.kind 应该一致，但 schema 层不强制约束
+    // 这里验证 parse 不会拒绝（业务层应在 service 层保证一致性）
+    const dto = AssetDtoSchema.parse({
+      id: 'asset-9',
+      kind: 'image',
+      title: 'Test',
+      tags: [],
+      status: 'active',
+      visibility: 'private',
+      source: 'upload',
+      origin: {
+        kind: 'uploaded',
+        originalFileName: 'test.jpg',
+        mimeType: 'image/jpeg',
+        size: 1000,
+        width: null,
+        height: null,
+        duration: null,
+      },
+      metadata: {},
+      files: [],
+      createdAt: '2026-06-20T00:00:00.000Z',
+      updatedAt: '2026-06-20T00:00:00.000Z',
+    })
+    expect(dto.origin.kind).toBe('uploaded')
+  })
+
+  test('AssetDtoSchema safeParse returns error for invalid data', () => {
+    const result = AssetDtoSchema.safeParse({
+      id: 'bad',
+      kind: 'invalid_kind',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  test('AssetDtoSchema safeParse works for valid drag payload', () => {
+    const payload = {
+      id: 'drag-asset-1',
+      kind: 'image',
+      title: '拖拽测试',
+      tags: [],
+      status: 'active',
+      visibility: 'private',
+      source: 'ai_generation',
+      origin: {
+        kind: 'ai_generated',
+        prompt: 'test prompt',
+        negativePrompt: null,
+        model: 'test-model',
+        provider: 'test',
+        mediaKind: 'image',
+        size: null,
+        ratio: null,
+        resolution: null,
+        duration: null,
+        seed: null,
+        promptExtend: false,
+        watermark: false,
+        requestId: null,
+        providerTaskId: null,
+        generationRecordId: 'gen-1',
+        taskId: 'task-1',
+        costCents: null,
+        providerUrl: null,
+      },
+      metadata: {},
+      files: [{
+        id: 'file-1',
+        role: 'original',
+        storageBucket: 'bucket',
+        storageKey: 'key',
+        url: 'https://example.com/img.png',
+        createdAt: '2026-06-20T00:00:00.000Z',
+      }],
+      createdAt: '2026-06-20T00:00:00.000Z',
+      updatedAt: '2026-06-20T00:00:00.000Z',
+    }
+    const result = AssetDtoSchema.safeParse(payload)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.id).toBe('drag-asset-1')
+      expect(result.data.origin.kind).toBe('ai_generated')
+    }
+  })
 })

@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./modal": "./src/modal.tsx",
-    "./select": "./src/select.tsx"
+    "./select": "./src/select.tsx",
+    "./asset-detail": "./src/asset-detail.tsx"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -15,6 +16,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@super-app/contracts": "workspace:*",
     "clsx": "^2.1.1",
     "lucide-react": "^1.21.0",
     "overlayscrollbars": "^2.16.0",
