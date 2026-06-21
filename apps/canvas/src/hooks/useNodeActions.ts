@@ -172,14 +172,26 @@ export function useNodeActions() {
         id: nodeId,
         type: 'imageNode',
         position,
-        data: { src: fileUrl, fileName: asset.title, assetId: asset.id },
+        data: {
+          src: fileUrl,
+          fileName: asset.title,
+          assetId: asset.id,
+          assetSource: asset.source,
+          assetOrigin: asset.origin,
+        },
       } as ImageNodeType
     } else if (kind === 'video') {
       node = {
         id: nodeId,
         type: 'videoNode',
         position,
-        data: { src: fileUrl, fileName: asset.title, assetId: asset.id },
+        data: {
+          src: fileUrl,
+          fileName: asset.title,
+          assetId: asset.id,
+          assetSource: asset.source,
+          assetOrigin: asset.origin,
+        },
       } as VideoNodeType
     } else if (kind === 'text') {
       const content =

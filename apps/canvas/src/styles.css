@@ -54,6 +54,37 @@ a:focus-visible {
   }
 }
 
+/* Media node info button */
+.media-node {
+  position: relative;
+}
+.media-node-info-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 10;
+  display: flex;
+  height: 24px;
+  width: 24px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 0;
+  background: rgb(28 28 28 / 0.8);
+  color: #999999;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  opacity: 0;
+}
+.media-node:hover .media-node-info-btn,
+.media-node-info-btn:focus-visible {
+  opacity: 1;
+}
+.media-node-info-btn:hover {
+  background: #2a2a2a;
+  color: #e5e5e5;
+}
+
 /* Toast animation */
 @keyframes slideUp {
   from {

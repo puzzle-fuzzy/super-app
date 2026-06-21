@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState, useEffect } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
-import { Film, ImageIcon } from 'lucide-react'
+import { Film, ImageIcon, Info } from 'lucide-react'
 import type { ImageNodeType, VideoNodeType } from '../types'
+import { AssetInfoDialog } from './AssetInfoDialog'
 
 type MediaNodeProps = NodeProps<ImageNodeType> | NodeProps<VideoNodeType>
 
@@ -9,6 +10,7 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
   const isVideo = type === 'videoNode'
   const videoRef = useRef<HTMLVideoElement>(null)
   const [imageError, setImageError] = useState(false)
+  const [infoOpen, setInfoOpen] = useState(false)
   const nodeWidth = typeof data.width === 'number' ? data.width : 320
   const nodeHeight = typeof data.height === 'number' ? data.height : 200
 
@@ -81,7 +83,7 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
             <div
               style={{
                 height: '100%',
-                background: '#6366f1',
+                background: '#60a5fa',
                 borderRadius: 3,
                 transformOrigin: 'left',
                 transition: 'transform 0.2s',
@@ -97,107 +99,133 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
 
   // 正常渲染
   return (
-    <div
-      className="media-node"
-      style={{
-        width: nodeWidth,
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        borderRadius: 12,
-        overflow: 'visible',
-        background: '#1c1c1c',
-        border: '1px solid #3a3a3a',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
-      }}
-    >
-      <Handle
-        type="target"
-        position={Position.Left}
-        style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }}
-      />
-      {isVideo && data.src ? (
-        <div
-          style={{
-            width: '100%',
-            background: '#000',
-            borderRadius: 11,
-            overflow: 'hidden',
-            lineHeight: 0,
-          }}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        >
-          <video
-            ref={videoRef}
-            style={{ width: '100%', display: 'block' }}
-            src={data.src}
-            preload="metadata"
-            muted
-            loop
-            playsInline
-            onError={() => setImageError(true)}
-          />
-        </div>
-      ) : !imageError && data.src ? (
-        <div
-          style={{
-            width: '100%',
-            overflow: 'hidden',
-            borderRadius: 11,
-            lineHeight: 0,
-            background: '#242424',
-          }}
-        >
-          <img
-            style={{ width: '100%', height: 'auto', display: 'block' }}
-            src={data.src}
-            alt={data.fileName}
-            loading="lazy"
-            onError={() => setImageError(true)}
-          />
-        </div>
-      ) : (
-        <div
-          style={{
-            width: '100%',
-            overflow: 'hidden',
-            borderRadius: 11,
-            lineHeight: 0,
-            background: '#242424',
-          }}
-        >
-          <img
-            style={{ width: '100%', height: 'auto', display: 'block' }}
-            src={`${import.meta.env.BASE_URL}images/generation-failed.png`}
-            alt="生成失败"
-            loading="lazy"
-          />
-        </div>
-      )}
-
-      {/* 文件名在节点外左下角 */}
-      <span
+    <>
+      <div
+        className="media-node"
         style={{
-          position: 'absolute',
-          left: 0,
-          bottom: -20,
-          maxWidth: '100%',
-          fontSize: 11,
-          color: '#999999',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          pointerEvents: 'none',
+          width: nodeWidth,
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          borderRadius: 12,
+          overflow: 'visible',
+          background: '#1c1c1c',
+          border: '1px solid #3a3a3a',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
         }}
       >
-        {data.fileName}
-      </span>
-    </div>
+        <Handle
+          type="target"
+          position={Position.Left}
+          style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }}
+        />
+        <Handle
+          type="source"
+          position={Position.Right}
+          style={{ background: '#666', border: '2px solid #1c1c1c', width: 9, height: 9 }}
+        />
+        {isVideo && data.src ? (
+          <div
+            style={{
+              width: '100%',
+              background: '#000',
+              borderRadius: 11,
+              overflow: 'hidden',
+              lineHeight: 0,
+            }}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            <video
+              ref={videoRef}
+              style={{ width: '100%', display: 'block' }}
+              src={data.src}
+              preload="metadata"
+              muted
+              loop
+              playsInline
+              onError={() => setImageError(true)}
+            />
+          </div>
+        ) : !imageError && data.src ? (
+          <div
+            style={{
+              width: '100%',
+              overflow: 'hidden',
+              borderRadius: 11,
+              lineHeight: 0,
+              background: '#242424',
+            }}
+          >
+            <img
+              style={{ width: '100%', height: 'auto', display: 'block' }}
+              src={data.src}
+              alt={data.fileName}
+              loading="lazy"
+              onError={() => setImageError(true)}
+            />
+          </div>
+        ) : (
+          <div
+            style={{
+              width: '100%',
+              overflow: 'hidden',
+              borderRadius: 11,
+              lineHeight: 0,
+              background: '#242424',
+            }}
+          >
+            <img
+              style={{ width: '100%', height: 'auto', display: 'block' }}
+              src={`${import.meta.env.BASE_URL}images/generation-failed.png`}
+              alt="生成失败"
+              loading="lazy"
+            />
+          </div>
+        )}
+
+        {/* 文件名在节点外左下角 */}
+        <span
+          style={{
+            position: 'absolute',
+            left: 0,
+            bottom: -20,
+            maxWidth: '100%',
+            fontSize: 11,
+            color: '#999999',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+          }}
+        >
+          {data.fileName}
+        </span>
+
+        {/* 完整信息按钮 — 存在 assetOrigin 时右上角 hover 显示 */}
+        {data.assetOrigin ? (
+          <button
+            type="button"
+            className="media-node-info-btn"
+            onClick={(e) => { e.stopPropagation(); setInfoOpen(true) }}
+            title="查看完整信息"
+          >
+            <Info size={14} />
+          </button>
+        ) : null}
+      </div>
+
+      <AssetInfoDialog
+        open={infoOpen}
+        onClose={() => setInfoOpen(false)}
+        origin={data.assetOrigin}
+        fileName={data.fileName}
+        src={data.src}
+        width={data.width}
+        height={data.height}
+        assetId={data.assetId}
+        taskId={data.taskId}
+      />
+    </>
   )
 }

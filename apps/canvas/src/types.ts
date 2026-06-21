@@ -1,4 +1,5 @@
 import type { Node } from '@xyflow/react'
+import type { AssetOrigin, AssetSource } from '@super-app/contracts/assets'
 
 // ========== 上传状态 ==========
 export interface UploadState {
@@ -15,6 +16,10 @@ export interface ImageNodeData {
   uploading?: UploadState
   groupId?: string
   assetId?: string
+  assetSource?: AssetSource
+  assetOrigin?: AssetOrigin
+  generationRecordId?: string
+  taskId?: string
   [key: string]: unknown
 }
 export type ImageNodeType = Node<ImageNodeData, 'imageNode'>
@@ -28,6 +33,10 @@ export interface VideoNodeData {
   uploading?: UploadState
   groupId?: string
   assetId?: string
+  assetSource?: AssetSource
+  assetOrigin?: AssetOrigin
+  generationRecordId?: string
+  taskId?: string
   [key: string]: unknown
 }
 export type VideoNodeType = Node<VideoNodeData, 'videoNode'>
