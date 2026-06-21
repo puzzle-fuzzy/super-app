@@ -112,7 +112,7 @@ export function ConsoleAppContent({
   return (
     <>
       <section
-        className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
+        className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-4.5 max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
         aria-label="API 控制台"
       >
 
@@ -150,7 +150,7 @@ export function ConsoleAppContent({
                 onClick={() => handleCopy(createdKey)}
               >
                 {copiedId === createdKey.slice(0, 8) ? (
-                  <span className="text-[11px] font-semibold text-[#22c55e]">已复制</span>
+                  <span className="text-[11px] font-semibold text-success">已复制</span>
                 ) : (
                   <Copy size={16} />
                 )}
@@ -166,7 +166,7 @@ export function ConsoleAppContent({
           </div>
         ) : keys.length === 0 ? (
           <div className="grid place-items-center py-20">
-            <div className="max-w-[420px] text-center">
+            <div className="max-w-105 text-center">
               <h3 className="mb-2.5 text-[22px] font-bold tracking-[-0.02em]">还没有 API 密钥</h3>
               <p className="m-0 mb-6 text-[#999999]">创建密钥以通过 API 访问你的 Super 资源。</p>
               <button
@@ -211,7 +211,7 @@ export function ConsoleAppContent({
       {/* Create dialog */}
       {createOpen && (
         <DialogOverlay onClose={() => setCreateOpen(false)}>
-          <div className="w-full max-w-[400px] rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
+          <div className="w-full max-w-100 rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
             <h3 className="m-0 mb-4 text-lg font-bold tracking-[-0.01em]">新建 API 密钥</h3>
             <input
               type="text"
@@ -259,7 +259,7 @@ function DialogOverlay({ children, onClose }: { children: React.ReactNode; onClo
 
   return (
     <div
-      className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-6"
+      className="fixed inset-0 z-100 grid place-items-center bg-black/60 p-6"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
@@ -272,7 +272,7 @@ function DialogOverlay({ children, onClose }: { children: React.ReactNode; onClo
 function ScreenState({ title, description }: { title: string; description: string }) {
   return (
     <main className="grid min-h-screen place-items-center bg-[#141414] p-6">
-      <div className="w-full max-w-[560px] rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
+      <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8 shadow-panel">
         <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
           SUPER CONSOLE
         </p>

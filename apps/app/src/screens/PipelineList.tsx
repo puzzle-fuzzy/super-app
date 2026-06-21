@@ -129,7 +129,7 @@ export function PipelineList({ user: _user }: {
   return (
     <>
       <section
-        className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
+        className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-4.5 max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
         aria-label="AI 视频流水线"
       >
 
@@ -160,7 +160,7 @@ export function PipelineList({ user: _user }: {
           </div>
         ) : projects.length === 0 ? (
           <div className="grid place-items-center py-20">
-            <div className="max-w-[420px] text-center">
+            <div className="max-w-105 text-center">
               <h3 className="mb-2.5 text-[22px] font-bold tracking-[-0.02em]">还没有流水线项目</h3>
               <p className="m-0 mb-6 text-[#999999]">输入一段故事文本，开始 AI 视频制作之旅。</p>
               <button
@@ -174,11 +174,11 @@ export function PipelineList({ user: _user }: {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-[14px] max-[1100px]:grid-cols-2 max-[680px]:grid-cols-1">
+          <div className="grid grid-cols-3 gap-3.5 max-[1100px]:grid-cols-2 max-[680px]:grid-cols-1">
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="group relative flex min-h-[180px] cursor-pointer flex-col rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-5 transition-all duration-160 hover:border-[#3a3a3a] hover:bg-[#202020]"
+                className="group relative flex min-h-45 cursor-pointer flex-col rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-5 transition-all duration-160 hover:border-[#3a3a3a] hover:bg-[#202020]"
                 onClick={() => navigate(`/pipeline/${project.id}`)}
               >
                 <div className="absolute top-4 right-4 z-10">
@@ -202,7 +202,7 @@ export function PipelineList({ user: _user }: {
                           setMenuOpenId(null)
                         }}
                       />
-                      <div className="absolute right-0 top-full z-30 mt-1 min-w-32 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)]">
+                      <div className="absolute right-0 top-full z-30 mt-1 min-w-32 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0/0.42)]">
                         <button
                           type="button"
                           className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-[7px] border-0 bg-transparent px-2.5 text-[13px] font-medium text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
@@ -244,7 +244,7 @@ export function PipelineList({ user: _user }: {
                 <span className="mb-1 text-[11px] font-bold tracking-[0.14em] text-[#666666]">
                   {statusLabel[project.status] ?? project.status}
                 </span>
-                <h3 className={`mb-2.5 text-2xl font-bold tracking-[-0.02em] ${project.finalVideoUrl ? 'mt-1' : 'mt-[42px]'}`}>
+                <h3 className={`mb-2.5 text-2xl font-bold tracking-[-0.02em] ${project.finalVideoUrl ? 'mt-1' : 'mt-10.5'}`}>
                   {project.title || '未命名项目'}
                 </h3>
                 <p className="m-0 line-clamp-2 text-[13px] text-[#888888]">
@@ -262,7 +262,7 @@ export function PipelineList({ user: _user }: {
       {/* Create Dialog */}
       {createOpen && (
         <DialogOverlay onClose={() => setCreateOpen(false)}>
-          <div className="w-full max-w-[480px] rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
+          <div className="w-full max-w-120 rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
             <h3 className="m-0 mb-4 text-lg font-bold tracking-[-0.01em]">新建流水线项目</h3>
             <label className="mb-1 block text-[13px] font-medium text-[#999999]">项目名称</label>
             <input
@@ -311,7 +311,7 @@ export function PipelineList({ user: _user }: {
       {/* Rename Dialog */}
       {renameOpen && (
         <DialogOverlay onClose={() => setRenameOpen(false)}>
-          <div className="w-full max-w-[400px] rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
+          <div className="w-full max-w-100 rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
             <h3 className="m-0 mb-4 text-lg font-bold tracking-[-0.01em]">重命名</h3>
             <input
               type="text"
@@ -347,7 +347,7 @@ export function PipelineList({ user: _user }: {
       {/* Delete Confirmation */}
       {deleteConfirm && (
         <DialogOverlay onClose={() => setDeleteConfirm(null)}>
-          <div className="w-full max-w-[400px] rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
+          <div className="w-full max-w-100 rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
             <h3 className="m-0 mb-2 text-lg font-bold tracking-[-0.01em]">确认删除</h3>
             <p className="m-0 mb-5 text-sm text-[#999999]">
               此操作不可撤销。确定要删除这个流水线项目吗？
@@ -362,7 +362,7 @@ export function PipelineList({ user: _user }: {
               </button>
               <button
                 type="button"
-                className="flex h-10 cursor-pointer items-center rounded-[10px] border-0 bg-[#f87171] px-5 text-[13px] font-semibold text-white transition-colors hover:bg-[#ef4444]"
+                className="flex h-10 cursor-pointer items-center rounded-[10px] border-0 bg-[#f87171] px-5 text-[13px] font-semibold text-white transition-colors hover:bg-danger"
                 onClick={() => handleDelete(deleteConfirm)}
               >
                 删除

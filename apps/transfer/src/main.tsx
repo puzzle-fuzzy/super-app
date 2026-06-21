@@ -240,10 +240,10 @@ function TransferApp() {
   return (
     <main className="flex min-h-screen flex-col bg-[#141414] text-[#e5e5e5]">
       {/* Header */}
-      <div className="mx-auto w-full max-w-[1800px] px-8 pt-8 max-[920px]:px-[18px] max-[620px]:px-3.5">
+      <div className="mx-auto w-full max-w-[1800px] px-8 pt-8 max-[920px]:px-4.5 max-[620px]:px-3.5">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-[12px] border border-[#3a3a3a] text-sm font-bold text-[#999999]">
+            <span className="grid h-9 w-9 place-items-center rounded-md border border-[#3a3a3a] text-sm font-bold text-[#999999]">
               S
             </span>
             <strong className="text-base font-semibold tracking-tight">Super Transfer</strong>
@@ -260,8 +260,8 @@ function TransferApp() {
       </div>
 
       {/* Card — vertically centered */}
-      <div className="flex flex-1 items-center justify-center px-8 pb-8 max-[920px]:px-[18px] max-[620px]:px-3.5">
-        <div className="w-full max-w-[560px] rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+      <div className="flex flex-1 items-center justify-center px-8 pb-8 max-[920px]:px-4.5 max-[620px]:px-3.5">
+        <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
           {/* Kicker + Title */}
           <p className="mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
             P2P FILE TRANSFER
@@ -305,7 +305,7 @@ function TransferApp() {
               <p className="m-0 mt-1 text-[13px] text-[#999999]">{formatFileSize(offer.fileSize)}</p>
               <button
                 type="button"
-                className="mt-5 flex h-11 cursor-pointer items-center gap-2 rounded-[12px] border-0 bg-[#e5e5e5] px-6 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
+                className="mt-5 flex h-11 cursor-pointer items-center gap-2 rounded-md border-0 bg-[#e5e5e5] px-6 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
                 onClick={acceptOffer}
               >
                 <ArrowDownToLine size={16} />
@@ -350,7 +350,7 @@ function TransferApp() {
           {/* Completed Download */}
           {isDone && completed && (
             <a
-              className="mt-6 flex h-11 cursor-pointer items-center justify-center gap-2 rounded-[12px] border-0 bg-[#064e3b] px-6 text-[13px] font-semibold text-[#34d399] no-underline transition-colors hover:bg-[#065f46]"
+              className="mt-6 flex h-11 cursor-pointer items-center justify-center gap-2 rounded-md border-0 bg-[#064e3b] px-6 text-[13px] font-semibold text-[#34d399] no-underline transition-colors hover:bg-[#065f46]"
               href={completed.url}
               download={completed.fileName}
             >

@@ -32,11 +32,11 @@ const FEATURES = [
 export function SiteApp() {
   return (
     <main className="min-h-screen bg-[#141414] text-[#e5e5e5]">
-      <section className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5">
+      <section className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-4.5 max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5">
         {/* Header */}
         <header className="mb-12 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-[12px] border border-[#3a3a3a] text-sm font-bold text-[#999999]">
+            <span className="grid h-9 w-9 place-items-center rounded-md border border-[#3a3a3a] text-sm font-bold text-[#999999]">
               S
             </span>
             <strong className="text-base font-semibold tracking-tight">Super</strong>
@@ -55,10 +55,10 @@ export function SiteApp() {
           <p className="mb-3 text-xs font-bold tracking-[0.16em] text-[#666666]">
             UNIFIED CLOUD WORKSPACE
           </p>
-          <h1 className="mx-auto mb-4 max-w-[700px] text-[clamp(40px,7vw,72px)] font-bold leading-[1.04] tracking-[-0.02em]">
+          <h1 className="mx-auto mb-4 max-w-175 text-[clamp(40px,7vw,72px)] font-bold leading-[1.04] tracking-[-0.02em]">
             你的创意资产与 AI 工作区
           </h1>
-          <p className="mx-auto mb-8 max-w-[520px] text-[17px] leading-[1.75] text-[#999999]">
+          <p className="mx-auto mb-8 max-w-130 text-[17px] leading-[1.75] text-[#999999]">
             Super 提供资产上传、画布编辑、P2P 传输和模型接口管理，帮你把灵感变为成果。
           </p>
           <div className="flex items-center justify-center gap-3">
@@ -79,14 +79,14 @@ export function SiteApp() {
         </div>
 
         {/* Features */}
-        <div className="mb-16 grid grid-cols-2 gap-[14px] max-[680px]:grid-cols-1">
+        <div className="mb-16 grid grid-cols-2 gap-3.5 max-[680px]:grid-cols-1">
           {FEATURES.map((feature) => (
             <a
               key={feature.title}
               href={feature.href}
-              className="flex gap-4 rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-6 text-[#e5e5e5] no-underline transition-all duration-160 hover:-translate-y-[3px] hover:border-[#3a3a3a] hover:bg-[#202020]"
+              className="flex gap-4 rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-6 text-[#e5e5e5] no-underline transition-all duration-160 hover:-translate-y-0.75 hover:border-[#3a3a3a] hover:bg-[#202020]"
             >
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px] border border-[#2a2a2a] text-[#999999]">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md border border-[#2a2a2a] text-[#999999]">
                 <feature.icon size={18} />
               </span>
               <div>

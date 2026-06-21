@@ -132,12 +132,12 @@ export function AssetsApp({ user }: { user: CurrentUser }) {
   return (
     <>
       <section
-        className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
+        className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-4.5 max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
         aria-label="资产中心"
       >
 
         <nav
-          className="mb-6 flex items-end gap-[18px] overflow-x-auto border-b border-[#2a2a2a] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-[620px]:flex-col max-[620px]:items-stretch max-[620px]:gap-0"
+          className="mb-6 flex items-end gap-4.5 overflow-x-auto border-b border-[#2a2a2a] scrollbar-none [&::-webkit-scrollbar]:hidden max-[620px]:flex-col max-[620px]:items-stretch max-[620px]:gap-0"
           aria-label="资产视图"
         >
           <div className="flex min-w-max items-end" role="tablist" aria-label="资产类型">
@@ -174,7 +174,7 @@ export function AssetsApp({ user }: { user: CurrentUser }) {
         </nav>
 
         <section
-          className="mb-[18px] flex items-center justify-between gap-4 text-[#666666] max-[620px]:flex-col max-[620px]:items-start"
+          className="mb-4.5 flex items-center justify-between gap-4 text-[#666666] max-[620px]:flex-col max-[620px]:items-start"
           aria-label="当前集合"
         >
           <div className="flex items-baseline gap-2.5">
@@ -189,7 +189,7 @@ export function AssetsApp({ user }: { user: CurrentUser }) {
         </section>
 
         {listError ? (
-          <p className="mb-[18px] rounded-[10px] border border-[rgb(255_138_128_/_0.36)] bg-[rgb(255_138_128_/_0.1)] p-3.5 text-sm leading-normal text-[#ffd8d4]">
+          <p className="mb-4.5 rounded-[10px] border border-[rgb(255_138_128/0.36)] bg-[rgb(255_138_128/0.1)] p-3.5 text-sm leading-normal text-[#ffd8d4]">
             {listError}
           </p>
         ) : null}

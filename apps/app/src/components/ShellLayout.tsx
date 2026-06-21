@@ -16,6 +16,12 @@ const NAV_ITEMS = [
   { label: 'API 控制台', path: '/api-console' },
 ]
 
+const EXTERNAL_LINKS = [
+  { label: '首页', href: clientEnv.SUPER_PUBLIC_SITE_URL },
+  { label: '文档', href: clientEnv.SUPER_PUBLIC_DOCS_URL },
+  { label: '管理', href: '/admin/' },
+]
+
 function ShellLayoutInner({ user }: { user: CurrentUser }) {
   const location = useLocation()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -77,6 +83,19 @@ function ShellLayoutInner({ user }: { user: CurrentUser }) {
                   </Link>
                 )
               })}
+            </nav>
+
+            {/* External links */}
+            <nav className="flex items-center gap-1 max-[780px]:hidden" aria-label="外部链接">
+              {EXTERNAL_LINKS.map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="rounded-[10px] px-3.5 py-2 text-sm font-medium text-[#666666] no-underline transition-colors hover:text-[#e5e5e5]"
+                >
+                  {item.label}
+                </a>
+              ))}
             </nav>
 
             {/* Spacer */}
