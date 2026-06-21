@@ -50,23 +50,13 @@
 - 纯 UI 组件不再直接调用 API — 数据层全部收进 hooks
 - `PipelineEditor.tsx`（~773 行）留给后续轮次拆分
 
-### 6. Pipeline 手动工作站交互仍未按阶段依赖关系收敛
+### 6. ~~Pipeline 手动工作站交互仍未按阶段依赖关系收敛~~ ✅ `acb83e4`
 
-**问题**
-
-- 当前 pipeline 仍是 12 个阶段节点各自带按钮的模式。
-- 目标体验应是父阶段完成后，在上下文中出现下一步动作，例如 Analysis 完成后显示“生成角色”“生成场景”。
-
-**解决办法**
-
-- 在 `@super-app/canvas-pipeline` 中沉淀阶段依赖和 next-actions 规则。
-- `PipelineEditor` 只消费 `availableActions`，不在 UI 中硬编码阶段判断。
-- 按阶段状态禁用不可触发动作，并展示阻塞原因。
-
-**完成标准**
-
-- 前端按钮由 pipeline domain 规则驱动。
-- 已完成父节点才暴露后续可执行动作。
+- `@super-app/canvas-pipeline` 新增 `computeAvailableActions()` 纯函数，按阶段顺序 + run 状态 + pause-before 规则计算 12 阶段的可触发性
+- `PipelineEditor.tsx` 节点生成由 computeAvailableActions 驱动，不再硬编码 per-phase 按钮逻辑
+- entity 节点（character/location/shot）也通过 `phaseAction()` 读取 `canTrigger`/`blockedReason`
+- `PipelineNode.tsx` 支持 `disabled`（半透明）+ `blockedReason`（tooltip 文本）
+- 待完成：不可触发时禁用按钮（需等 Button 禁用态样式设计）
 
 ## P2 - 类型与契约单一真源
 
