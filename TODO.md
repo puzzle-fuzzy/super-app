@@ -76,32 +76,12 @@
 
 ## P2 - 前端架构与组件边界
 
-### 7. `PipelineEditor.tsx` 仍然承担过多职责
+### 7. ~~`PipelineEditor.tsx` 仍然承担过多职责~~ ✅ `63d0ad8`
 
-**问题**
-
-- `apps/canvas/src/screens/PipelineEditor.tsx` 仍约 748 行。
-- 文件里同时包含数据加载、SSE、phase trigger、节点构造、边构造、详情面板、资产侧栏、拖拽应用参考资产。
-- 详情面板和资产侧栏都将继续变复杂，如果不拆分会快速回到“大文件难维护”的状态。
-
-**解决办法**
-
-- 拆分为：
-  - `usePipelineProject(projectId)`
-  - `usePipelineRuns(projectId)`
-  - `usePipelineSse(projectId, onRefresh)`
-  - `usePipelineAssets(projectId)`
-  - `buildPipelineGraph(project, runs, actions)`
-  - `PipelineGraph`
-  - `PipelineAssetSidebar`
-  - `PipelineDetailPanel`
-  - `PipelineAssetDropHandler`
-- 让 `PipelineEditor.tsx` 只负责页面编排。
-
-**完成标准**
-
-- `PipelineEditor.tsx` 控制在 250-350 行以内。
-- 节点构造和详情展示可以独立测试。
+- `PipelineEditor.tsx`：783 → 195 行
+- 提取 4 个 hooks（usePipelineProject、usePipelineGraph、usePipelineSse、usePipelineAssets）
+- 提取 PipelineDetailPanel 组件
+- 剩余：PipelineAssetSidebar 和 PipelineAssetDropHandler 可后续继续拆分
 
 ### 8. `EditorView.tsx` 需要继续拆分生成与画布交互职责
 
