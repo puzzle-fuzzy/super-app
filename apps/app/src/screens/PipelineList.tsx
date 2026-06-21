@@ -142,63 +142,6 @@ export function PipelineList({
         className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
         aria-label="AI 视频流水线"
       >
-        {/* Header */}
-        <header className="mb-8 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-              aria-label="返回画布"
-              onClick={() => navigate('/')}
-            >
-              <ArrowLeft size={16} aria-hidden="true" />
-            </button>
-            <strong className="text-base font-semibold tracking-tight">AI 视频流水线</strong>
-          </div>
-          <div className="flex items-center gap-2">
-            <a
-              href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
-              className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-              aria-label="首页"
-              title="首页"
-            >
-              <House size={16} aria-hidden="true" />
-            </a>
-            {/* Simple user menu */}
-            <div className="relative" data-user-menu-root>
-              <button
-                type="button"
-                className="flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-full border-0 bg-[#2a2a2a] text-[14px] font-semibold text-[#999999]"
-                onClick={() => setUserMenuOpen((v) => !v)}
-              >
-                {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  (user.name || user.email).charAt(0).toUpperCase()
-                )}
-              </button>
-              {userMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-20" onClick={() => setUserMenuOpen(false)} />
-                  <div className="absolute right-0 top-full z-30 mt-2 min-w-44 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)]">
-                    <div className="px-2.5 py-2 text-[13px] text-[#999999]">
-                      <div className="font-medium text-[#e5e5e5]">{user.name || '用户'}</div>
-                      <div className="text-[12px]">{user.email}</div>
-                    </div>
-                    <div className="my-1.5 h-px bg-[#2a2a2a]" />
-                    <button
-                      type="button"
-                      className="flex h-9 w-full cursor-pointer items-center rounded-[7px] border-0 bg-transparent px-2.5 text-[13px] font-medium text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-                      onClick={handleLogout}
-                    >
-                      退出登录
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </header>
 
         {/* Toolbar */}
         <div className="mb-6 flex items-center justify-between">

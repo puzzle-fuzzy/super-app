@@ -78,26 +78,6 @@ export function CanvasProjectList({
         className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
         aria-label="画布"
       >
-        {/* Header */}
-        <header className="mb-8 flex items-center justify-between gap-4">
-          <strong className="text-base font-semibold tracking-tight">画布</strong>
-          <div className="flex items-center gap-2">
-            <a
-              href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
-              className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-              aria-label="首页"
-              title="首页"
-            >
-              <House size={16} aria-hidden="true" />
-            </a>
-            <UserMenu
-              user={user}
-              open={userMenuOpen}
-              setOpen={setUserMenuOpen}
-              onLogout={handleLogout}
-            />
-          </div>
-        </header>
 
         {/* Toolbar */}
         <div className="mb-6 flex items-center justify-between">

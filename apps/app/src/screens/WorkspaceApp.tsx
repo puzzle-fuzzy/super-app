@@ -155,90 +155,12 @@ export function WorkspaceApp({ user }: { user: CurrentUser }) {
   }
 
   return (
-    <main className="min-h-screen bg-[#141414] text-[#e5e5e5]">
+    <>
       <section
         className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
         aria-label="工作台"
       >
         {/* ---------------------------------------------------------------- */}
-        {/*  Top Bar: brand + nav + user                                     */}
-        {/* ---------------------------------------------------------------- */}
-        <header className="mb-8 flex items-center justify-between gap-4 max-[620px]:flex-wrap">
-          <div className="flex items-center gap-8 max-[620px]:w-full max-[620px]:justify-between">
-            {/* Brand */}
-            <div className="flex items-center gap-3">
-              <span className="grid h-9 w-9 place-items-center rounded-[12px] border border-[#3a3a3a] text-sm font-bold text-[#999999]">
-                S
-              </span>
-              <strong className="text-base font-semibold tracking-tight">Super</strong>
-            </div>
-
-            {/* Nav */}
-            <nav className="flex items-center gap-1 max-[620px]:hidden">
-              {NAV_ITEMS.map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  aria-current={item.active ? 'page' : undefined}
-                  className={`rounded-[10px] px-3.5 py-2 text-sm font-medium no-underline transition-colors ${
-                    item.active
-                      ? 'bg-white/[0.07] text-[#e5e5e5]'
-                      : 'text-[#999999] hover:text-[#e5e5e5]'
-                  }`}
-                >
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-          </div>
-
-          {/* User Avatar Dropdown */}
-          <div className="relative shrink-0" data-user-menu-root>
-            <button
-              type="button"
-              className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] px-2 py-1.5 text-sm transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a]"
-              onClick={() => setUserMenuOpen((prev) => !prev)}
-              aria-expanded={userMenuOpen}
-              aria-haspopup="true"
-            >
-              {user.avatarUrl ? (
-                <img
-                  className="h-7 w-7 rounded-full object-cover"
-                  src={user.avatarUrl}
-                  alt={user.name ?? user.email}
-                />
-              ) : (
-                <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2a2a2a] text-[#999999]">
-                  <UserRound size={14} aria-hidden="true" />
-                </span>
-              )}
-              <span className="max-w-[120px] truncate text-[13px] font-medium text-[#e5e5e5]">
-                {user.name ?? user.email}
-              </span>
-              <ChevronDown
-                size={14}
-                className={`text-[#666666] transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
-              />
-            </button>
-            <div
-              className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
-                userMenuOpen ? 'grid' : 'hidden'
-              }`}
-            >
-              <button
-                type="button"
-                className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left text-[13px] font-medium text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5] [&_svg]:size-[15px]"
-                onClick={() => {
-                  setUserMenuOpen(false)
-                  handleLogout()
-                }}
-              >
-                <LogOut size={15} aria-hidden="true" />
-                退出登录
-              </button>
-            </div>
-          </div>
-        </header>
 
         {/* ---------------------------------------------------------------- */}
         {/*  Welcome                                                        */}
@@ -364,7 +286,7 @@ export function WorkspaceApp({ user }: { user: CurrentUser }) {
           </div>
         </section>
       </section>
-    </main>
+    </>
   )
 }
 

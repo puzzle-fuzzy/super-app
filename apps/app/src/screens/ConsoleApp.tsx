@@ -121,66 +121,6 @@ export function ConsoleAppContent({
         className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
         aria-label="API 控制台"
       >
-        {/* Header */}
-        <header className="mb-8 flex items-center justify-between gap-4">
-          <strong className="text-base font-semibold tracking-tight">API 控制台</strong>
-
-          <div className="flex items-center gap-2">
-            <a
-              href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
-              className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-              aria-label="首页"
-              title="首页"
-            >
-              <House size={16} aria-hidden="true" />
-            </a>
-
-            {/* User Avatar Dropdown */}
-            <div className="relative" data-user-menu-root>
-              <button
-                type="button"
-                className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] px-2 py-1.5 text-sm transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a]"
-                onClick={() => setUserMenuOpen((prev) => !prev)}
-                aria-expanded={userMenuOpen}
-                aria-haspopup="true"
-              >
-                {user.avatarUrl ? (
-                  <img
-                    className="h-7 w-7 rounded-full object-cover"
-                    src={user.avatarUrl}
-                    alt={user.name ?? user.email}
-                  />
-                ) : (
-                  <span className="grid h-7 w-7 place-items-center rounded-full bg-[#2a2a2a] text-[#999999]">
-                    <UserRound size={14} aria-hidden="true" />
-                  </span>
-                )}
-                <span className="max-w-[120px] truncate text-[13px] font-medium text-[#e5e5e5]">
-                  {user.name ?? user.email}
-                </span>
-                <ChevronDown
-                  size={14}
-                  className={`text-[#666666] transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
-              <div
-                className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${userMenuOpen ? 'grid' : 'hidden'}`}
-              >
-                <button
-                  type="button"
-                  className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left text-[13px] font-medium text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-                  onClick={() => {
-                    setUserMenuOpen(false)
-                    handleLogout()
-                  }}
-                >
-                  <LogOut size={15} aria-hidden="true" />
-                  退出登录
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
 
         {/* Toolbar */}
         <div className="mb-6 flex items-center justify-between">
