@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  ArrowLeft,
-  House,
   MoreHorizontal,
   PenLine,
   Plus,

@@ -57,7 +57,7 @@ const SHORTCUTS: Shortcut[] = [
   },
 ]
 
-const NAV_ITEMS = [
+const _NAV_ITEMS = [
   { label: '工作台', href: clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL, active: true },
   { label: '资产库', href: clientEnv.SUPER_PUBLIC_ASSETS_APP_URL },
   { label: '画布', href: clientEnv.SUPER_PUBLIC_CANVAS_APP_URL },

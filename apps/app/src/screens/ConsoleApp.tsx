@@ -28,7 +28,7 @@ export function ConsoleApp() {
 }
 
 export function ConsoleAppContent({
-  user,
+  user: _user,
 }: {
   user: { id: string; name?: string | undefined; email: string; avatarUrl?: string | undefined }
 }) {

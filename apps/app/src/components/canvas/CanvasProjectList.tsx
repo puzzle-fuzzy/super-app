@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Film,
-  House,
   MoreHorizontal,
   PenLine,
   Plus,

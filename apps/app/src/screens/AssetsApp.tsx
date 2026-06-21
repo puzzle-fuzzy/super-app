@@ -54,7 +54,6 @@ export function AssetsApp({ user }: { user: CurrentUser }) {
     openEditStyle,
     openEditTemplate,
     saveEditor,
-    handleLogout,
   } = useAssetsData()
 
   const [openActionAssetId, setOpenActionAssetId] = useState<string | null>(null)

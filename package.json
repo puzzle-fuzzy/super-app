@@ -17,7 +17,7 @@
   },
   "packageManager": "pnpm@10.12.1",
   "scripts": {
-    "dev": "turbo dev --filter=!@super-app/workspace --filter=!@super-app/assets --filter=!@super-app/canvas --filter=!@super-app/console",
+    "dev": "turbo dev",
     "build": "turbo build",
     "build:frontends": "NODE_ENV=production turbo build --filter=./apps/* --force",
     "collect:frontends": "bun scripts/collect-frontends.ts",

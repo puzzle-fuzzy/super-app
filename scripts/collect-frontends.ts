@@ -16,12 +16,7 @@ const APPS: { dir: string; base: string }[] = [
   { dir: 'apps/site', base: '/' },
   { dir: 'apps/auth', base: '/auth/' },
   { dir: 'apps/app', base: '/app/' },
-  // 以下旧 app 保留过渡期，统一 app 部署后可按需移除
-  { dir: 'apps/workspace', base: '/workspace/' },
-  { dir: 'apps/canvas', base: '/canvas/' },
-  { dir: 'apps/assets', base: '/assets/' },
   { dir: 'apps/transfer', base: '/transfer/' },
-  { dir: 'apps/console', base: '/api-console/' },
 ]
 
 /** Narrows caught filesystem errors enough to branch on Node's errno code. */
