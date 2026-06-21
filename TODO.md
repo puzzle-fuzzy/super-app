@@ -60,24 +60,18 @@
 
 ## P2 - 类型与契约单一真源
 
-### 7. `packages/types` 与 `packages/contracts` 仍有重复定义漂移风险
+### 7. ~~`packages/types` 与 `packages/contracts` 仍有重复定义漂移风险~~ ✅ `a8add7d`
 
-**问题**
+**本轮完成**：
+- 修复 `types/src/subtitle.ts` 中 `SubtitleProjectDTO.accountId` → 应为 `ownerId`（实际无人消费该重复定义，contracts 版本正确）
+- 迁移 3 组纯 wire DTO 到 contracts：`asset-tags`、`upload`、`notifications`（含 Zod schema + `z.infer` 类型）
+- 修复 `UploadedFileDTO.accountId` → `ownerId`，`NotificationDTO.accountId` → `ownerId`
+- 从 `packages/types` 移除对应的 wire DTO 定义
 
-- `packages/contracts` 负责 Zod wire schema，`packages/types` 负责裸 TS DTO，但部分 DTO/枚举仍手写重复。
-- 示例：`packages/types/src/canvas.ts` 中 `CanvasProjectStatus` 是手写 union，注释写“从 DB pgEnum 推导”，但代码并未真正从 DB enum 或 contract schema 推导。
-- API service DTO 映射中仍有大量 `as ProjectDTO[...]` / `Record<string, unknown>` 转换，说明 schema 和 DTO 的单一真源还没有完全打通。
-
-**解决办法**
-
-- 对 wire DTO 优先从 `@super-app/contracts` 的 Zod schema `z.infer` 导出类型。
-- 对 DB enum 建立共享 const 或 schema enum，避免 DB/schema/types/contracts 三处重复。
-- DTO mapper 中的 JSON 字段使用对应 schema parse，而不是直接 `as`。
-
-**完成标准**
-
-- 关键 DTO 类型由 schema 推导。
-- 手写 union 只保留在确实不属于 wire/schema 的领域内部类型。
+**剩余（后续轮次）**：
+- `types/src/canvas.ts` vs `contracts/src/pipeline.ts`：Canvas/Pipeline 全套 DTO 重复（~10 套接口），涉及面广需单独审计
+- `types/src/user-tasks.ts` vs `contracts/src/tasks.ts`：部分重复含字段漂移
+- `types/src/admin.ts`：~20 个 admin DTO 待迁移
 
 ### 8. TypeScript 严格度还可以继续提升
 
