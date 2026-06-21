@@ -6,6 +6,9 @@ import { OverlayScrollbarsComponent } from 'overlayscrollbars-react'
 import { AppRoutes } from './routes'
 import './styles.css'
 
+// shadcn/ui — always dark mode
+document.documentElement.classList.add('dark')
+
 createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
     <OverlayScrollbarsComponent

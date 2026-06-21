@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import type { TextNodeType } from '../../types'
 import { useUIStore } from '../../stores/uiStore'
+import { Button } from '@/components/ui/button'
 
 type TextNodeProps = NodeProps<TextNodeType>
 
@@ -15,8 +16,8 @@ export default function TextNode({ data }: TextNodeProps) {
     : false
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
       onClick={() => setTextPreview(data.description)}
       style={{
         width: 320,
@@ -33,7 +34,7 @@ export default function TextNode({ data }: TextNodeProps) {
         padding: 0,
         transition: 'box-shadow 0.2s',
       }}
-      className="text-node-btn"
+      className="w-full text-left text-node-btn"
     >
       <Handle
         type="target"
@@ -73,6 +74,6 @@ export default function TextNode({ data }: TextNodeProps) {
           }}
         />
       )}
-    </button>
+    </Button>
   )
 }

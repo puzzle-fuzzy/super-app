@@ -2,6 +2,7 @@ import { FormEvent, useMemo, useState } from 'react'
 
 import { clientEnv } from '@super-app/env/client'
 import { login, register } from '@super-app/auth-client'
+import { Button } from '@/components/ui/button'
 
 type Mode = 'login' | 'register'
 
@@ -73,24 +74,24 @@ export function AuthApp() {
 
         <section className="auth-panel" aria-label="Authentication form">
           <div className="mode-switch" role="tablist" aria-label="Auth mode">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               role="tab"
               aria-selected={mode === 'login'}
               className={mode === 'login' ? 'active' : ''}
               onClick={() => setMode('login')}
             >
               登录
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="ghost"
               role="tab"
               aria-selected={mode === 'register'}
               className={mode === 'register' ? 'active' : ''}
               onClick={() => setMode('register')}
             >
               注册
-            </button>
+            </Button>
           </div>
 
           <form onSubmit={handleSubmit} className="auth-form">
@@ -140,9 +141,9 @@ export function AuthApp() {
 
             {error ? <p className="form-error">{error}</p> : null}
 
-            <button type="submit" className="submit-button" disabled={isSubmitting}>
+            <Button type="submit" className="submit-button" disabled={isSubmitting}>
               {isSubmitting ? '处理中...' : mode === 'login' ? '登录 Super' : '创建并进入'}
-            </button>
+            </Button>
 
             <a href="/transfer" className="guest-link">
               游客模式 · 跳过登录

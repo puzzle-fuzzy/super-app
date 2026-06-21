@@ -1,7 +1,8 @@
 import { Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 import type { FilterKind } from '../../utils/asset-helpers'
-import { panelKicker, primaryButton } from '../../utils/asset-helpers'
+import { panelKicker } from '../../utils/asset-helpers'
 
 export function EmptyState({
   filter,
@@ -23,14 +24,10 @@ export function EmptyState({
           先上传一张参考图，或者写下第一段提示词，让这里变成你的创作素材库。
         </p>
         <div>
-          <button
-            className={`${primaryButton} mt-[18px]`}
-            type="button"
-            onClick={filter === 'subject' ? onNewSubject : onNewText}
-          >
+          <Button className="h-10 rounded-[10px] px-5 text-[13px] font-semibold mt-[18px]" onClick={filter === 'subject' ? onNewSubject : onNewText}>
             <Plus size={16} aria-hidden="true" />
             {filter === 'subject' ? '创建第一个主体' : '写第一段文本'}
-          </button>
+          </Button>
         </div>
       </div>
     </section>

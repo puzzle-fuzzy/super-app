@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { Button } from '@/components/ui/button'
 import { useUIStore } from '../../stores/uiStore'
 import { useCanvasStore } from '../../stores/canvasStore'
 
@@ -100,36 +101,19 @@ export default function GroupNameModal() {
           }}
         />
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
             onClick={closeGroupNameModal}
-            style={{
-              padding: '6px 16px',
-              fontSize: 13,
-              border: '1px solid #3a3a3a',
-              borderRadius: 8,
-              background: 'transparent',
-              color: '#999999',
-              cursor: 'pointer',
-            }}
           >
             取消
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            className="h-10 rounded-[10px] px-5 text-[13px] font-semibold"
             onClick={handleSubmit}
-            style={{
-              padding: '6px 16px',
-              fontSize: 13,
-              border: 'none',
-              borderRadius: 8,
-              background: '#6366f1',
-              color: '#fff',
-              cursor: 'pointer',
-            }}
           >
             确认
-          </button>
+          </Button>
         </div>
       </div>
     </div>,

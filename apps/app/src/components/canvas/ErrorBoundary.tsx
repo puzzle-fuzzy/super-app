@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   children: ReactNode
@@ -34,21 +35,13 @@ export default class ErrorBoundary extends Component<Props, State> {
           >
             <div style={{ textAlign: 'center' }}>
               <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>抱歉，发生了意外错误</p>
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
                 onClick={() => window.location.reload()}
-                style={{
-                  padding: '8px 20px',
-                  border: '1px solid #3a3a3a',
-                  borderRadius: 8,
-                  background: '#1c1c1c',
-                  color: '#e5e5e5',
-                  cursor: 'pointer',
-                  fontSize: 13,
-                }}
               >
                 刷新页面
-              </button>
+              </Button>
             </div>
           </div>
         )

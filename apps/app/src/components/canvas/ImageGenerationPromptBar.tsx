@@ -16,6 +16,7 @@ import {
 } from '@super-app/ai-models'
 import type { CanvasGenerateImageRequest } from '@super-app/contracts/canvas'
 import { Select } from '@super-app/ui-react'
+import { Button } from '@/components/ui/button'
 
 import { useUIStore } from '../../stores/uiStore'
 
@@ -339,14 +340,15 @@ export function ImageGenerationPromptBar({
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex min-h-9 items-center gap-2">
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1 rounded-md text-[11px] text-[#666666] hover:text-[#e5e5e5]"
                 onClick={() => setAdvancedOpen((open) => !open)}
-                className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-[#303030] bg-[#202020] px-3 text-[13px] font-medium text-[#d4d4d4] transition-colors hover:border-[#4a4a4a] hover:bg-[#282828]"
               >
                 <SlidersHorizontal size={14} aria-hidden="true" />
                 高级参数
-              </button>
+              </Button>
               {status ? (
                 <p
                   className={`m-0 text-[13px] ${
@@ -364,20 +366,22 @@ export function ImageGenerationPromptBar({
 
             <div className="flex items-center gap-2">
               {status?.type === 'error' && lastInput ? (
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 rounded-lg px-3 text-[12px]"
                   disabled={generating}
                   onClick={retryLast}
-                  className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-[#7a3831] bg-[#3a2420] px-4 text-[13px] font-semibold text-[#ffd4cf] transition-colors hover:border-[#b9564b] hover:bg-[#4a2b25] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <RotateCcw size={14} aria-hidden="true" />
                   重试
-                </button>
+                </Button>
               ) : null}
-              <button
+              <Button
                 type="submit"
+                size="sm"
+                className="h-8 gap-1.5 rounded-lg px-3 text-[12px] font-semibold"
                 disabled={!prompt.trim() || generating}
-                className="inline-flex h-10 min-w-28 cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-[#e5e5e5] px-5 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ImageIcon size={15} aria-hidden="true" />
                 {generating
@@ -385,7 +389,7 @@ export function ImageGenerationPromptBar({
                   : isVideoGenerationModel(modelConfig)
                     ? '生成视频'
                     : '生成图片'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

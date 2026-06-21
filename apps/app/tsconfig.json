@@ -6,8 +6,8 @@
       "vite/client"
     ],
     "paths": {
-      "@app/workspace/*": [
-        "../workspace/src/*"
+      "@/*": [
+        "./src/*"
       ],
       "@app/assets/*": [
         "../assets/src/*"

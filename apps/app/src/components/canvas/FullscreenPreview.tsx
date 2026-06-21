@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useUIStore } from '../../stores/uiStore'
 
 export default function FullscreenPreview() {
@@ -70,28 +71,14 @@ export default function FullscreenPreview() {
         if (e.target === e.currentTarget) setFullscreenPreview(null)
       }}
     >
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-4 right-4 h-8 w-8 rounded-lg bg-black/40 text-white hover:bg-black/60"
         onClick={() => setFullscreenPreview(null)}
-        style={{
-          position: 'absolute',
-          top: 16,
-          right: 16,
-          width: 40,
-          height: 40,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: 'none',
-          borderRadius: 10,
-          background: 'rgba(255,255,255,0.08)',
-          color: '#e5e5e5',
-          cursor: 'pointer',
-          transition: 'background 0.15s',
-        }}
       >
         <X size={22} />
-      </button>
+      </Button>
 
       {preview.mediaType === 'video' ? (
         <video

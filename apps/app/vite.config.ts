@@ -8,6 +8,11 @@ const appDir = fileURLToPath(new URL('.', import.meta.url))
 
 export default defineConfig(({ command }) => ({
   plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      '@': path.resolve(appDir, 'src'),
+    },
+  },
   envDir: path.resolve(appDir, '../..'),
   envPrefix: 'SUPER_PUBLIC_',
   // dev: 直接从 / 提供资源；prod: 构建到 /app/_assets/，由 nginx 路由

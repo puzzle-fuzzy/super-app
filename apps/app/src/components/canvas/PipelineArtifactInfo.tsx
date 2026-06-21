@@ -4,6 +4,7 @@
  */
 import { Copy, Info } from 'lucide-react'
 import { Modal } from '@super-app/ui-react'
+import { Button } from '@/components/ui/button'
 
 interface ArtifactField {
   label: string
@@ -18,9 +19,10 @@ export function PipelineArtifactButton({
 }) {
   return (
     <div className="text-center">
-      <button
-        type="button"
-        className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] px-3 text-[11px] font-medium text-[#999999] transition-colors hover:border-[#3a3a3a] hover:text-[#e5e5e5]"
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 rounded-lg text-[#666666]"
         onClick={() => {
           const detail = document.getElementById(`artifact-info-${title}`)
           if (detail) {
@@ -30,7 +32,7 @@ export function PipelineArtifactButton({
       >
         <Info size={12} />
         完整信息
-      </button>
+      </Button>
     </div>
   )
 }
@@ -43,14 +45,15 @@ function DetailRow({ label, value, copyable }: ArtifactField) {
       <span className="flex items-center gap-2 text-[#e5e5e5] break-all">
         {value.length > 200 ? value.slice(0, 200) + '…' : value}
         {copyable && (
-          <button
-            type="button"
-            className="inline-flex h-6 shrink-0 cursor-pointer items-center gap-1 rounded-md border-0 bg-[#2a2a2a] px-2 text-[11px] text-[#999999] hover:bg-[#3a3a3a] hover:text-[#e5e5e5]"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 rounded-md text-[11px] text-[#999999]"
             onClick={() => navigator.clipboard.writeText(value)}
           >
             <Copy size={10} />
             复制
-          </button>
+          </Button>
         )}
       </span>
     </div>

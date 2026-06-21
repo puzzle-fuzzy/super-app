@@ -1,4 +1,5 @@
 import { Trash2, Group, Maximize, Copy, LayoutGrid } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useCanvasStore } from '../../stores/canvasStore'
 import { useUIStore } from '../../stores/uiStore'
 import { getNodeGroupId, type AppNode } from '../../types'
@@ -75,8 +76,10 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
       }}
     >
       {selectedCount > 1 && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-lg text-[#999999] hover:text-[#e5e5e5]"
           style={btnStyle}
           onClick={handleOrganize}
           title="整理排列"
@@ -90,12 +93,14 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
           }}
         >
           <LayoutGrid size={18} />
-        </button>
+        </Button>
       )}
 
       {canGroup && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-lg text-[#999999] hover:text-[#e5e5e5]"
           style={btnStyle}
           onClick={() => openGroupNameModal('create')}
           title="创建小组"
@@ -109,12 +114,14 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
           }}
         >
           <Group size={18} />
-        </button>
+        </Button>
       )}
 
       {hasMedia && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-lg text-[#999999] hover:text-[#e5e5e5]"
           style={btnStyle}
           onClick={handleFullscreen}
           title="全屏预览"
@@ -128,12 +135,14 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
           }}
         >
           <Maximize size={18} />
-        </button>
+        </Button>
       )}
 
       {selectedNodes.length === 1 && getNodeSource(selectedNodes[0]) && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-lg text-[#999999] hover:text-[#e5e5e5]"
           style={btnStyle}
           onClick={handleCopyUrl}
           title="复制链接"
@@ -147,11 +156,13 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
           }}
         >
           <Copy size={18} />
-        </button>
+        </Button>
       )}
 
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 rounded-lg text-[#999999] hover:text-[#e5e5e5]"
         style={btnStyle}
         onClick={handleDeleteSelected}
         title="删除"
@@ -165,7 +176,7 @@ export default function SelectionToolbar({ position, selectedCount }: SelectionT
         }}
       >
         <Trash2 size={18} />
-      </button>
+      </Button>
     </div>
   )
 }

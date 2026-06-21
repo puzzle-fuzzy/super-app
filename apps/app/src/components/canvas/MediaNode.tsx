@@ -3,6 +3,7 @@ import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { Film, ImageIcon, Info } from 'lucide-react'
 import type { ImageNodeType, VideoNodeType } from '../../types'
 import { AssetInfoDialog } from './AssetInfoDialog'
+import { Button } from '@/components/ui/button'
 
 type MediaNodeProps = NodeProps<ImageNodeType> | NodeProps<VideoNodeType>
 
@@ -217,14 +218,15 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
 
         {/* 完整信息按钮 — 存在 assetOrigin 时右上角 hover 显示 */}
         {data.assetOrigin ? (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon"
             className="media-node-info-btn"
             onClick={(e) => { e.stopPropagation(); setInfoOpen(true) }}
             title="查看完整信息"
           >
             <Info size={14} />
-          </button>
+          </Button>
         ) : null}
       </div>
 

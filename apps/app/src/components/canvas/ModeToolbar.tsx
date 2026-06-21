@@ -1,4 +1,5 @@
 import { Hand, MousePointer2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useCanvasStore } from '../../stores/canvasStore'
 
 interface ModeToolbarProps {
@@ -41,8 +42,10 @@ export default function ModeToolbar({ userName }: ModeToolbarProps) {
         boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
       }}
     >
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 rounded-lg text-[#999999] hover:text-[#e5e5e5]"
         style={btnStyle(interactionMode === 'pan')}
         onClick={() => setInteractionMode('pan')}
         title="拖拽模式"
@@ -60,10 +63,12 @@ export default function ModeToolbar({ userName }: ModeToolbarProps) {
         }}
       >
         <Hand size={18} />
-      </button>
+      </Button>
 
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 rounded-lg text-[#999999] hover:text-[#e5e5e5]"
         style={btnStyle(interactionMode === 'select')}
         onClick={() => setInteractionMode('select')}
         title="选择模式"
@@ -81,7 +86,7 @@ export default function ModeToolbar({ userName }: ModeToolbarProps) {
         }}
       >
         <MousePointer2 size={18} />
-      </button>
+      </Button>
 
       {userName && (
         <div

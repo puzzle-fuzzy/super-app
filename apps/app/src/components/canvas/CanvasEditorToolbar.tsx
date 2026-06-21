@@ -1,4 +1,6 @@
 import { ArrowLeft, House, StickyNote } from 'lucide-react'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { clientEnv } from '@super-app/env/client'
 import { UserMenu } from './UserMenu'
 import { GeneratedImageHistory } from './GeneratedImageHistory'
@@ -34,14 +36,15 @@ export function CanvasEditorToolbar({
   return (
     <header className="flex shrink-0 items-center justify-between border-b border-[#2a2a2a] px-5 py-3">
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[#999999] transition-colors hover:bg-[#242424] hover:text-[#e5e5e5]"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-lg text-[#999999] hover:text-[#e5e5e5]"
           onClick={onBack}
           title="返回列表"
         >
           <ArrowLeft size={18} />
-        </button>
+        </Button>
         <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">{title}</h2>
         <span className="text-[11px] text-[#666666]">
           v{version} · {nodeCount} 节点 · {edgeCount} 连线
@@ -49,14 +52,15 @@ export function CanvasEditorToolbar({
       </div>
 
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border-0 bg-[#3a3a3a] px-3 text-[13px] font-medium text-[#e5e5e5] transition-colors hover:bg-[#4a4a4a]"
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-1.5 rounded-lg text-[12px] font-medium text-[#999999] hover:text-[#e5e5e5]"
           onClick={onAddText}
         >
           <StickyNote size={14} />
           文本
-        </button>
+        </Button>
 
         <span
           className={`text-[12px] transition-opacity duration-300 ${
@@ -69,7 +73,7 @@ export function CanvasEditorToolbar({
 
         <a
           href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
-          className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
+          className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'h-9 w-9 rounded-lg')}
           aria-label="首页"
           title="首页"
         >

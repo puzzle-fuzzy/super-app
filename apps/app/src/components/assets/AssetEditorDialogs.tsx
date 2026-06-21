@@ -1,5 +1,6 @@
 import { Save } from 'lucide-react'
 import { Modal, Select } from '@super-app/ui-react'
+import { Button } from '@/components/ui/button'
 
 import type { AssetDto } from '@super-app/contracts/assets'
 import type { SubjectType } from '@super-app/contracts/subject-assets'
@@ -27,8 +28,6 @@ import {
   fieldClass,
   fieldLabel,
   fieldControl,
-  primaryButton,
-  secondaryButton,
 } from '../../utils/asset-helpers'
 
 export function EditorPanel({
@@ -82,13 +81,13 @@ export function EditorPanel({
         </div>
       </Modal.Body>
       <Modal.Footer>
-        <button className={secondaryButton} type="button" onClick={onCancel} disabled={saving}>
+        <Button variant="outline" className="h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={onCancel} disabled={saving}>
           取消
-        </button>
-        <button className={primaryButton} type="button" onClick={onSave} disabled={saving}>
+        </Button>
+        <Button className="h-10 rounded-[10px] px-5 text-[13px] font-semibold" onClick={onSave} disabled={saving}>
           <Save size={15} aria-hidden="true" />
           {saving ? '保存中...' : '保存'}
-        </button>
+        </Button>
       </Modal.Footer>
     </Modal>
   )
@@ -314,12 +313,12 @@ export function DeleteConfirm({
           这个素材会从当前列表移除。之后的恢复能力会在资产回收站阶段加入。
         </p>
         <div className="mt-1 flex flex-wrap justify-end gap-2">
-          <button className={secondaryButton} type="button" onClick={onCancel}>
+          <Button variant="outline" className="h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={onCancel}>
             取消
-          </button>
-          <button className={primaryButton} type="button" onClick={onConfirm}>
+          </Button>
+          <Button variant="destructive" className="h-10 rounded-[10px] px-5 text-[13px] font-semibold" onClick={onConfirm}>
             确认删除
-          </button>
+          </Button>
         </div>
       </div>
     </div>

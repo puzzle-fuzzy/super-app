@@ -2,6 +2,7 @@ import { Loader2, Play, RefreshCw } from 'lucide-react'
 import type { NodeProps } from '@xyflow/react'
 import type { PipelineCharacterDto, PipelineLocationDto, PipelineShotDto } from '@super-app/contracts/pipeline'
 
+import { Button } from '@/components/ui/button'
 import type { NodeStatus, PipelineNodeData } from '../../pipeline/types'
 
 // ── Status Visuals ──────────────────────────────────────────────────
@@ -176,9 +177,10 @@ export function PipelineNode({ data }: NodeProps) {
       {/* Action buttons */}
       <div className="mt-3 flex gap-2">
         {d.status === 'pending' && d.onTrigger && !d.disabled && (
-          <button
-            type="button"
-            className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[#e5e5e5] px-3 text-[11px] font-semibold text-[#141414] transition-colors hover:bg-white"
+          <Button
+            variant="default"
+            size="sm"
+            className="h-7 rounded-md px-3 text-[11px] font-semibold"
             onClick={(e) => {
               e.stopPropagation()
               d.onTrigger?.()
@@ -186,12 +188,13 @@ export function PipelineNode({ data }: NodeProps) {
           >
             <Play size={12} />
             开始
-          </button>
+          </Button>
         )}
         {d.status === 'failed' && d.onRetry && (
-          <button
-            type="button"
-            className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[#f87171] px-3 text-[11px] font-semibold text-white transition-colors hover:bg-[#ef4444]"
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 rounded-md px-3 text-[11px] font-medium"
             onClick={(e) => {
               e.stopPropagation()
               d.onRetry?.()
@@ -199,7 +202,7 @@ export function PipelineNode({ data }: NodeProps) {
           >
             <RefreshCw size={12} />
             重试
-          </button>
+          </Button>
         )}
         {d.status === 'running' && (
           <span className="inline-flex items-center gap-1 text-[11px] text-blue-400">

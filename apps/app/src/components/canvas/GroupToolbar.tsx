@@ -1,4 +1,5 @@
 import { LayoutGrid, Pencil, Ungroup } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useCanvasStore } from '../../stores/canvasStore'
 import { useUIStore } from '../../stores/uiStore'
 
@@ -42,8 +43,10 @@ export default function GroupToolbar({ position }: GroupToolbarProps) {
         transform: 'translateX(-100%)',
       }}
     >
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 rounded-lg text-[#999999] hover:text-[#e5e5e5]"
         style={btnStyle}
         onClick={() => handleOrganizeGroup(position.groupId)}
         title="整理小组成员"
@@ -57,10 +60,12 @@ export default function GroupToolbar({ position }: GroupToolbarProps) {
         }}
       >
         <LayoutGrid size={18} />
-      </button>
+      </Button>
 
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 rounded-lg text-[#999999] hover:text-[#e5e5e5]"
         style={btnStyle}
         onClick={() => openGroupNameModal('rename', position.groupId)}
         title="重命名"
@@ -74,10 +79,12 @@ export default function GroupToolbar({ position }: GroupToolbarProps) {
         }}
       >
         <Pencil size={18} />
-      </button>
+      </Button>
 
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 rounded-lg text-[#999999] hover:text-[#e5e5e5]"
         style={btnStyle}
         onClick={() => handleUngroup(position.groupId)}
         title="解散小组"
@@ -91,7 +98,7 @@ export default function GroupToolbar({ position }: GroupToolbarProps) {
         }}
       >
         <Ungroup size={18} />
-      </button>
+      </Button>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { Copy, Key, Plus, Trash2 } from 'lucide-react'
 
 import { apiKeysApi } from '@super-app/api-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
+import { Button } from '@/components/ui/button'
 
 interface ApiKeyItem {
   id: string
@@ -124,14 +125,13 @@ export function ConsoleAppContent({
             </h1>
             <p className="m-0 mt-2 text-sm text-[#999999]">管理你的 API 访问密钥</p>
           </div>
-          <button
-            type="button"
-            className="flex h-10 cursor-pointer items-center gap-2 rounded-[10px] border-0 bg-[#e5e5e5] px-5 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
+          <Button
+            className="h-10 rounded-[10px] px-5 text-[13px] font-semibold"
             onClick={() => setCreateOpen(true)}
           >
             <Plus size={16} />
             新建密钥
-          </button>
+          </Button>
         </div>
 
         {/* Created key banner */}
@@ -144,9 +144,10 @@ export function ConsoleAppContent({
               <code className="flex-1 rounded-lg bg-[#141414] px-3.5 py-2.5 text-[13px] text-[#e5e5e5] break-all font-mono">
                 {createdKey}
               </code>
-              <button
-                type="button"
-                className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#3a3a3a] bg-[#242424] text-[#e5e5e5] transition-colors hover:bg-[#2a2a2a]"
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 shrink-0 rounded-lg"
                 onClick={() => handleCopy(createdKey)}
               >
                 {copiedId === createdKey.slice(0, 8) ? (
@@ -154,7 +155,7 @@ export function ConsoleAppContent({
                 ) : (
                   <Copy size={16} />
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -169,14 +170,13 @@ export function ConsoleAppContent({
             <div className="max-w-105 text-center">
               <h3 className="mb-2.5 text-[22px] font-bold tracking-[-0.02em]">还没有 API 密钥</h3>
               <p className="m-0 mb-6 text-[#999999]">创建密钥以通过 API 访问你的 Super 资源。</p>
-              <button
-                type="button"
-                className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-[10px] border-0 bg-[#e5e5e5] px-5 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
+              <Button
+                className="h-10 rounded-[10px] px-5 text-[13px] font-semibold"
                 onClick={() => setCreateOpen(true)}
               >
                 <Plus size={16} />
                 新建密钥
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -194,14 +194,15 @@ export function ConsoleAppContent({
                     {formatTime(key.createdAt)}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-[#2a2a2a] bg-transparent px-3 text-[13px] font-medium text-[#f87171] transition-colors hover:border-[#3a3a3a] hover:bg-[#242424]"
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-9 rounded-lg px-3 text-[13px] font-medium"
                   onClick={() => handleRevoke(key.id)}
                 >
                   <Trash2 size={14} />
                   撤销
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -226,20 +227,19 @@ export function ConsoleAppContent({
               className="mb-4 w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a] focus:border-[#666666]"
             />
             <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                className="flex h-10 cursor-pointer items-center rounded-[10px] border border-[#2a2a2a] bg-transparent px-5 text-[13px] font-medium text-[#e5e5e5] transition-colors hover:border-[#3a3a3a] hover:bg-[#242424]"
+              <Button
+                variant="outline"
+                className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
                 onClick={() => setCreateOpen(false)}
               >
                 取消
-              </button>
-              <button
-                type="button"
-                className="flex h-10 cursor-pointer items-center rounded-[10px] border-0 bg-[#e5e5e5] px-5 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
+              </Button>
+              <Button
+                className="h-10 rounded-[10px] px-5 text-[13px] font-semibold"
                 onClick={handleCreate}
               >
                 创建
-              </button>
+              </Button>
             </div>
           </div>
         </DialogOverlay>

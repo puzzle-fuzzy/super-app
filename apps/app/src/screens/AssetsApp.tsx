@@ -3,6 +3,8 @@ import { Grid3X3 } from 'lucide-react'
 
 import { SSEClient } from '@super-app/api-client'
 import type { CurrentUser } from '@super-app/contracts/auth'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AssetCard } from '../components/assets/AssetCard'
 import { AssetDetailDialog } from '../components/assets/AssetDetailDialog'
 import { EditorPanel, DeleteConfirm } from '../components/assets/AssetEditorDialogs'
@@ -11,6 +13,7 @@ import { LoadingState } from '../components/assets/LoadingState'
 import { TransferNoticeDialog } from '../components/assets/TransferNoticeDialog'
 import { useAssetsData } from '../hooks/useAssetsData'
 import { FILTERS } from '../utils/asset-helpers'
+import type { FilterKind } from '../utils/asset-helpers'
 
 export function AssetsApp({ user }: { user: CurrentUser }) {
   const sseRef = useRef<SSEClient | null>(null)
@@ -56,35 +59,8 @@ export function AssetsApp({ user }: { user: CurrentUser }) {
     saveEditor,
   } = useAssetsData()
 
-  const [openActionAssetId, setOpenActionAssetId] = useState<string | null>(null)
   const [detailAssetId, setDetailAssetId] = useState<string | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-
-  // close action menu on outside click / Escape
-  useEffect(() => {
-    if (!openActionAssetId) return
-
-    function closeOnOutsidePointer(event: PointerEvent) {
-      const target = event.target
-      if (target instanceof Element && target.closest('[data-asset-action-root]')) {
-        return
-      }
-      setOpenActionAssetId(null)
-    }
-
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setOpenActionAssetId(null)
-      }
-    }
-
-    document.addEventListener('pointerdown', closeOnOutsidePointer)
-    document.addEventListener('keydown', closeOnEscape)
-    return () => {
-      document.removeEventListener('pointerdown', closeOnOutsidePointer)
-      document.removeEventListener('keydown', closeOnEscape)
-    }
-  }, [openActionAssetId])
 
   // close user menu on outside click / Escape
   useEffect(() => {
@@ -140,36 +116,31 @@ export function AssetsApp({ user }: { user: CurrentUser }) {
           className="mb-6 flex items-end gap-4.5 overflow-x-auto border-b border-[#2a2a2a] scrollbar-none [&::-webkit-scrollbar]:hidden max-[620px]:flex-col max-[620px]:items-stretch max-[620px]:gap-0"
           aria-label="资产视图"
         >
-          <div className="flex min-w-max items-end" role="tablist" aria-label="资产类型">
-            {FILTERS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                role="tab"
-                aria-label={option.label}
-                aria-selected={filter === option.value}
-                disabled={option.disabled}
-                className={`inline-flex min-h-12 cursor-pointer items-center whitespace-nowrap border-b-2 bg-transparent px-5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${filter === option.value
-                  ? 'border-[#e5e5e5] text-[#e5e5e5]'
-                  : 'border-transparent text-[#999999] hover:text-[#e5e5e5]'
-                  }`}
-                onClick={() => !option.disabled && setFilter(option.value)}
-              >
-                <span>{option.label}</span>
-              </button>
-            ))}
-          </div>
+          <Tabs value={filter} onValueChange={(v) => setFilter(v as FilterKind)}>
+            <TabsList aria-label="资产类型">
+              {FILTERS.map((option) => (
+                <TabsTrigger
+                  key={option.value}
+                  value={option.value}
+                  disabled={option.disabled}
+                >
+                  {option.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
           <div
             className="ml-auto flex items-center gap-1 py-2.5 max-[620px]:ml-0"
             aria-label="视图模式"
           >
-            <button
-              type="button"
-              className="inline-flex min-h-8 cursor-default items-center gap-1.5 rounded-md bg-[#242424] px-2.5 text-xs text-[#e5e5e5]"
+            <Button
+              variant="ghost"
+              size="sm"
+              className="min-h-8 cursor-default gap-1.5 rounded-md bg-[#242424] px-2.5 text-xs text-[#e5e5e5]"
             >
               <Grid3X3 size={14} aria-hidden="true" />
               网格
-            </button>
+            </Button>
           </div>
         </nav>
 
@@ -220,11 +191,6 @@ export function AssetsApp({ user }: { user: CurrentUser }) {
                   onViewDetails={() => setDetailAssetId(asset.id)}
                   sharing={sharingAssetId === asset.id}
                   transferring={transferringAssetId === asset.id}
-                  menuOpen={openActionAssetId === asset.id}
-                  onToggleMenu={() =>
-                    setOpenActionAssetId((current) => (current === asset.id ? null : asset.id))
-                  }
-                  onCloseMenu={() => setOpenActionAssetId(null)}
                 />
               ))}
             </section>

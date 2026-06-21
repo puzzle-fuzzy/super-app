@@ -4,6 +4,9 @@ import { File as FileIcon, Film, ImageIcon, Music, Palette, PanelLeft, PanelLeft
 import { assetsApi } from '@super-app/api-client'
 import type { AssetDto, AssetKind } from '@super-app/contracts/assets'
 
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+
 export const SIDEBAR_FILTERS: { value: 'all' | AssetKind; label: string }[] = [
   { value: 'all', label: '全部' },
   { value: 'image', label: '图片' },
@@ -113,15 +116,16 @@ export function AssetSidebar({
         style={{ width: 52, borderRight: '1px solid #2a2a2a', background: '#161616' }}
         className="flex shrink-0 flex-col items-center gap-3 py-3"
       >
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-lg text-[#999999]"
           onClick={onToggle}
           aria-label="展开资产面板"
           title="展开资产面板"
-          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[#999999] transition-colors hover:bg-[#242424] hover:text-[#e5e5e5]"
         >
           <PanelLeft size={18} aria-hidden="true" />
-        </button>
+        </Button>
       </aside>
     )
   }
@@ -133,31 +137,34 @@ export function AssetSidebar({
     >
       <div className="flex items-center justify-between px-4 py-3">
         <strong className="text-[13px] font-semibold text-[#e5e5e5]">资产</strong>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-lg text-[#999999]"
           onClick={onToggle}
           aria-label="收起资产面板"
           title="收起资产面板"
-          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border-0 bg-transparent text-[#999999] transition-colors hover:bg-[#242424] hover:text-[#e5e5e5]"
         >
           <PanelLeftClose size={16} aria-hidden="true" />
-        </button>
+        </Button>
       </div>
 
       <div className="flex flex-wrap gap-1.5 px-3 pb-2">
         {SIDEBAR_FILTERS.map((opt) => (
-          <button
+          <Button
             key={opt.value}
-            type="button"
-            onClick={() => setFilter(opt.value)}
-            className={`cursor-pointer rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+            variant="ghost"
+            size="sm"
+            className={cn(
+              'rounded-md px-2.5 py-1 text-[11px] font-medium',
               filter === opt.value
-                ? 'border-[#666] bg-[#3a3a3a] text-[#e5e5e5]'
-                : 'border-[#2a2a2a] bg-transparent text-[#999999] hover:border-[#3a3a3a] hover:text-[#e5e5e5]'
-            }`}
+                ? 'bg-[#2a2a2a] text-[#e5e5e5]'
+                : 'text-[#666666] hover:text-[#e5e5e5]'
+            )}
+            onClick={() => setFilter(opt.value)}
           >
             {opt.label}
-          </button>
+          </Button>
         ))}
       </div>
 

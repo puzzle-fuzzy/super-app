@@ -7,6 +7,7 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 import { formatRelativeTime } from '@super-app/utils'
 
@@ -78,22 +79,21 @@ export function CanvasProjectList({ user: _user }: {
             <p className="m-0 mt-2 text-sm text-[#999999]">{projects.length} 个项目</p>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="flex h-10 cursor-pointer items-center gap-2 rounded-[10px] border border-[#3a3a3a] bg-transparent px-5 text-[13px] font-medium text-[#999999] transition-colors hover:border-[#666666] hover:text-[#e5e5e5]"
+            <Button
+              variant="outline"
+              className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-medium text-[#999999] hover:text-[#e5e5e5]"
               onClick={() => navigate('/pipeline')}
             >
               <Film size={16} />
               AI 视频流水线
-            </button>
-            <button
-              type="button"
-              className="flex h-10 cursor-pointer items-center gap-2 rounded-[10px] border-0 bg-[#e5e5e5] px-5 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
+            </Button>
+            <Button
+              className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-semibold"
               onClick={() => setCreateOpen(true)}
             >
               <Plus size={16} />
               新建画布
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -107,14 +107,13 @@ export function CanvasProjectList({ user: _user }: {
             <div className="max-w-105 text-center">
               <h3 className="mb-2.5 text-[22px] font-bold tracking-[-0.02em]">还没有画布项目</h3>
               <p className="m-0 mb-6 text-[#999999]">创建第一个画布，开始组织你的资产和想法。</p>
-              <button
-                type="button"
-                className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-[10px] border-0 bg-[#e5e5e5] px-5 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
+              <Button
+                className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-semibold"
                 onClick={() => setCreateOpen(true)}
               >
                 <Plus size={16} />
                 新建画布
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -126,16 +125,17 @@ export function CanvasProjectList({ user: _user }: {
                 onClick={() => navigate(`/project/${project.id}`)}
               >
                 <div className="absolute top-4 right-4 z-10">
-                  <button
-                    type="button"
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg border-0 bg-transparent text-[#666666] transition-opacity hover:bg-[#2a2a2a] hover:text-[#e5e5e5] ${menuOpenId === project.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-8 w-8 rounded-lg text-[#666666] hover:text-[#e5e5e5] ${menuOpenId === project.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                     onClick={(e) => {
                       e.stopPropagation()
                       setMenuOpenId(menuOpenId === project.id ? null : project.id)
                     }}
                   >
                     <MoreHorizontal size={16} />
-                  </button>
+                  </Button>
                   {menuOpenId === project.id && (
                     <>
                       <div
@@ -147,9 +147,10 @@ export function CanvasProjectList({ user: _user }: {
                         }}
                       />
                       <div className="absolute right-0 top-full z-30 mt-1 min-w-32 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0/0.42)]">
-                        <button
-                          type="button"
-                          className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-[7px] border-0 bg-transparent px-2.5 text-[13px] font-medium text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-9 w-full justify-start gap-2 rounded-[7px] px-2.5 text-[13px] font-medium text-[#999999] hover:text-[#e5e5e5]"
                           onClick={(e) => {
                             e.stopPropagation()
                             setMenuOpenId(null)
@@ -160,10 +161,11 @@ export function CanvasProjectList({ user: _user }: {
                         >
                           <PenLine size={14} />
                           重命名
-                        </button>
-                        <button
-                          type="button"
-                          className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-[7px] border-0 bg-transparent px-2.5 text-[13px] font-medium text-[#f87171] hover:bg-[#2a2a2a]"
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-9 w-full justify-start gap-2 rounded-[7px] px-2.5 text-[13px] font-medium text-[#f87171]"
                           onClick={(e) => {
                             e.stopPropagation()
                             setMenuOpenId(null)
@@ -172,7 +174,7 @@ export function CanvasProjectList({ user: _user }: {
                         >
                           <Trash2 size={14} />
                           删除
-                        </button>
+                        </Button>
                       </div>
                     </>
                   )}
@@ -210,20 +212,19 @@ export function CanvasProjectList({ user: _user }: {
               className="mb-4 w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a] focus:border-[#666666]"
             />
             <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                className="flex h-10 cursor-pointer items-center rounded-[10px] border border-[#2a2a2a] bg-transparent px-5 text-[13px] font-medium text-[#e5e5e5] transition-colors hover:border-[#3a3a3a] hover:bg-[#242424]"
+              <Button
+                variant="outline"
+                className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
                 onClick={() => setCreateOpen(false)}
               >
                 取消
-              </button>
-              <button
-                type="button"
-                className="flex h-10 cursor-pointer items-center gap-2 rounded-[10px] border-0 bg-[#e5e5e5] px-5 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
+              </Button>
+              <Button
+                className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-semibold"
                 onClick={handleCreate}
               >
                 创建
-              </button>
+              </Button>
             </div>
           </div>
         </DialogOverlay>
@@ -246,20 +247,19 @@ export function CanvasProjectList({ user: _user }: {
               className="mb-4 w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a] focus:border-[#666666]"
             />
             <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                className="flex h-10 cursor-pointer items-center rounded-[10px] border border-[#2a2a2a] bg-transparent px-5 text-[13px] font-medium text-[#e5e5e5] transition-colors hover:border-[#3a3a3a] hover:bg-[#242424]"
+              <Button
+                variant="outline"
+                className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
                 onClick={() => setRenameOpen(false)}
               >
                 取消
-              </button>
-              <button
-                type="button"
-                className="flex h-10 cursor-pointer items-center rounded-[10px] border-0 bg-[#e5e5e5] px-5 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
+              </Button>
+              <Button
+                className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-semibold"
                 onClick={handleRename}
               >
                 保存
-              </button>
+              </Button>
             </div>
           </div>
         </DialogOverlay>
@@ -274,20 +274,20 @@ export function CanvasProjectList({ user: _user }: {
               此操作不可撤销。确定要删除这个画布项目吗？
             </p>
             <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                className="flex h-10 cursor-pointer items-center rounded-[10px] border border-[#2a2a2a] bg-transparent px-5 text-[13px] font-medium text-[#e5e5e5] transition-colors hover:border-[#3a3a3a] hover:bg-[#242424]"
+              <Button
+                variant="outline"
+                className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
                 onClick={() => setDeleteConfirm(null)}
               >
                 取消
-              </button>
-              <button
-                type="button"
-                className="flex h-10 cursor-pointer items-center rounded-[10px] border-0 bg-[#f87171] px-5 text-[13px] font-semibold text-white transition-colors hover:bg-danger"
+              </Button>
+              <Button
+                variant="destructive"
+                className="h-10 rounded-[10px] px-5 text-[13px] font-semibold"
                 onClick={() => handleDelete(deleteConfirm)}
               >
                 删除
-              </button>
+              </Button>
             </div>
           </div>
         </DialogOverlay>

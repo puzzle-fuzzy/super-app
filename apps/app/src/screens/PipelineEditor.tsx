@@ -1,6 +1,8 @@
 import { useCallback } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { Background, Controls, ReactFlow, ReactFlowProvider, useReactFlow } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -187,14 +189,10 @@ function PipelineEditor({
       <div className="grid min-h-screen place-items-center bg-[#141414]">
         <div className="text-center">
           <p className="text-[#f87171]">{error || '项目不存在'}</p>
-          <button
-            type="button"
-            className="mt-4 inline-flex h-10 cursor-pointer items-center gap-2 rounded-[10px] border border-[#3a3a3a] bg-transparent px-5 text-[13px] font-medium text-[#e5e5e5] transition-colors hover:border-[#666666]"
-            onClick={onBack}
-          >
+          <Button variant="outline" className="mt-4 h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={onBack}>
             <ArrowLeft size={14} />
             返回列表
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -206,24 +204,16 @@ function PipelineEditor({
     <div className="flex h-screen flex-col bg-[#141414] text-[#e5e5e5]">
       {/* Top Bar */}
       <header className="flex shrink-0 items-center gap-4 border-b border-[#2a2a2a] px-5 py-3">
-        <button
-          type="button"
-          className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] transition-colors hover:border-[#3a3a3a] hover:text-[#e5e5e5]"
-          onClick={onBack}
-        >
+        <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 rounded-lg text-[#999999] hover:text-[#e5e5e5]" onClick={onBack}>
           <ArrowLeft size={16} />
-        </button>
+        </Button>
         <div className="min-w-0 flex-1">
           <h1 className="m-0 truncate text-base font-bold">{project.title || '未命名项目'}</h1>
           <p className="m-0 text-[12px] text-[#666666]">状态: {project.status}</p>
         </div>
-        <button
-          type="button"
-          className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-[#2a2a2a] bg-transparent px-3 text-[12px] font-medium text-[#999999] transition-colors hover:border-[#3a3a3a] hover:text-[#e5e5e5]"
-          onClick={() => setAssetSidebarOpen((v) => !v)}
-        >
+        <Button variant="outline" size="sm" className="h-9 gap-1.5 rounded-lg px-3 text-[12px] font-medium text-[#999999] hover:text-[#e5e5e5]" onClick={() => setAssetSidebarOpen((v) => !v)}>
           {assetSidebarOpen ? '隐藏资产' : '资产库'}
-        </button>
+        </Button>
       </header>
 
       {/* Main Area */}
@@ -237,18 +227,20 @@ function PipelineEditor({
             </div>
             <div className="flex flex-wrap gap-1.5 border-b border-[#2a2a2a] px-3 py-2">
               {(['all', 'image', 'video'] as const).map((k) => (
-                <button
+                <Button
                   key={k}
-                  type="button"
-                  className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "rounded-md px-2.5 py-1 text-[11px] font-medium",
                     assetFilter === k
-                      ? 'bg-[#2a2a2a] text-[#e5e5e5]'
-                      : 'text-[#666666] hover:text-[#e5e5e5]'
-                  }`}
+                      ? "bg-[#2a2a2a] text-[#e5e5e5]"
+                      : "text-[#666666] hover:text-[#e5e5e5]"
+                  )}
                   onClick={() => setAssetFilter(k === 'all' ? 'all' : (k as AssetKind))}
                 >
                   {k === 'all' ? '全部' : k === 'image' ? '图片' : '视频'}
-                </button>
+                </Button>
               ))}
             </div>
             <div className="flex-1 space-y-1 overflow-y-auto p-2">

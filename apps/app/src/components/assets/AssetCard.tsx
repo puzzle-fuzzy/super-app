@@ -1,4 +1,5 @@
 import { Ellipsis, FileText, Info, Send, Share2, Download, Trash2, Video } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 import type { AssetDto } from '@super-app/contracts/assets'
 import {
@@ -6,8 +7,14 @@ import {
   assetLabel,
   assetSummary,
   iconForAsset,
-  menuItem,
 } from '../../utils/asset-helpers'
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/material-ui-dropdown-menu'
 
 export function AssetCard({
   asset,
@@ -18,9 +25,6 @@ export function AssetCard({
   onViewDetails,
   sharing,
   transferring,
-  menuOpen,
-  onToggleMenu,
-  onCloseMenu,
 }: {
   asset: AssetDto
   onDelete: () => void
@@ -30,9 +34,6 @@ export function AssetCard({
   onViewDetails?: () => void
   sharing: boolean
   transferring: boolean
-  menuOpen: boolean
-  onToggleMenu: () => void
-  onCloseMenu: () => void
 }) {
   const canEdit =
     asset.kind === 'text' ||
@@ -46,9 +47,7 @@ export function AssetCard({
 
   return (
     <article
-      className={`relative rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] transition-colors hover:border-[#3a3a3a] hover:bg-[#202020] ${
-        menuOpen ? 'z-30' : 'z-0'
-      }`}
+      className="relative rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] transition-colors hover:border-[#3a3a3a] hover:bg-[#202020] z-0"
     >
       <div className="min-w-0">
         <div className="relative aspect-[4/3] rounded-t-xl bg-[#242424]">
@@ -98,9 +97,6 @@ export function AssetCard({
             onViewDetails={onViewDetails}
             sharing={sharing}
             transferring={transferring}
-            menuOpen={menuOpen}
-            onToggleMenu={onToggleMenu}
-            onCloseMenu={onCloseMenu}
             dark={isMedia}
           />
         </div>
@@ -151,9 +147,6 @@ function AssetActions({
   onViewDetails,
   sharing,
   transferring,
-  menuOpen,
-  onToggleMenu,
-  onCloseMenu,
   dark,
 }: {
   canEdit: boolean
@@ -166,86 +159,67 @@ function AssetActions({
   onViewDetails?: () => void
   sharing: boolean
   transferring: boolean
-  menuOpen: boolean
-  onToggleMenu: () => void
-  onCloseMenu: () => void
   dark?: boolean
 }) {
-  function runAction(action: () => void) {
-    onCloseMenu()
-    action()
-  }
-
   return (
     <div className="absolute bottom-2.5 left-2.5 z-[3]">
-      <div className="relative" data-asset-action-root>
-        <button
-          type="button"
-          aria-label="更多操作"
-          title="更多操作"
-          aria-expanded={menuOpen}
-          onClick={onToggleMenu}
-          className={`grid h-8 w-8 place-items-center rounded-sm transition-colors cursor-pointer ${
-            dark
-              ? 'bg-black/55 text-[#d4d4d4] hover:bg-black/75'
-              : 'bg-[#242424] text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]'
-          }`}
-        >
-          <Ellipsis size={16} aria-hidden="true" />
-        </button>
-        <div
-          className={`absolute bottom-10 left-0 z-50 min-w-36 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
-            menuOpen ? 'grid' : 'hidden'
-          }`}
-        >
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="更多操作"
+            title="更多操作"
+            className={`h-8 w-8 rounded-lg text-[#666666] hover:text-[#e5e5e5] ${
+              dark
+                ? 'bg-black/55 text-[#d4d4d4] hover:bg-black/75'
+                : 'bg-[#242424] hover:bg-[#2a2a2a]'
+            }`}
+          >
+            <Ellipsis size={16} aria-hidden="true" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="min-w-36">
           {onViewDetails ? (
-            <button className={menuItem} type="button" onClick={() => runAction(onViewDetails)}>
+            <DropdownMenuItem onSelect={onViewDetails} delayDuration={0}>
               <Info size={15} aria-hidden="true" />
               查看详情
-            </button>
+            </DropdownMenuItem>
           ) : null}
           {canTransfer ? (
-            <button
-              className={menuItem}
-              type="button"
-              onClick={() => runAction(onTransfer)}
-              disabled={transferring}
-            >
+            <DropdownMenuItem onSelect={onTransfer} disabled={transferring} delayDuration={0}>
               <Send size={15} aria-hidden="true" />
               {transferring ? '创建中' : '传输'}
-            </button>
+            </DropdownMenuItem>
           ) : null}
-          <button
-            className={menuItem}
-            type="button"
-            onClick={() => runAction(onShare)}
-            disabled={sharing || !canTransfer}
-          >
+          <DropdownMenuItem onSelect={onShare} disabled={sharing || !canTransfer} delayDuration={0}>
             <Share2 size={15} aria-hidden="true" />
             {sharing ? '创建中' : '分享'}
-          </button>
+          </DropdownMenuItem>
           {downloadUrl ? (
-            <a className={menuItem} href={downloadUrl} download target="_blank" rel="noreferrer">
-              <Download size={15} aria-hidden="true" />
-              下载
-            </a>
+            <DropdownMenuItem asChild delayDuration={0}>
+              <a href={downloadUrl} download target="_blank" rel="noreferrer">
+                <Download size={15} aria-hidden="true" />
+                下载
+              </a>
+            </DropdownMenuItem>
           ) : null}
           {canEdit ? (
-            <button className={menuItem} type="button" onClick={() => runAction(onEdit)}>
+            <DropdownMenuItem onSelect={onEdit} delayDuration={0}>
               <FileText size={15} aria-hidden="true" />
               重命名
-            </button>
+            </DropdownMenuItem>
           ) : null}
-          <button
-            type="button"
-            onClick={() => runAction(onDelete)}
-            className={`${menuItem} text-[#ffaaa3] hover:bg-[#3a1f1d] hover:text-[#ffb8b2]`}
+          <DropdownMenuItem
+            onSelect={onDelete}
+            delayDuration={0}
+            className="text-[#ffaaa3]"
           >
             <Trash2 size={15} aria-hidden="true" />
             删除
-          </button>
-        </div>
-      </div>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }

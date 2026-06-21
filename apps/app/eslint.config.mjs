@@ -2,7 +2,7 @@ import base from '../../eslint.config.mjs'
 
 export default [
   {
-    ignores: ['dist-web/**', 'dist/**', '.turbo/**'],
+    ignores: ['dist-web/**', 'dist/**', '.turbo/**', 'src/components/ui/**'],
   },
   ...base,
   {

@@ -3,6 +3,7 @@ import { History, ImageIcon } from 'lucide-react'
 
 import { assetsApi } from '@super-app/api-client'
 import type { AssetDto } from '@super-app/contracts/assets'
+import { Button } from '@/components/ui/button'
 
 export function isGeneratedMediaAsset(asset: AssetDto): boolean {
   return (
@@ -55,19 +56,16 @@ export function GeneratedImageHistory({
 
   return (
     <div className="relative">
-      <button
-        type="button"
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 gap-1.5 rounded-lg px-3 text-[12px] font-medium"
         aria-label="生成历史"
         onClick={() => setOpen((value) => !value)}
-        className={`inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border px-3 text-[13px] font-medium transition-colors ${
-          open
-            ? 'border-[#4a4a4a] bg-[#2a2a2a] text-[#e5e5e5]'
-            : 'border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]'
-        }`}
       >
         <History size={15} aria-hidden="true" />
         <span className="hidden sm:inline">生成历史</span>
-      </button>
+      </Button>
 
       {open ? (
         <div className="absolute top-12 right-0 z-50 flex w-[360px] max-h-80 min-h-56 flex-col gap-2 overflow-y-auto rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] px-3 py-3 shadow-[0_18px_48px_rgba(0,0,0,0.4)]">
@@ -88,15 +86,15 @@ export function GeneratedImageHistory({
               const label = generatedAssetPrompt(asset)
               const imageUrl = asset.files.find((file) => file.role === 'original')?.url
               return (
-                <button
+                <Button
                   key={asset.id}
-                  type="button"
+                  variant="ghost"
+                  className="w-full justify-start gap-3 rounded-lg p-2.5 text-left"
                   aria-label={`添加 ${label}`}
                   onClick={() => {
                     onAddAsset(asset)
                     setOpen(false)
                   }}
-                  className="grid cursor-pointer grid-cols-[56px_1fr] gap-3 rounded-xl border border-[#2a2a2a] bg-[#202020] p-2 text-left transition-colors hover:border-[#4a4a4a] hover:bg-[#262626]"
                 >
                   {imageUrl ? (
                     <img
@@ -116,7 +114,7 @@ export function GeneratedImageHistory({
                     </span>
                     <span className="mt-1 block text-xs text-[#777777]">点击添加到画布</span>
                   </span>
-                </button>
+                </Button>
               )
             })
           )}

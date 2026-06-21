@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useUIStore } from '../../stores/uiStore'
 
 export default function TextPreviewModal() {
@@ -45,27 +46,14 @@ export default function TextPreviewModal() {
           position: 'relative',
         }}
       >
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-3 right-3 h-8 w-8 rounded-lg text-[#999999] hover:text-[#e5e5e5]"
           onClick={() => setTextPreview(null)}
-          style={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            width: 32,
-            height: 32,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: 'none',
-            borderRadius: 8,
-            background: 'transparent',
-            color: '#999999',
-            cursor: 'pointer',
-          }}
         >
           <X size={18} />
-        </button>
+        </Button>
         <div
           style={{
             padding: 24,

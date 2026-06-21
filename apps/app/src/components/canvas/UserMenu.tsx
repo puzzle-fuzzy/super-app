@@ -1,4 +1,5 @@
 import { ChevronDown, LogOut, UserRound } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export function UserMenu({
   user,
@@ -13,9 +14,10 @@ export function UserMenu({
 }) {
   return (
     <div className="relative" data-user-menu-root>
-      <button
-        type="button"
-        className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] px-2 py-1.5 text-sm transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a]"
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 rounded-full text-[#999999]"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
         aria-haspopup="true"
@@ -38,15 +40,16 @@ export function UserMenu({
           size={14}
           className={`text-[#666666] transition-transform ${open ? 'rotate-180' : ''}`}
         />
-      </button>
+      </Button>
       <div
         className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
           open ? 'grid' : 'hidden'
         }`}
       >
-        <button
-          type="button"
-          className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left text-[13px] font-medium text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-9 w-full justify-start gap-2 rounded-[7px] px-2.5 text-[13px] font-medium text-[#999999] hover:text-[#e5e5e5]"
           onClick={() => {
             setOpen(false)
             onLogout()
@@ -54,7 +57,7 @@ export function UserMenu({
         >
           <LogOut size={15} aria-hidden="true" />
           退出登录
-        </button>
+        </Button>
       </div>
     </div>
   )

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Check, Copy } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 import type { TransferNotice } from '../../hooks/useAssetsData'
 import { copyToClipboard } from '../../utils/webrtc-transfer'
@@ -8,8 +9,6 @@ import {
   modalPanel,
   panelKicker,
   panelTitle,
-  primaryButton,
-  secondaryButton,
 } from '../../utils/asset-helpers'
 
 export function TransferNoticeDialog({
@@ -42,10 +41,10 @@ export function TransferNoticeDialog({
           </p>
         ) : null}
         <div className="mt-1 flex flex-wrap justify-end gap-2">
-          <button className={secondaryButton} type="button" onClick={onClose}>
+          <Button variant="outline" className="h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={onClose}>
             关闭
-          </button>
-          <button className={primaryButton} type="button" onClick={handleCopy} disabled={copied}>
+          </Button>
+          <Button className="h-10 rounded-[10px] px-5 text-[13px] font-semibold" onClick={handleCopy} disabled={copied}>
             {copied ? (
               <>
                 <Check size={15} aria-hidden="true" />
@@ -57,7 +56,7 @@ export function TransferNoticeDialog({
                 复制链接
               </>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
