@@ -73,23 +73,11 @@
 - `types/src/user-tasks.ts` vs `contracts/src/tasks.ts`：部分重复含字段漂移
 - `types/src/admin.ts`：~20 个 admin DTO 待迁移
 
-### 8. TypeScript 严格度还可以继续提升
+### 8. ~~TypeScript 严格度还可以继续提升~~ ✅ `7b6c5ad`
 
-**问题**
-
-- 根 `tsconfig.json` 已开启 `strict`，但尚未启用 `noUncheckedIndexedAccess`、`exactOptionalPropertyTypes` 等更能暴露边界问题的选项。
-- 当前代码中存在大量可选字段、JSON 字段、索引访问和 DTO 映射，适合逐步开启更严格规则。
-
-**解决办法**
-
-- 先在 leaf packages 试点：`packages/utils`、`packages/contracts`、`packages/task-engine`。
-- 再扩展到 `packages/db`、`services/api`、`services/worker`。
-- 每阶段只修复对应包的真实类型问题，避免一次性大改。
-
-**完成标准**
-
-- 至少 contracts/utils/task-engine 开启并通过更严格选项。
-- 记录无法开启的包和阻塞原因。
+- `noUncheckedIndexedAccess`：已按每包 tsconfig 开启，覆盖 12 个包
+- `exactOptionalPropertyTypes`：尝试后暂缓（`provider`/`gateway`/`billing` 等包产生级联 `?:T | undefined` 模式错误，需单独轮次处理）
+- 修复了 33 个文件的 ~50 处索引访问缺口
 
 ## P3 - 测试覆盖与验收
 
