@@ -79,150 +79,138 @@ function ShellLayoutInner({ user }: { user: CurrentUser | null }) {
 
   const loginUrl = `${clientEnv.SUPER_PUBLIC_AUTH_APP_URL}?return_to=${encodeURIComponent(window.location.href)}`
 
+  const btnBase =
+    'grid h-[34px] w-[34px] place-items-center rounded-[8px] border border-[#2a2a2a] bg-transparent text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:text-[#e5e5e5]'
+
   return (
     <ShellContext.Provider value={{ isUnified: true, user: user as CurrentUser }}>
       <div className="min-h-screen bg-[#141414] text-[#e5e5e5]">
-        {/* ── Floating Right Icon Bar ──────────────────────── */}
-        <aside
-          className="fixed right-5 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-1 rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c]/90 p-2 shadow-[0_8px_32px_rgb(0_0_0/0.5)] backdrop-blur-sm max-[920px]:hidden"
-          aria-label="主导航"
-        >
-          {isGuest ? (
-            /* Guest: only show transfer icon */
-            <Link
-              to="/transfer"
-              title="传输"
-              aria-label="传输"
-              className="grid h-10 w-10 place-items-center rounded-[12px] bg-white/10 text-[#e5e5e5] no-underline transition-colors"
-            >
-              <Send size={20} aria-hidden="true" />
-            </Link>
-          ) : (
-            /* Logged in: full sidebar */
-            <>
-              {SIDEBAR_ITEMS.map((item) => {
-                const active = location.pathname.startsWith(item.path)
-                return (
+        {/* ── Top Header Bar ──────────────────────────────── */}
+        <header className="sticky top-0 z-50 bg-[#141414]/95 backdrop-blur-sm">
+          <div className="mx-auto flex h-16 max-w-[1800px] items-center gap-2 px-8 max-[920px]:px-4.5 max-[620px]:px-3.5">
+            
+
+            <div className="flex-1" />
+
+            {/* Nav icons */}
+            {!isGuest && SIDEBAR_ITEMS.map((item) => {
+              const active = location.pathname.startsWith(item.path)
+              return (
+                <span key={item.label} className="relative group">
                   <Link
-                    key={item.label}
                     to={item.path}
-                    title={item.label}
                     aria-label={item.label}
-                    className={`grid h-10 w-10 place-items-center rounded-[12px] no-underline transition-colors ${
-                      active
-                        ? 'bg-white/10 text-[#e5e5e5]'
-                        : 'text-[#999999] hover:bg-white/8 hover:text-[#e5e5e5]'
-                    }`}
+                    className={`${btnBase} ${active ? 'border-[#3a3a3a] text-[#e5e5e5] bg-white/[0.04]' : ''}`}
                   >
-                    <item.Icon size={20} aria-hidden="true" />
+                    <item.Icon size={15} aria-hidden="true" />
                   </Link>
-                )
-              })}
-
-              {/* divider before credits */}
-              <div className="mx-1 my-1 border-t border-[#2a2a2a]" />
-
-              {/* Credits */}
-              <div
-                className="grid h-10 w-10 place-items-center rounded-[12px]"
-                title={`积分 ${Math.round(credits)}`}
-              >
-                <span className="text-[11px] font-semibold text-[#e5e5e5] tabular-nums leading-none">
-                  {Math.round(credits)}
+                  <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 pointer-events-none whitespace-nowrap rounded-[5px] border border-[#2a2a2a] bg-[#1d1d1d] px-2 py-0.5 text-[11px] text-[#e5e5e5] opacity-0 transition-opacity group-hover:opacity-100 z-10">
+                    {item.label}
+                  </span>
                 </span>
-              </div>
-            </>
-          )}
+              )
+            })}
+            {isGuest && (
+              <span className="relative group">
+                <Link to="/transfer" aria-label="传输" className={`${btnBase} border-[#3a3a3a] text-[#e5e5e5] bg-white/[0.04]`}>
+                  <Send size={15} aria-hidden="true" />
+                </Link>
+                <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 pointer-events-none whitespace-nowrap rounded-[5px] border border-[#2a2a2a] bg-[#1d1d1d] px-2 py-0.5 text-[11px] text-[#e5e5e5] opacity-0 transition-opacity group-hover:opacity-100 z-10">
+                  传输
+                </span>
+              </span>
+            )}
 
-          {/* divider before user */}
-          <div className="mx-1 my-1 border-t border-[#2a2a2a]" />
-
-          {/* User Menu */}
-          <div className="relative" data-user-menu-root>
-            {isGuest ? (
-              /* Guest: user icon links to login */
-              <a
-                href={loginUrl}
-                title="登录"
-                aria-label="登录"
-                className="grid h-10 w-10 place-items-center rounded-[12px] no-underline transition-colors hover:bg-white/8"
-              >
-                <UserRound size={18} className="text-[#999999]" aria-hidden="true" />
-              </a>
-            ) : (
-              /* Logged in: user menu with dropdown */
-              <>
-                <button
-                  type="button"
-                  className="grid h-10 w-10 cursor-pointer place-items-center rounded-[12px] border-0 bg-transparent transition-colors hover:bg-white/8"
-                  onClick={() => setUserMenuOpen((prev) => !prev)}
-                  aria-expanded={userMenuOpen}
-                  aria-haspopup="true"
-                  title={user.name ?? user.email ?? '用户'}
-                >
-                  {user.avatarUrl ? (
-                    <img className="h-6 w-6 rounded-full object-cover" src={user.avatarUrl} alt="" />
-                  ) : (
-                    <UserRound size={18} className="text-[#999999]" aria-hidden="true" />
-                  )}
-                </button>
+            {/* Credits */}
+            {!isGuest && (
+              <span className="relative group">
                 <div
-                  className={`absolute top-2 right-full z-50 mr-3 min-w-48 overflow-hidden rounded-[12px] border border-[#3a3a3a] bg-[#1d1d1d] p-2 shadow-[0_12px_32px_rgb(0_0_0/0.42)] ${
-                    userMenuOpen ? 'grid' : 'hidden'
-                  }`}
+                  className="flex h-[34px] min-w-[34px] items-center gap-1 rounded-[6px] border border-[#2a2a2a] bg-transparent px-2"
                 >
-                  {/* user info */}
-                  <div className="px-2.5 py-2">
-                    <p className="m-0 text-[13px] font-medium text-[#e5e5e5] truncate">
-                      {user.name ?? '未命名用户'}
-                    </p>
-                    <p className="m-0 mt-0.5 text-[11px] text-[#666666] truncate">
-                      {user.email ?? ''}
-                    </p>
-                  </div>
+                  <span className="text-[11px] text-[#666666]">积分</span>
+                  <span className="text-[11px] font-semibold text-[#e5e5e5] tabular-nums leading-none">
+                    {Math.round(credits)}
+                  </span>
+                </div>
+              </span>
+            )}
 
-                  {/* links: API keys / docs / admin */}
-                  <div className="mx-2 border-t border-[#2a2a2a]" />
-                  {USER_MENU_LINKS.map((item) =>
-                    item.path ? (
-                      <Link
-                        key={item.label}
-                        to={item.path}
-                        onClick={() => setUserMenuOpen(false)}
-                        className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left text-[13px] font-medium text-[#999999] no-underline transition-colors hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-                      >
-                        <item.Icon size={15} aria-hidden="true" />
-                        {item.label}
-                      </Link>
-                    ) : (
-                      <a
-                        key={item.label}
-                        href={item.href}
-                        className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left text-[13px] font-medium text-[#999999] no-underline transition-colors hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-                      >
-                        <item.Icon size={15} aria-hidden="true" />
-                        {item.label}
-                      </a>
-                    )
-                  )}
-
-                  <div className="mx-2 border-t border-[#2a2a2a]" />
+            {/* User */}
+            <div className="relative" data-user-menu-root>
+              {isGuest ? (
+                <a href={loginUrl} title="登录" aria-label="登录" className={btnBase}>
+                  <UserRound size={15} aria-hidden="true" />
+                </a>
+              ) : (
+                <>
                   <button
                     type="button"
-                    className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left text-[13px] font-medium text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-                    onClick={() => {
-                      setUserMenuOpen(false)
-                      handleLogout()
-                    }}
+                    className={`grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-full border border-[#2a2a2a] bg-transparent text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:text-[#e5e5e5] ${userMenuOpen ? 'border-[#3a3a3a] text-[#e5e5e5]' : ''}`}
+                    onClick={() => setUserMenuOpen((prev) => !prev)}
+                    aria-expanded={userMenuOpen}
+                    aria-haspopup="true"
+                    title={user.name ?? user.email ?? '用户'}
                   >
-                    <LogOut size={15} aria-hidden="true" />
-                    退出登录
+                    {user.avatarUrl ? (
+                      <img className="h-[30px] w-[30px] rounded-full object-cover" src={user.avatarUrl} alt="" />
+                    ) : (
+                      <UserRound size={15} aria-hidden="true" />
+                    )}
                   </button>
-                </div>
-              </>
-            )}
+                  <div
+                    className={`absolute right-0 top-full z-50 mt-2 min-w-48 overflow-hidden rounded-[12px] border border-[#3a3a3a] bg-[#1d1d1d] p-2 shadow-[0_12px_32px_rgb(0_0_0/0.42)] ${
+                      userMenuOpen ? 'grid' : 'hidden'
+                    }`}
+                  >
+                    <div className="px-2.5 py-2">
+                      <p className="m-0 text-[13px] font-medium text-[#e5e5e5] truncate">
+                        {user.name ?? '未命名用户'}
+                      </p>
+                      <p className="m-0 mt-0.5 text-[11px] text-[#666666] truncate">
+                        {user.email ?? ''}
+                      </p>
+                    </div>
+                    <div className="mx-2 border-t border-[#2a2a2a]" />
+                    {USER_MENU_LINKS.map((item) =>
+                      item.path ? (
+                        <Link
+                          key={item.label}
+                          to={item.path}
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left text-[13px] font-medium text-[#999999] no-underline transition-colors hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
+                        >
+                          <item.Icon size={15} aria-hidden="true" />
+                          {item.label}
+                        </Link>
+                      ) : (
+                        <a
+                          key={item.label}
+                          href={item.href}
+                          className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left text-[13px] font-medium text-[#999999] no-underline transition-colors hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
+                        >
+                          <item.Icon size={15} aria-hidden="true" />
+                          {item.label}
+                        </a>
+                      )
+                    )}
+                    <div className="mx-2 border-t border-[#2a2a2a]" />
+                    <button
+                      type="button"
+                      className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left text-[13px] font-medium text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
+                      onClick={() => {
+                        setUserMenuOpen(false)
+                        handleLogout()
+                      }}
+                    >
+                      <LogOut size={15} aria-hidden="true" />
+                      退出登录
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </aside>
+        </header>
 
         {/* ── Page Content ──────────────────────────────── */}
         <div>
