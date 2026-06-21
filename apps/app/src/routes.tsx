@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { ShellLayout } from './components/ShellLayout'
 import { useShellUser } from './components/ShellContext'
+import { AuthApp } from './screens/AuthApp'
 
 // Lazy-load each app screen — keeps per-module bundle sizes small
 const WorkspaceApp = React.lazy(() =>
@@ -66,6 +67,10 @@ function ConsoleRoute() {
 export function AppRoutes() {
   return (
     <Routes>
+      {/* 公开路由：无需登录 */}
+      <Route path="/auth/*" element={<AuthApp />} />
+
+      {/* 认证路由：需要登录 */}
       <Route element={<ShellLayout />}>
         <Route path="/workspace/*" element={<WorkspaceRoute />} />
         <Route path="/assets/*" element={<AssetsRoute />} />

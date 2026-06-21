@@ -14,7 +14,6 @@ const DST = join(ROOT, 'dist-web')
 // app → base 映射（site base="/" 放根，其余按 base 分段）
 const APPS: { dir: string; base: string }[] = [
   { dir: 'apps/site', base: '/' },
-  { dir: 'apps/auth', base: '/auth/' },
   { dir: 'apps/app', base: '/app/' },
   { dir: 'apps/transfer', base: '/transfer/' },
 ]

@@ -19,7 +19,6 @@ COPY package.json bun.lock pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY tsconfig.json ./
 
 # Copy all workspace package.json files for install
-COPY apps/auth/package.json apps/auth/
 COPY apps/transfer/package.json apps/transfer/
 COPY apps/docs/package.json apps/docs/
 COPY apps/app/package.json apps/app/
