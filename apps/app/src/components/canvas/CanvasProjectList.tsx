@@ -9,17 +9,12 @@ import {
   Trash2,
 } from 'lucide-react'
 
-import { logout } from '@super-app/auth-client'
-import { clientEnv } from '@super-app/env/client'
 import { formatRelativeTime } from '@super-app/utils'
 
 import { useProjectList } from '../../hooks/useProjectList'
-import { UserMenu } from './UserMenu'
 import { DialogOverlay } from './ScreenState'
 
-export function CanvasProjectList({
-  user,
-}: {
+export function CanvasProjectList({ user: _user }: {
   user: { id: string; name?: string; email: string; avatarUrl?: string }
 }) {
   const navigate = useNavigate()
@@ -65,10 +60,6 @@ export function CanvasProjectList({
     }
   }, [userMenuOpen])
 
-  async function handleLogout() {
-    await logout()
-    window.location.assign(clientEnv.SUPER_PUBLIC_AUTH_APP_URL)
-  }
 
   /* ---- Render ---------------------------------------------------------- */
 

@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, Copy, House, Key, LogOut, Plus, Trash2, UserRound } from 'lucide-react'
+import { Copy, Key, Plus, Trash2 } from 'lucide-react'
 
 import { apiKeysApi } from '@super-app/api-client'
-import { logout } from '@super-app/auth-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
-import { clientEnv } from '@super-app/env/client'
 
 interface ApiKeyItem {
   id: string
@@ -78,10 +76,6 @@ export function ConsoleAppContent({
     loadKeys()
   }, [loadKeys])
 
-  async function handleLogout() {
-    await logout()
-    window.location.assign(clientEnv.SUPER_PUBLIC_AUTH_APP_URL)
-  }
 
   async function handleCreate() {
     if (!newKeyName.trim()) return

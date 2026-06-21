@@ -1,17 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  ArrowLeftRight,
-  Grid3X3,
-  Images,
-  Key,
-  LogOut,
-  PenTool,
-  UserRound,
-} from 'lucide-react'
+import { Grid3X3 } from 'lucide-react'
 
 import { SSEClient } from '@super-app/api-client'
 import type { CurrentUser } from '@super-app/contracts/auth'
-import { clientEnv } from '@super-app/env/client'
 import { AssetCard } from '../components/assets/AssetCard'
 import { AssetDetailDialog } from '../components/assets/AssetDetailDialog'
 import { EditorPanel, DeleteConfirm } from '../components/assets/AssetEditorDialogs'
@@ -19,11 +10,10 @@ import { EmptyState } from '../components/assets/EmptyState'
 import { LoadingState } from '../components/assets/LoadingState'
 import { TransferNoticeDialog } from '../components/assets/TransferNoticeDialog'
 import { useAssetsData } from '../hooks/useAssetsData'
-import { FILTERS, menuItem } from '../utils/asset-helpers'
+import { FILTERS } from '../utils/asset-helpers'
 
 export function AssetsApp({ user }: { user: CurrentUser }) {
   const sseRef = useRef<SSEClient | null>(null)
-  const fileInput = useRef<HTMLInputElement>(null)
 
   // SSE connection
   useEffect(() => {
@@ -45,7 +35,6 @@ export function AssetsApp({ user }: { user: CurrentUser }) {
     setFilter,
     isListLoading,
     listError,
-    uploading,
     saving,
     editor,
     setEditor,
@@ -57,7 +46,6 @@ export function AssetsApp({ user }: { user: CurrentUser }) {
     transferringAssetId,
     visibleItems,
     activeFilter,
-    handleUpload,
     confirmDelete,
     handleCreateShareLink,
     handleStartTransfer,

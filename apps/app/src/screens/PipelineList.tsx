@@ -10,17 +10,13 @@ import {
 import { useNavigate } from 'react-router-dom'
 
 import { pipelineApi, type PipelineProjectSummary } from '@super-app/api-client'
-import { logout } from '@super-app/auth-client'
-import { clientEnv } from '@super-app/env/client'
 import { formatRelativeTime } from '@super-app/utils'
 
 /* -------------------------------------------------------------------------- */
 /*  PipelineList  — 流水线项目列表页                                            */
 /* -------------------------------------------------------------------------- */
 
-export function PipelineList({
-  user,
-}: {
+export function PipelineList({ user: _user }: {
   user: { id: string; name?: string; email: string; avatarUrl?: string }
 }) {
   const navigate = useNavigate()
@@ -56,10 +52,6 @@ export function PipelineList({
     }
   }, [userMenuOpen])
 
-  async function handleLogout() {
-    await logout()
-    window.location.assign(clientEnv.SUPER_PUBLIC_AUTH_APP_URL)
-  }
 
   /* ---- Data loading ---------------------------------------------------- */
 

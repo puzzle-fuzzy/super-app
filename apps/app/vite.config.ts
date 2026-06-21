@@ -30,6 +30,10 @@ export default defineConfig(({ command }) => ({
       '/api': {
         target: 'http://localhost:5200',
         changeOrigin: true,
+        // 仅代理 /api/ 前缀的真实 API 请求；/api-console 等前端路由走 SPA fallback
+        bypass: (req) => {
+          if (!req.url?.startsWith('/api/')) return '/index.html'
+        },
       },
     },
   },

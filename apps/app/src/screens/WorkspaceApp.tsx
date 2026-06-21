@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Box, ChevronDown, Image, Key, LogOut, Send, UserRound } from 'lucide-react'
+import { Box, Image, Key, Send } from 'lucide-react'
 
 import { assetsApi, canvasApi } from '@super-app/api-client'
 import { clientEnv } from '@super-app/env/client'
-import { logout } from '@super-app/auth-client'
 import type { CurrentUser } from '@super-app/contracts/auth'
 import type { AssetDto } from '@super-app/contracts/assets'
 import type { CanvasProjectDto } from '@super-app/contracts/canvas'
@@ -149,10 +148,6 @@ export function WorkspaceApp({ user }: { user: CurrentUser }) {
     }
   }, [user, dataLoaded])
 
-  async function handleLogout() {
-    await logout()
-    window.location.assign(clientEnv.SUPER_PUBLIC_AUTH_APP_URL)
-  }
 
   return (
     <>
