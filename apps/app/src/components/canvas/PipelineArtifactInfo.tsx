@@ -3,8 +3,14 @@
  * 复用 AssetInfoDialog 的视觉风格，但接受 Pipeline 原生数据（非 AssetDto）。
  */
 import { Copy, Info } from 'lucide-react'
-import { Modal } from '@super-app/ui-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+} from '@/components/ui/dialog'
 
 interface ArtifactField {
   label: string
@@ -63,7 +69,7 @@ function DetailRow({ label, value, copyable }: ArtifactField) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-4">
-      <h4 className="m-0 mb-2 text-[13px] font-semibold text-[#999999]">{title}</h4>
+      <h4 className="m-0 mb-2 text-[11px] font-black tracking-[0.15em] uppercase text-[#999999]">{title}</h4>
       <div className="space-y-1.5">{children}</div>
     </div>
   )
@@ -81,18 +87,22 @@ export function PipelineArtifactInfoDialog({
   fields: ArtifactField[]
 }) {
   return (
-    <Modal open={open} onClose={onClose}>
-      <Modal.Header title={title} />
-      <Modal.Body>
-        <div className="space-y-4">
-          <Section title="详细信息">
-            {fields.map((field) => (
-              <DetailRow key={field.label} {...field} />
-            ))}
-          </Section>
-        </div>
-      </Modal.Body>
-    </Modal>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
+      <DialogContent className="max-w-[680px] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <div className="space-y-4">
+            <Section title="详细信息">
+              {fields.map((field) => (
+                <DetailRow key={field.label} {...field} />
+              ))}
+            </Section>
+          </div>
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
   )
 }
 

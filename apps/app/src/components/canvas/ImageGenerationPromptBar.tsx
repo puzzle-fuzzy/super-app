@@ -213,7 +213,7 @@ export function ImageGenerationPromptBar({
             onChange={(event) => setPrompt(event.target.value)}
             placeholder="描述你想生成的图片或视频..."
             rows={5}
-            className="min-h-24 resize-none rounded-xl border border-[#303030] bg-[#101010] px-4 py-3 text-[14px] leading-relaxed text-[#eeeeee] outline-none transition-colors placeholder:text-[#8a8a8a] focus:border-[#686868]"
+            className="min-h-24 resize-none rounded-xl border border-[#303030] bg-[#101010] px-4 py-3 text-[14px] leading-relaxed text-[#eeeeee] outline-none transition-colors placeholder:text-[#8a8a8a]"
           />
 
           {advancedOpen ? (
@@ -295,7 +295,7 @@ export function ImageGenerationPromptBar({
                     value={negativePrompt}
                     onChange={(event) => setNegativePrompt(event.target.value)}
                     placeholder="不希望出现的内容..."
-                    className="h-9 rounded-lg border border-[#303030] bg-[#101010] px-3 text-[13px] text-[#eeeeee] outline-none placeholder:text-[#777777] focus:border-[#686868]"
+                    className="h-9 rounded-lg border border-[#303030] bg-[#101010] px-3 text-[13px] text-[#eeeeee] outline-none placeholder:text-[#777777]"
                   />
                 </label>
               ) : null}
@@ -330,7 +330,7 @@ export function ImageGenerationPromptBar({
                         setSeed(event.target.value.replace(/\D/g, '').slice(0, 10))
                       }
                       placeholder="随机"
-                      className="h-8 w-28 rounded-lg border border-[#303030] bg-[#101010] px-2 text-[13px] text-[#eeeeee] outline-none placeholder:text-[#777777] focus:border-[#686868]"
+                      className="h-8 w-28 rounded-lg border border-[#303030] bg-[#101010] px-2 text-[13px] text-[#eeeeee] outline-none placeholder:text-[#777777]"
                     />
                   </label>
                 ) : null}
@@ -367,7 +367,7 @@ export function ImageGenerationPromptBar({
             <div className="flex items-center gap-2">
               {status?.type === 'error' && lastInput ? (
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   className="h-8 gap-1.5 rounded-lg px-3 text-[12px]"
                   disabled={generating}
@@ -380,7 +380,7 @@ export function ImageGenerationPromptBar({
               <Button
                 type="submit"
                 size="sm"
-                className="h-8 gap-1.5 rounded-lg px-3 text-[12px] font-semibold"
+                className="h-8 gap-1.5 rounded-lg px-3 text-[13px] font-semibold"
                 disabled={!prompt.trim() || generating}
               >
                 <ImageIcon size={15} aria-hidden="true" />

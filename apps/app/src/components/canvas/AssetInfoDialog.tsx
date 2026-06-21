@@ -1,6 +1,12 @@
 import type { AssetOrigin } from '@super-app/contracts/assets'
-import { Modal } from '@super-app/ui-react'
 import { AssetDetailView } from '@super-app/ui-react/asset-detail'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+} from '@/components/ui/dialog'
 import { useUIStore } from '../../stores/uiStore'
 import type { GenerationStatus } from '../../types'
 
@@ -53,23 +59,27 @@ export function AssetInfoDialog({ open, onClose, origin, fileName, src, assetId,
   }
 
   return (
-    <Modal open={open} onClose={onClose}>
-      <Modal.Header title="资产详情" />
-      <Modal.Body>
-        <AssetDetailView
-          origin={origin}
-          previewUrl={src}
-          title={fileName}
-          assetId={assetId}
-          onFillGenerationParams={handleFillGenerationParams}
-        />
-        {generationStatus && (
-          <div className="mt-3 flex items-center gap-2">
-            <span className="text-[12px] text-[#666666]">生成状态:</span>
-            <StatusBadge status={generationStatus} />
-          </div>
-        )}
-      </Modal.Body>
-    </Modal>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
+      <DialogContent className="max-w-[680px] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>资产详情</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <AssetDetailView
+            origin={origin}
+            previewUrl={src}
+            title={fileName}
+            assetId={assetId}
+            onFillGenerationParams={handleFillGenerationParams}
+          />
+          {generationStatus && (
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-[12px] text-[#666666]">生成状态:</span>
+              <StatusBadge status={generationStatus} />
+            </div>
+          )}
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
   )
 }

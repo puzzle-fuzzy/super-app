@@ -71,7 +71,7 @@ function ShellLayoutInner({ user }: { user: CurrentUser | null }) {
   const loginUrl = `${clientEnv.SUPER_PUBLIC_AUTH_APP_URL}?return_to=${encodeURIComponent(window.location.href)}`
 
   const btnBase =
-    'grid h-[34px] w-[34px] place-items-center rounded-[8px] bg-transparent text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:text-[#e5e5e5]'
+    'grid h-8.5 w-8.5 place-items-center rounded-[8px] bg-transparent text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:text-[#e5e5e5]'
 
   return (
     <ShellContext.Provider value={{ isUnified: true, user: user as CurrentUser }}>
@@ -105,7 +105,7 @@ function ShellLayoutInner({ user }: { user: CurrentUser | null }) {
             {!isGuest && (
               <span className="relative group">
                 <div
-                  className="flex h-[34px] min-w-[34px] items-center gap-1 bg-transparent px-2"
+                  className="flex h-8.5 min-w-8.5 items-center gap-1 bg-transparent px-2"
                 >
                   <span className="text-[11px] text-[#666666]">积分</span>
                   <span className="text-[11px] font-semibold text-[#e5e5e5] tabular-nums leading-none">
@@ -127,7 +127,7 @@ function ShellLayoutInner({ user }: { user: CurrentUser | null }) {
                     {/* <Button
                       variant="ghost"
                       size="icon"
-                      className="h-[34px] w-[34px] rounded-full text-[#999999] hover:text-[#e5e5e5]"
+                      className="h-8.5 w-8.5 rounded-full text-[#999999] hover:text-[#e5e5e5]"
                       title={user.name ?? user.email ?? '用户'}
                     > */}
                     <Avatar className="h-8.5 w-8.5 cursor-pointer">

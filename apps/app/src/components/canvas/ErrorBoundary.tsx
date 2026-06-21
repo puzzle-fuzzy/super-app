@@ -36,7 +36,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             <div style={{ textAlign: 'center' }}>
               <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>抱歉，发生了意外错误</p>
               <Button
-                variant="outline"
+                variant="ghost"
                 className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
                 onClick={() => window.location.reload()}
               >

@@ -75,10 +75,10 @@ export function AssetCard({
             </>
           ) : (
             <div className="flex h-full flex-col overflow-hidden rounded-t-xl p-5">
-              <span className="mb-4 grid h-[38px] w-[38px] place-items-center rounded-[9px] border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999]">
+              <span className="mb-4 grid h-9.5 w-9.5 place-items-center rounded-[9px] border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999]">
                 <Icon size={18} aria-hidden="true" />
               </span>
-              <span className="text-xs font-bold tracking-[0.08em] text-[#666666] uppercase">
+              <span className="text-[10px] font-black tracking-[0.15em] uppercase text-[#666666]">
                 {assetKindLabel(asset.kind)}
               </span>
               <p className="mt-2.5 line-clamp-4 flex-1 overflow-hidden text-[13px] leading-[1.7] text-[#777777]">
@@ -101,7 +101,7 @@ export function AssetCard({
           />
         </div>
         <span className="grid min-w-0 gap-1 px-3.5 py-3.5">
-          <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-sm font-semibold leading-normal text-[#e5e5e5]">
+          <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium leading-normal text-[#e5e5e5]">
             {asset.title}
           </strong>
           <small className="overflow-hidden text-ellipsis whitespace-nowrap text-xs text-[#666666]">
@@ -129,7 +129,7 @@ export function AssetPreview({ asset }: { asset: AssetDto }) {
 
   return (
     <span className="grid h-full w-full place-items-center overflow-hidden rounded-t-xl bg-[#242424]">
-      <span className="grid h-[52px] w-[52px] place-items-center rounded-xl border border-[#2a2a2a] bg-[#242424] text-[15px] font-bold text-[#999999]">
+      <span className="grid h-13 w-13 place-items-center rounded-xl border border-[#2a2a2a] bg-[#242424] text-[13px] font-semibold text-[#999999]">
         {assetKindLabel(asset.kind).slice(0, 2)}
       </span>
     </span>

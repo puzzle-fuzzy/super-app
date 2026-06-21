@@ -117,12 +117,6 @@ export const secondaryButton = `${surfaceButton} border border-[#2a2a2a] bg-[#1c
 export const menuItem =
   'flex h-9 w-full cursor-pointer appearance-none items-center justify-start gap-2.5 rounded-[7px] border-0 bg-transparent px-2.5 text-left font-sans text-[13px] font-medium leading-[13px] text-[#999999] no-underline hover:bg-[#2a2a2a] hover:text-[#e5e5e5] disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:size-[15px] [&_svg]:shrink-0'
 
-export const modalBackdrop =
-  'fixed inset-0 z-50 grid place-items-center bg-black/70 p-[22px]'
-
-export const modalPanel =
-  'max-h-[90vh] w-[min(680px,100%)] rounded-[14px] border border-[#3a3a3a] bg-[#1c1c1c] p-6'
-
 export const panelKicker = 'm-0 text-xs font-bold text-[#666666]'
 
 export const panelTitle =

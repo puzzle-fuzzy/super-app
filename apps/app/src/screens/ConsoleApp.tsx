@@ -120,7 +120,7 @@ export function ConsoleAppContent({
         {/* Toolbar */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="m-0 text-[clamp(26px,4vw,40px)] font-bold leading-none tracking-[-0.02em]">
+            <h1 className="m-0 text-[clamp(22px,3vw,32px)] font-semibold leading-none tracking-[-0.02em]">
               API 密钥
             </h1>
             <p className="m-0 mt-2 text-sm text-[#999999]">管理你的 API 访问密钥</p>
@@ -145,7 +145,7 @@ export function ConsoleAppContent({
                 {createdKey}
               </code>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 className="h-10 w-10 shrink-0 rounded-lg"
                 onClick={() => handleCopy(createdKey)}
@@ -168,7 +168,7 @@ export function ConsoleAppContent({
         ) : keys.length === 0 ? (
           <div className="grid place-items-center py-20">
             <div className="max-w-105 text-center">
-              <h3 className="mb-2.5 text-[22px] font-bold tracking-[-0.02em]">还没有 API 密钥</h3>
+              <h3 className="mb-2.5 text-[18px] font-semibold tracking-[-0.02em]">还没有 API 密钥</h3>
               <p className="m-0 mb-6 text-[#999999]">创建密钥以通过 API 访问你的 Super 资源。</p>
               <Button
                 className="h-10 rounded-[10px] px-5 text-[13px] font-semibold"
@@ -213,7 +213,7 @@ export function ConsoleAppContent({
       {createOpen && (
         <DialogOverlay onClose={() => setCreateOpen(false)}>
           <div className="w-full max-w-100 rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
-            <h3 className="m-0 mb-4 text-lg font-bold tracking-[-0.01em]">新建 API 密钥</h3>
+            <h3 className="m-0 mb-4 text-base font-semibold tracking-[-0.01em]">新建 API 密钥</h3>
             <input
               type="text"
               value={newKeyName}
@@ -224,11 +224,11 @@ export function ConsoleAppContent({
               }}
               placeholder="密钥名称（例如：生产环境）"
               autoFocus
-              className="mb-4 w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a] focus:border-[#666666]"
+              className="mb-4 w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a]"
             />
             <div className="flex justify-end gap-3">
               <Button
-                variant="outline"
+                variant="ghost"
                 className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
                 onClick={() => setCreateOpen(false)}
               >
@@ -272,11 +272,11 @@ function DialogOverlay({ children, onClose }: { children: React.ReactNode; onClo
 function ScreenState({ title, description }: { title: string; description: string }) {
   return (
     <main className="grid min-h-screen place-items-center bg-[#141414] p-6">
-      <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8 shadow-panel">
-        <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
+      <div className="w-full max-w-140 rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-8 shadow-panel">
+        <p className="m-0 mb-2.5 text-[10px] font-black tracking-[0.15em] uppercase text-[#666666]">
           SUPER CONSOLE
         </p>
-        <h1 className="m-0 mb-3 text-[34px] font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]">
+        <h1 className="m-0 mb-3 text-[26px] font-semibold leading-tight tracking-[-0.02em] text-[#e5e5e5]">
           {title}
         </h1>
         <p className="m-0 text-[#999999]">{description}</p>

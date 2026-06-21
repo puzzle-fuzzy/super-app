@@ -1,6 +1,15 @@
 import { Save } from 'lucide-react'
-import { Modal, Select } from '@super-app/ui-react'
+import { Select } from '@super-app/ui-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogKicker,
+  DialogBody,
+} from '@/components/ui/dialog'
 
 import type { AssetDto } from '@super-app/contracts/assets'
 import type { SubjectType } from '@super-app/contracts/subject-assets'
@@ -21,10 +30,6 @@ import {
   CONSISTENCY_OPTIONS,
   STYLE_TYPE_OPTIONS,
   TEMPLATE_TYPE_OPTIONS,
-  modalBackdrop,
-  modalPanel,
-  panelKicker,
-  panelTitle,
   fieldClass,
   fieldLabel,
   fieldControl,
@@ -43,53 +48,56 @@ export function EditorPanel({
   onCancel: () => void
   onSave: () => void
 }) {
-  return (
-    <Modal open onClose={onCancel}>
-      <Modal.Header
-        kicker="创作编辑"
-        title={
-          (editor.id ? '编辑' : '新建') +
-          (editor.kind === 'text'
-            ? '文本'
-            : editor.kind === 'subject'
-              ? '主体'
-              : editor.kind === 'style'
-                ? '风格'
-                : '模板')
-        }
-      />
-      <Modal.Body>
-        <div className="grid gap-[15px]">
-          <label className={fieldClass}>
-            <span className={fieldLabel}>标题</span>
-            <input
-              className={fieldControl}
-              value={editor.title}
-              onChange={(event) => setEditor({ ...editor, title: event.target.value })}
-            />
-          </label>
+  const title =
+    (editor.id ? '编辑' : '新建') +
+    (editor.kind === 'text'
+      ? '文本'
+      : editor.kind === 'subject'
+        ? '主体'
+        : editor.kind === 'style'
+          ? '风格'
+          : '模板')
 
-          {editor.kind === 'text' ? (
-            <TextEditorFields editor={editor} setEditor={setEditor} />
-          ) : editor.kind === 'subject' ? (
-            <SubjectEditorFields editor={editor} setEditor={setEditor} />
-          ) : editor.kind === 'style' ? (
-            <StyleEditorFields editor={editor} setEditor={setEditor} />
-          ) : (
-            <TemplateEditorFields editor={editor} setEditor={setEditor} />
-          )}
-        </div>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="outline" className="h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={onCancel} disabled={saving}>
-          取消
-        </Button>
-        <Button className="h-10 rounded-[10px] px-5 text-[13px] font-semibold" onClick={onSave} disabled={saving}>
-          <Save size={15} aria-hidden="true" />
-          {saving ? '保存中...' : '保存'}
-        </Button>
-      </Modal.Footer>
-    </Modal>
+  return (
+    <Dialog open onOpenChange={(open) => { if (!open) onCancel() }}>
+      <DialogContent className="max-w-[680px] flex flex-col">
+        <DialogHeader>
+          <DialogKicker>创作编辑</DialogKicker>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <div className="grid gap-3.75">
+            <label className={fieldClass}>
+              <span className={fieldLabel}>标题</span>
+              <input
+                className={fieldControl}
+                value={editor.title}
+                onChange={(event) => setEditor({ ...editor, title: event.target.value })}
+              />
+            </label>
+
+            {editor.kind === 'text' ? (
+              <TextEditorFields editor={editor} setEditor={setEditor} />
+            ) : editor.kind === 'subject' ? (
+              <SubjectEditorFields editor={editor} setEditor={setEditor} />
+            ) : editor.kind === 'style' ? (
+              <StyleEditorFields editor={editor} setEditor={setEditor} />
+            ) : (
+              <TemplateEditorFields editor={editor} setEditor={setEditor} />
+            )}
+          </div>
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="ghost" className="h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={onCancel} disabled={saving}>
+            取消
+          </Button>
+          <Button className="h-10 rounded-[10px] px-5 text-sm font-semibold" onClick={onSave} disabled={saving}>
+            <Save size={15} aria-hidden="true" />
+            {saving ? '保存中...' : '保存'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -305,22 +313,24 @@ export function DeleteConfirm({
   onConfirm: () => void
 }) {
   return (
-    <div className={modalBackdrop} role="dialog" aria-label="删除确认">
-      <div className={`${modalPanel} overflow-auto w-[min(440px,100%)]`}>
-        <p className={panelKicker}>确认删除</p>
-        <h2 className={panelTitle}>删除「{asset.title}」？</h2>
-        <p className="text-sm leading-relaxed text-[#999999]">
+    <Dialog open onOpenChange={(open) => { if (!open) onCancel() }}>
+      <DialogContent className="max-w-[440px]">
+        <DialogHeader>
+          <DialogKicker>确认删除</DialogKicker>
+          <DialogTitle>删除「{asset.title}」？</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm leading-relaxed text-[#999999] px-6 pb-5">
           这个素材会从当前列表移除。之后的恢复能力会在资产回收站阶段加入。
         </p>
-        <div className="mt-1 flex flex-wrap justify-end gap-2">
-          <Button variant="outline" className="h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={onCancel}>
+        <DialogFooter>
+          <Button variant="ghost" className="h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={onCancel}>
             取消
           </Button>
-          <Button variant="destructive" className="h-10 rounded-[10px] px-5 text-[13px] font-semibold" onClick={onConfirm}>
+          <Button variant="destructive" className="h-10 rounded-[10px] px-5 text-sm font-semibold" onClick={onConfirm}>
             确认删除
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

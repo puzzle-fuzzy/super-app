@@ -45,7 +45,7 @@ export function CanvasEditorToolbar({
         >
           <ArrowLeft size={18} />
         </Button>
-        <h2 className="m-0 text-[15px] font-semibold tracking-[-0.01em]">{title}</h2>
+        <h2 className="m-0 text-sm font-semibold tracking-[-0.01em]">{title}</h2>
         <span className="text-[11px] text-[#666666]">
           v{version} · {nodeCount} 节点 · {edgeCount} 连线
         </span>

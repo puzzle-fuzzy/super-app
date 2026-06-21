@@ -57,7 +57,7 @@ export function GeneratedImageHistory({
   return (
     <div className="relative">
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
         className="h-8 gap-1.5 rounded-lg px-3 text-[12px] font-medium"
         aria-label="生成历史"
@@ -68,7 +68,7 @@ export function GeneratedImageHistory({
       </Button>
 
       {open ? (
-        <div className="absolute top-12 right-0 z-50 flex w-[360px] max-h-80 min-h-56 flex-col gap-2 overflow-y-auto rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] px-3 py-3 shadow-[0_18px_48px_rgba(0,0,0,0.4)]">
+        <div className="absolute top-12 right-0 z-50 flex w-90 max-h-80 min-h-56 flex-col gap-2 overflow-y-auto rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] px-3 py-3 shadow-[0_18px_48px_rgba(0,0,0,0.4)]">
           {historyLoading ? (
             <p className="m-0 rounded-xl bg-[#242424] px-3 py-2 text-[13px] text-[#999999]">
               正在加载生成历史...
@@ -109,7 +109,7 @@ export function GeneratedImageHistory({
                     </span>
                   )}
                   <span className="min-w-0 self-center">
-                    <span className="block truncate text-[13px] font-semibold text-[#e5e5e5]">
+                    <span className="block truncate text-sm font-medium text-[#e5e5e5]">
                       {label}
                     </span>
                     <span className="mt-1 block text-xs text-[#777777]">点击添加到画布</span>

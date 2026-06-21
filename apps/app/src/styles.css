@@ -93,7 +93,6 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px #3a3a3a;
 }
 
 /* ── Reduced motion ──────────────────────────────────────── */
@@ -336,11 +335,6 @@ textarea:focus-visible {
   color: var(--color-foreground);
   outline: none;
   padding: 0 14px;
-}
-
-.auth-form input:focus {
-  border-color: rgba(232, 226, 210, 0.55);
-  box-shadow: 0 0 0 4px rgba(232, 226, 210, 0.08);
 }
 
 .form-error {

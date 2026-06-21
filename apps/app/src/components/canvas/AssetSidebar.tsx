@@ -136,7 +136,7 @@ export function AssetSidebar({
       className="flex shrink-0 flex-col"
     >
       <div className="flex items-center justify-between px-4 py-3">
-        <strong className="text-[13px] font-semibold text-[#e5e5e5]">资产</strong>
+        <strong className="text-[12px] font-semibold text-[#e5e5e5]">资产</strong>
         <Button
           variant="ghost"
           size="icon"

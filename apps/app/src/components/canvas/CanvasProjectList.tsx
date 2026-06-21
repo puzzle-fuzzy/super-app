@@ -8,6 +8,12 @@ import {
   Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/material-ui-dropdown-menu'
 
 import { formatRelativeTime } from '@super-app/utils'
 
@@ -73,14 +79,14 @@ export function CanvasProjectList({ user: _user }: {
         {/* Toolbar */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="m-0 text-[clamp(26px,4vw,40px)] font-bold leading-none tracking-[-0.02em]">
+            <h1 className="m-0 text-[clamp(22px,3vw,32px)] font-semibold leading-none tracking-[-0.02em]">
               我的画布
             </h1>
             <p className="m-0 mt-2 text-sm text-[#999999]">{projects.length} 个项目</p>
           </div>
           <div className="flex items-center gap-3">
             <Button
-              variant="outline"
+              variant="ghost"
               className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-medium text-[#999999] hover:text-[#e5e5e5]"
               onClick={() => navigate('/pipeline')}
             >
@@ -105,7 +111,7 @@ export function CanvasProjectList({ user: _user }: {
         ) : projects.length === 0 ? (
           <div className="grid place-items-center py-20">
             <div className="max-w-105 text-center">
-              <h3 className="mb-2.5 text-[22px] font-bold tracking-[-0.02em]">还没有画布项目</h3>
+              <h3 className="mb-2.5 text-[18px] font-semibold tracking-[-0.02em]">还没有画布项目</h3>
               <p className="m-0 mb-6 text-[#999999]">创建第一个画布，开始组织你的资产和想法。</p>
               <Button
                 className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-semibold"
@@ -124,65 +130,48 @@ export function CanvasProjectList({ user: _user }: {
                 className="group relative flex min-h-45 cursor-pointer flex-col rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-5 transition-all duration-160 hover:border-[#3a3a3a] hover:bg-[#202020]"
                 onClick={() => navigate(`/project/${project.id}`)}
               >
-                <div className="absolute top-4 right-4 z-10">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`h-8 w-8 rounded-lg text-[#666666] hover:text-[#e5e5e5] ${menuOpenId === project.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setMenuOpenId(menuOpenId === project.id ? null : project.id)
-                    }}
-                  >
-                    <MoreHorizontal size={16} />
-                  </Button>
-                  {menuOpenId === project.id && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-20 cursor-default"
-                        onMouseDown={(e) => {
-                          e.stopPropagation()
-                          e.preventDefault()
+                <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-8 w-8 rounded-lg text-[#666666] hover:text-[#e5e5e5] ${menuOpenId === project.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                      >
+                        <MoreHorizontal size={16} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="min-w-32">
+                      <DropdownMenuItem
+                        delayDuration={0}
+                        onSelect={() => {
                           setMenuOpenId(null)
+                          setRenameId(project.id)
+                          setRenameTitle(project.title)
+                          setRenameOpen(true)
                         }}
-                      />
-                      <div className="absolute right-0 top-full z-30 mt-1 min-w-32 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0/0.42)]">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-9 w-full justify-start gap-2 rounded-[7px] px-2.5 text-[13px] font-medium text-[#999999] hover:text-[#e5e5e5]"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setMenuOpenId(null)
-                            setRenameId(project.id)
-                            setRenameTitle(project.title)
-                            setRenameOpen(true)
-                          }}
-                        >
-                          <PenLine size={14} />
-                          重命名
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-9 w-full justify-start gap-2 rounded-[7px] px-2.5 text-[13px] font-medium text-[#f87171]"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setMenuOpenId(null)
-                            setDeleteConfirm(project.id)
-                          }}
-                        >
-                          <Trash2 size={14} />
-                          删除
-                        </Button>
-                      </div>
-                    </>
-                  )}
+                      >
+                        <PenLine size={14} />
+                        重命名
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        delayDuration={0}
+                        className="text-[#ffaaa3]"
+                        onSelect={() => {
+                          setMenuOpenId(null)
+                          setDeleteConfirm(project.id)
+                        }}
+                      >
+                        <Trash2 size={14} />
+                        删除
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <span className="mb-1 text-[11px] font-bold tracking-[0.14em] text-[#666666]">
+                <span className="mb-1 text-[10px] font-black tracking-[0.15em] uppercase text-[#666666]">
                   画布项目
                 </span>
-                <h3 className="mt-10.5 mb-2.5 text-2xl font-bold tracking-[-0.02em]">
+                <h3 className="mt-10.5 mb-2.5 text-xl font-semibold tracking-[-0.02em]">
                   {project.title}
                 </h3>
                 <p className="m-0 mt-auto text-[12px] text-[#666666]">
@@ -198,7 +187,7 @@ export function CanvasProjectList({ user: _user }: {
       {createOpen && (
         <DialogOverlay onClose={() => setCreateOpen(false)}>
           <div className="w-full max-w-100 rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
-            <h3 className="m-0 mb-4 text-lg font-bold tracking-[-0.01em]">新建画布</h3>
+            <h3 className="m-0 mb-4 text-base font-semibold tracking-[-0.01em]">新建画布</h3>
             <input
               type="text"
               value={newTitle}
@@ -209,11 +198,11 @@ export function CanvasProjectList({ user: _user }: {
               }}
               placeholder="输入项目名称"
               autoFocus
-              className="mb-4 w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a] focus:border-[#666666]"
+              className="mb-4 w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a]"
             />
             <div className="flex justify-end gap-3">
               <Button
-                variant="outline"
+                variant="ghost"
                 className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
                 onClick={() => setCreateOpen(false)}
               >
@@ -234,7 +223,7 @@ export function CanvasProjectList({ user: _user }: {
       {renameOpen && (
         <DialogOverlay onClose={() => setRenameOpen(false)}>
           <div className="w-full max-w-100 rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
-            <h3 className="m-0 mb-4 text-lg font-bold tracking-[-0.01em]">重命名</h3>
+            <h3 className="m-0 mb-4 text-base font-semibold tracking-[-0.01em]">重命名</h3>
             <input
               type="text"
               value={renameTitle}
@@ -244,11 +233,11 @@ export function CanvasProjectList({ user: _user }: {
                 if (e.key === 'Escape') setRenameOpen(false)
               }}
               autoFocus
-              className="mb-4 w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a] focus:border-[#666666]"
+              className="mb-4 w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a]"
             />
             <div className="flex justify-end gap-3">
               <Button
-                variant="outline"
+                variant="ghost"
                 className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
                 onClick={() => setRenameOpen(false)}
               >
@@ -269,13 +258,13 @@ export function CanvasProjectList({ user: _user }: {
       {deleteConfirm && (
         <DialogOverlay onClose={() => setDeleteConfirm(null)}>
           <div className="w-full max-w-100 rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
-            <h3 className="m-0 mb-2 text-lg font-bold tracking-[-0.01em]">确认删除</h3>
+            <h3 className="m-0 mb-2 text-base font-semibold tracking-[-0.01em]">确认删除</h3>
             <p className="m-0 mb-5 text-sm text-[#999999]">
               此操作不可撤销。确定要删除这个画布项目吗？
             </p>
             <div className="flex justify-end gap-3">
               <Button
-                variant="outline"
+                variant="ghost"
                 className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
                 onClick={() => setDeleteConfirm(null)}
               >

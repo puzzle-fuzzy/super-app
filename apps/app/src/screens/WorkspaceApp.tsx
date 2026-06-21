@@ -152,7 +152,7 @@ export function WorkspaceApp({ user }: { user: CurrentUser }) {
   return (
     <>
       <section
-        className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
+        className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-4.5 max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
         aria-label="工作台"
       >
         {/* ---------------------------------------------------------------- */}
@@ -160,11 +160,11 @@ export function WorkspaceApp({ user }: { user: CurrentUser }) {
         {/* ---------------------------------------------------------------- */}
         {/*  Welcome                                                        */}
         {/* ---------------------------------------------------------------- */}
-        <div className="mb-[14px]">
-          <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
+        <div className="mb-3.5">
+          <p className="m-0 mb-2.5 text-[10px] font-black tracking-[0.15em] uppercase text-[#666666]">
             CLOUD WORKSPACE
           </p>
-          <h1 className="m-0 pb-8 text-[clamp(34px,5vw,56px)] font-bold leading-none tracking-[-0.02em]">
+          <h1 className="m-0 pb-8 text-[clamp(28px,4vw,44px)] font-semibold leading-none tracking-[-0.02em]">
             欢迎回来，{user.name || user.email}
           </h1>
         </div>
@@ -172,12 +172,12 @@ export function WorkspaceApp({ user }: { user: CurrentUser }) {
         {/* ---------------------------------------------------------------- */}
         {/*  Hero                                                           */}
         {/* ---------------------------------------------------------------- */}
-        <section className="mb-[18px] grid grid-cols-[minmax(0,1fr)_minmax(260px,0.62fr)] gap-7 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(26px,4vw,44px)] max-[980px]:grid-cols-1">
+        <section className="mb-[18px] grid grid-cols-[minmax(0,1fr)_minmax(260px,0.62fr)] gap-7 rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(26px,4vw,44px)] max-[980px]:grid-cols-1">
           <div>
-            <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
+            <p className="m-0 mb-2.5 text-[10px] font-black tracking-[0.15em] uppercase text-[#666666]">
               MVP FLOW
             </p>
-            <h2 className="m-0 max-w-[640px] text-[clamp(30px,4vw,48px)] font-bold leading-[1.02] tracking-[-0.02em]">
+            <h2 className="m-0 max-w-[640px] text-[clamp(24px,3vw,38px)] font-semibold leading-[1.02] tracking-[-0.02em]">
               从这里进入资产、画布和 API 能力。
             </h2>
           </div>
@@ -189,18 +189,18 @@ export function WorkspaceApp({ user }: { user: CurrentUser }) {
         {/* ---------------------------------------------------------------- */}
         {/*  Shortcuts                                                      */}
         {/* ---------------------------------------------------------------- */}
-        <section className="mb-[14px] grid grid-cols-4 gap-[14px] max-[980px]:grid-cols-2 max-[620px]:grid-cols-1">
+        <section className="mb-3.5 grid grid-cols-4 gap-3.5 max-[980px]:grid-cols-2 max-[620px]:grid-cols-1">
           {SHORTCUTS.map((shortcut) => (
             <a
               key={shortcut.label}
               href={shortcut.href}
-              className="flex min-h-[210px] flex-col rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-5 text-[#e5e5e5] no-underline transition-all duration-160 hover:-translate-y-[3px] hover:border-[#3a3a3a] hover:bg-[#202020]"
+              className="flex min-h-52.5 flex-col rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-5 text-[#e5e5e5] no-underline transition-all duration-160 hover:-translate-y-0.75 hover:border-[#3a3a3a] hover:bg-[#202020]"
             >
-              <span className="mb-1 flex items-center gap-2 text-[11px] font-bold tracking-[0.14em] text-[#666666]">
+              <span className="mb-1 flex items-center gap-2 text-[10px] font-black tracking-[0.15em] uppercase text-[#666666]">
                 <shortcut.icon size={14} aria-hidden="true" />
                 {shortcut.status}
               </span>
-              <h3 className="mt-[42px] mb-2.5 text-2xl font-bold tracking-[-0.02em]">
+              <h3 className="mt-10.5 mb-2.5 text-xl font-semibold tracking-[-0.02em]">
                 {shortcut.label}
               </h3>
               <p className="m-0 leading-[1.65] text-[#999999]">{shortcut.description}</p>
@@ -211,10 +211,10 @@ export function WorkspaceApp({ user }: { user: CurrentUser }) {
         {/* ---------------------------------------------------------------- */}
         {/*  Recent Content                                                  */}
         {/* ---------------------------------------------------------------- */}
-        <section className="grid grid-cols-2 gap-[14px] max-[980px]:grid-cols-1">
+        <section className="grid grid-cols-2 gap-3.5 max-[980px]:grid-cols-1">
           {/* Recent Canvas Projects */}
           <div className="rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-6">
-            <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
+            <p className="m-0 mb-2.5 text-[10px] font-black tracking-[0.15em] uppercase text-[#666666]">
               最近项目
             </p>
             {recentProjects.length > 0 ? (
@@ -236,7 +236,7 @@ export function WorkspaceApp({ user }: { user: CurrentUser }) {
               </ul>
             ) : (
               <>
-                <h3 className="m-0 mb-2.5 text-[22px] font-bold tracking-[-0.02em]">
+                <h3 className="m-0 mb-2.5 text-[18px] font-semibold tracking-[-0.02em]">
                   {dataLoaded ? '还没有画布项目' : '加载中…'}
                 </h3>
                 <p className="m-0 leading-[1.65] text-[#999999]">
@@ -248,7 +248,7 @@ export function WorkspaceApp({ user }: { user: CurrentUser }) {
 
           {/* Recent Assets */}
           <div className="rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-6">
-            <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
+            <p className="m-0 mb-2.5 text-[10px] font-black tracking-[0.15em] uppercase text-[#666666]">
               最近资产
             </p>
             {recentAssets.length > 0 ? (
@@ -270,7 +270,7 @@ export function WorkspaceApp({ user }: { user: CurrentUser }) {
               </ul>
             ) : (
               <>
-                <h3 className="m-0 mb-2.5 text-[22px] font-bold tracking-[-0.02em]">
+                <h3 className="m-0 mb-2.5 text-[18px] font-semibold tracking-[-0.02em]">
                   {dataLoaded ? '资产库等待接入' : '加载中…'}
                 </h3>
                 <p className="m-0 leading-[1.65] text-[#999999]">

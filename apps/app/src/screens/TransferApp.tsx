@@ -52,7 +52,7 @@ export function TransferApp({ user: _user }: { user: CurrentUser | null }) {
 
   return (
     <main className="min-h-screen bg-[#141414] text-[#e5e5e5]">
-      <section className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5">
+      <section className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-4.5 max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5">
         <div className="flex min-h-[80vh] items-center justify-center">
           {mode === 'choose' && <ChooseMode onSend={() => setMode('send')} onReceive={() => setMode('receive')} />}
           {mode === 'send' && <SendMode onBack={() => setMode('choose')} />}
@@ -71,8 +71,8 @@ export function TransferApp({ user: _user }: { user: CurrentUser | null }) {
 
 function ChooseMode({ onSend, onReceive }: { onSend: () => void; onReceive: () => void }) {
   return (
-    <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
-      <h1 className="m-0 mb-2 text-[28px] font-bold tracking-[-0.02em]">
+    <div className="w-full max-w-140 rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+      <h1 className="m-0 mb-2 text-[22px] font-semibold tracking-[-0.02em]">
         点对点文件传输
       </h1>
       <p className="mt-4 leading-[1.7] text-[#999999]">
@@ -81,7 +81,7 @@ function ChooseMode({ onSend, onReceive }: { onSend: () => void; onReceive: () =
 
       <div className="mt-8 grid grid-cols-2 gap-4 max-[680px]:grid-cols-1">
         <Button
-          variant="outline"
+          variant="ghost"
           className="flex-col items-center gap-4 rounded-[18px] p-8 h-auto"
           onClick={onSend}
         >
@@ -89,13 +89,13 @@ function ChooseMode({ onSend, onReceive }: { onSend: () => void; onReceive: () =
             <Upload size={24} />
           </span>
           <div className="text-center">
-            <p className="m-0 text-[17px] font-semibold">发送文件</p>
+            <p className="m-0 text-[15px] font-semibold">发送文件</p>
             <p className="mt-1 text-[13px] text-[#666666]">上传文件生成分享链接</p>
           </div>
         </Button>
 
         <Button
-          variant="outline"
+          variant="ghost"
           className="flex-col items-center gap-4 rounded-[18px] p-8 h-auto"
           onClick={onReceive}
         >
@@ -103,7 +103,7 @@ function ChooseMode({ onSend, onReceive }: { onSend: () => void; onReceive: () =
             <ArrowDownToLine size={24} />
           </span>
           <div className="text-center">
-            <p className="m-0 text-[17px] font-semibold">接收文件</p>
+            <p className="m-0 text-[15px] font-semibold">接收文件</p>
             <p className="mt-1 text-[13px] text-[#666666]">输入房间号或打开分享链接</p>
           </div>
         </Button>
@@ -162,8 +162,8 @@ function SendMode({ onBack }: { onBack: () => void }) {
 
   if (room) {
     return (
-      <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
-        <h1 className="m-0 mb-2 text-[28px] font-bold tracking-[-0.02em]">
+      <div className="w-full max-w-140 rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+        <h1 className="m-0 mb-2 text-[22px] font-semibold tracking-[-0.02em]">
           分享链接给接收方
         </h1>
         <p className="mt-4 leading-[1.7] text-[#999999]">
@@ -171,10 +171,10 @@ function SendMode({ onBack }: { onBack: () => void }) {
         </p>
 
         <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
-          <p className="m-0 mb-1 text-[12px] font-semibold tracking-[0.08em] text-[#666666]">
+          <p className="m-0 mb-1 text-[10px] font-black tracking-[0.15em] uppercase text-[#666666]">
             文件信息
           </p>
-          <p className="m-0 text-[20px] font-bold tracking-[-0.01em] break-all">
+          <p className="m-0 text-[17px] font-semibold tracking-[-0.01em] break-all">
             {room.fileName}
           </p>
           <p className="m-0 mt-1 text-[13px] text-[#999999]">{formatFileSize(room.fileSize)}</p>
@@ -184,7 +184,7 @@ function SendMode({ onBack }: { onBack: () => void }) {
               {room.pageUrl}
             </code>
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               className="h-10 w-10 shrink-0 rounded-[10px]"
               onClick={handleCopy}
@@ -207,8 +207,8 @@ function SendMode({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
-      <h1 className="m-0 mb-2 text-[28px] font-bold tracking-[-0.02em]">
+    <div className="w-full max-w-140 rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+      <h1 className="m-0 mb-2 text-[22px] font-semibold tracking-[-0.02em]">
         发送文件
       </h1>
       <p className="mt-4 leading-[1.7] text-[#999999]">
@@ -240,7 +240,7 @@ function SendMode({ onBack }: { onBack: () => void }) {
 
         <Button
           disabled={!file || uploading}
-          className="mt-5 h-11 w-full rounded-md text-[13px] font-semibold"
+          className="mt-5 h-11 w-full rounded-md text-sm font-semibold"
           onClick={handleCreateRoom}
         >
           {uploading ? (
@@ -476,8 +476,8 @@ function ReceiveMode({ roomIdFromUrl, onBack }: { roomIdFromUrl: string | null; 
   // Join room form (manual entry, no ?room= in URL)
   if (!joined) {
     return (
-      <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
-        <h1 className="m-0 mb-2 text-[28px] font-bold tracking-[-0.02em]">
+      <div className="w-full max-w-140 rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+        <h1 className="m-0 mb-2 text-[22px] font-semibold tracking-[-0.02em]">
           接收文件
         </h1>
         <p className="mt-4 leading-[1.7] text-[#999999]">
@@ -491,7 +491,7 @@ function ReceiveMode({ roomIdFromUrl, onBack }: { roomIdFromUrl: string | null; 
             onChange={(e) => setRoomId(extractRoomId(e.target.value))}
             onKeyDown={(e) => e.key === 'Enter' && joinRoom()}
             placeholder="输入房间 ID 或粘贴链接"
-            className="w-full h-12 border border-[#2a2a2a] rounded-[10px] bg-[#242424] px-4 text-[14px] text-[#e5e5e5] outline-none focus:border-[#3a3a3a] placeholder:text-[#666666]"
+            className="w-full h-12 border border-[#2a2a2a] rounded-[10px] bg-[#242424] px-4 text-[14px] text-[#e5e5e5] outline-none placeholder:text-[#666666]"
           />
 
           {joinError && (
@@ -500,7 +500,7 @@ function ReceiveMode({ roomIdFromUrl, onBack }: { roomIdFromUrl: string | null; 
 
           <Button
             disabled={!roomId.trim()}
-            className="mt-4 h-11 w-full rounded-md text-[13px] font-semibold"
+            className="mt-4 h-11 w-full rounded-md text-sm font-semibold"
             onClick={joinRoom}
           >
             <ArrowDownToLine size={16} />
@@ -527,26 +527,26 @@ function ReceiveMode({ roomIdFromUrl, onBack }: { roomIdFromUrl: string | null; 
   const isDone = !!completed
 
   return (
-    <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
-      <h1 className="m-0 mb-2 text-[28px] font-bold tracking-[-0.02em]">
+    <div className="w-full max-w-140 rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+      <h1 className="m-0 mb-2 text-[22px] font-semibold tracking-[-0.02em]">
         接收文件
       </h1>
 
       {/* Connection indicator */}
       <div className="mt-5 flex items-center gap-2">
         {connected ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#064e3b] px-3 py-1 text-[12px] font-semibold text-[#34d399]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#064e3b] px-3 py-1 text-[11px] font-semibold text-[#34d399]">
             <Wifi size={12} />
             已连接
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#2a1f1f] px-3 py-1 text-[12px] font-semibold text-[#f87171]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#2a1f1f] px-3 py-1 text-[11px] font-semibold text-[#f87171]">
             <WifiOff size={12} />
             未连接
           </span>
         )}
         {peerId && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1e293b] px-3 py-1 text-[12px] font-semibold text-[#60a5fa]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1e293b] px-3 py-1 text-[11px] font-semibold text-[#60a5fa]">
             设备 {peerId.slice(0, 8)}
           </span>
         )}
@@ -557,15 +557,15 @@ function ReceiveMode({ roomIdFromUrl, onBack }: { roomIdFromUrl: string | null; 
       {/* File Offer Card */}
       {isReady && offer && (
         <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
-          <p className="m-0 mb-1 text-[12px] font-semibold tracking-[0.08em] text-[#666666]">
+          <p className="m-0 mb-1 text-[10px] font-black tracking-[0.15em] uppercase text-[#666666]">
             待接收文件
           </p>
-          <p className="m-0 text-[20px] font-bold tracking-[-0.01em] break-all">
+          <p className="m-0 text-[17px] font-semibold tracking-[-0.01em] break-all">
             {offer.fileName}
           </p>
           <p className="m-0 mt-1 text-[13px] text-[#999999]">{formatFileSize(offer.fileSize)}</p>
           <Button
-            className="mt-5 h-11 rounded-md px-6 text-[13px] font-semibold"
+            className="mt-5 h-11 rounded-md px-6 text-sm font-semibold"
             onClick={acceptOffer}
           >
             <ArrowDownToLine size={16} />

@@ -49,12 +49,12 @@ export function PipelineNode({ data }: NodeProps) {
 
   return (
     <div
-      className={`relative min-w-[260px] max-w-[320px] rounded-xl border-2 p-4 ${STATUS_COLORS[d.status]} transition-all ${d.disabled ? 'opacity-45' : ''}`}
+      className={`relative min-w-[260px] max-w-80 rounded-xl border-2 p-4 ${STATUS_COLORS[d.status]} transition-all ${d.disabled ? 'opacity-45' : ''}`}
       title={d.blockedReason}
     >
       {/* Header */}
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-[13px] font-semibold text-[#e5e5e5]">{d.label}</span>
+        <span className="text-sm font-medium text-[#e5e5e5]">{d.label}</span>
         <span className="text-[11px] font-medium" style={{ color: indicator.color }}>
           {indicator.label}
         </span>
@@ -192,7 +192,7 @@ export function PipelineNode({ data }: NodeProps) {
         )}
         {d.status === 'failed' && d.onRetry && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             className="h-7 rounded-md px-3 text-[11px] font-medium"
             onClick={(e) => {

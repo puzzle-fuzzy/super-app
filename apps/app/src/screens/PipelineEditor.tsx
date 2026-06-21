@@ -189,7 +189,7 @@ function PipelineEditor({
       <div className="grid min-h-screen place-items-center bg-[#141414]">
         <div className="text-center">
           <p className="text-[#f87171]">{error || '项目不存在'}</p>
-          <Button variant="outline" className="mt-4 h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={onBack}>
+          <Button variant="ghost" className="mt-4 h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={onBack}>
             <ArrowLeft size={14} />
             返回列表
           </Button>
@@ -208,10 +208,10 @@ function PipelineEditor({
           <ArrowLeft size={16} />
         </Button>
         <div className="min-w-0 flex-1">
-          <h1 className="m-0 truncate text-base font-bold">{project.title || '未命名项目'}</h1>
+          <h1 className="m-0 truncate text-sm font-semibold">{project.title || '未命名项目'}</h1>
           <p className="m-0 text-[12px] text-[#666666]">状态: {project.status}</p>
         </div>
-        <Button variant="outline" size="sm" className="h-9 gap-1.5 rounded-lg px-3 text-[12px] font-medium text-[#999999] hover:text-[#e5e5e5]" onClick={() => setAssetSidebarOpen((v) => !v)}>
+        <Button variant="ghost" size="sm" className="h-9 gap-1.5 rounded-lg px-3 text-[12px] font-medium text-[#999999] hover:text-[#e5e5e5]" onClick={() => setAssetSidebarOpen((v) => !v)}>
           {assetSidebarOpen ? '隐藏资产' : '资产库'}
         </Button>
       </header>
@@ -220,9 +220,9 @@ function PipelineEditor({
       <div className="flex flex-1 overflow-hidden">
         {/* Asset Sidebar */}
         {assetSidebarOpen && (
-          <aside className="flex w-[240px] shrink-0 flex-col border-r border-[#2a2a2a] bg-[#181818]">
+          <aside className="flex w-60 shrink-0 flex-col border-r border-[#2a2a2a] bg-[#181818]">
             <div className="border-b border-[#2a2a2a] px-3 py-3">
-              <p className="m-0 text-[12px] font-semibold text-[#999999]">资产库</p>
+              <p className="m-0 text-[10px] font-black tracking-[0.15em] uppercase text-[#999999]">资产库</p>
               <p className="m-0 mt-0.5 text-[10px] text-[#666666]">拖拽到节点设置参考图</p>
             </div>
             <div className="flex flex-wrap gap-1.5 border-b border-[#2a2a2a] px-3 py-2">

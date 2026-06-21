@@ -13,7 +13,7 @@ export function PipelineDetailPanel({ selectedNode }: { selectedNode: Node | nul
       const c = data.entityData as PipelineCharacterDto
       return (
         <div className="space-y-4">
-          <h3 className="m-0 text-base font-bold">{c.name}</h3>
+          <h3 className="m-0 text-sm font-semibold">{c.name}</h3>
           {c.referenceImageUrl && <img src={c.referenceImageUrl} alt={c.name} className="w-full rounded-xl" />}
           <p className="m-0 text-[13px] text-[#999999]">角色: {c.role || '未设定'}</p>
           {c.description && <p className="m-0 text-[13px] text-[#888888]">{c.description}</p>}
@@ -43,7 +43,7 @@ export function PipelineDetailPanel({ selectedNode }: { selectedNode: Node | nul
       const l = data.entityData as PipelineLocationDto
       return (
         <div className="space-y-4">
-          <h3 className="m-0 text-base font-bold">{l.name}</h3>
+          <h3 className="m-0 text-sm font-semibold">{l.name}</h3>
           {l.referenceImageUrl && <img src={l.referenceImageUrl} alt={l.name} className="w-full rounded-xl" />}
           <p className="m-0 text-[13px] text-[#999999]">类型: {l.type}</p>
           {l.scenePrompt && (
@@ -70,7 +70,7 @@ export function PipelineDetailPanel({ selectedNode }: { selectedNode: Node | nul
       const s = data.entityData as PipelineShotDto
       return (
         <div className="space-y-4">
-          <h3 className="m-0 text-base font-bold">{`镜头 #${s.shotIndex + 1}`}</h3>
+          <h3 className="m-0 text-sm font-semibold">{`镜头 #${s.shotIndex + 1}`}</h3>
           {s.videoUrl && <video src={s.videoUrl} controls className="w-full rounded-xl" />}
           <p className="m-0 text-[13px] text-[#999999]">时长: {s.duration}s</p>
           <p className="m-0 text-[13px] text-[#888888]">{s.narrative}</p>
@@ -97,7 +97,7 @@ export function PipelineDetailPanel({ selectedNode }: { selectedNode: Node | nul
 
     return (
       <div className="space-y-3">
-        <h3 className="m-0 text-base font-bold">{data.label}</h3>
+        <h3 className="m-0 text-sm font-semibold">{data.label}</h3>
         <p className="m-0 text-[13px] text-[#999999]">状态: {data.status}</p>
         {data.errorMessage && (
           <p className="m-0 rounded-lg bg-red-500/10 p-3 text-[12px] text-red-400">{data.errorMessage}</p>
@@ -107,7 +107,7 @@ export function PipelineDetailPanel({ selectedNode }: { selectedNode: Node | nul
   }, [selectedNode])
 
   return content ? (
-    <aside className="w-[320px] shrink-0 overflow-y-auto border-l border-[#2a2a2a] bg-[#181818] p-4">
+    <aside className="w-80 shrink-0 overflow-y-auto border-l border-[#2a2a2a] bg-[#181818] p-4">
       {content}
     </aside>
   ) : null

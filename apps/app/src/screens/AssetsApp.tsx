@@ -150,7 +150,7 @@ export function AssetsApp({ user }: { user: CurrentUser }) {
         >
           <div className="flex items-baseline gap-2.5">
             <span className="text-[13px]">正在浏览</span>
-            <strong className="text-[15px] font-semibold text-[#e5e5e5]">
+            <strong className="text-sm font-semibold text-[#e5e5e5]">
               {isListLoading ? '同步中' : `${visibleItems.length} 个素材`}
             </strong>
           </div>
@@ -172,7 +172,7 @@ export function AssetsApp({ user }: { user: CurrentUser }) {
             <EmptyState filter={filter} onNewText={openNewText} onNewSubject={openNewSubject} />
           ) : (
             <section
-              className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 max-[620px]:grid-cols-1"
+              className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7 max-[620px]:grid-cols-1"
               aria-label="资产列表"
             >
               {visibleItems.map((asset) => (

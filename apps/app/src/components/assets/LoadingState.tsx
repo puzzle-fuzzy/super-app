@@ -1,7 +1,7 @@
 export function LoadingState() {
   return (
     <section
-      className="flex min-h-[260px] items-center justify-center gap-2.5 text-sm text-[#999999]"
+      className="flex min-h-65 items-center justify-center gap-2.5 text-sm text-[#999999]"
       aria-label="资产加载中"
     >
       <span
