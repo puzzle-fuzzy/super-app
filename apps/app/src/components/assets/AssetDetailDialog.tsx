@@ -31,7 +31,7 @@ export function AssetDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-[960px] p-0 overflow-hidden">
+      <DialogContent className="max-w-240 p-0 overflow-hidden">
         <div className="flex max-[720px]:flex-col h-full max-h-[85vh]">
           {/* ── 左侧：预览面板 ── */}
           <div className="shrink-0 w-[45%] max-[720px]:w-full bg-[#141414] flex flex-col">

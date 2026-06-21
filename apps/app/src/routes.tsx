@@ -23,6 +23,9 @@ const ConsoleAppContent = React.lazy(() =>
 const TransferApp = React.lazy(() =>
   import('./screens/TransferApp').then((m) => ({ default: m.TransferApp }))
 )
+const AdminApp = React.lazy(() =>
+  import('./screens/AdminApp').then((m) => ({ default: m.AdminApp }))
+)
 
 function AppFallback() {
   return (
@@ -78,6 +81,14 @@ function TransferRoute() {
   )
 }
 
+function AdminRoute() {
+  return (
+    <React.Suspense fallback={<AppFallback />}>
+      <AdminApp />
+    </React.Suspense>
+  )
+}
+
 export function AppRoutes() {
   return (
     <Routes>
@@ -91,6 +102,7 @@ export function AppRoutes() {
         <Route path="/canvas/*" element={<CanvasRoute />} />
         <Route path="/api-console/*" element={<ConsoleRoute />} />
         <Route path="/transfer/*" element={<TransferRoute />} />
+        <Route path="/admin/*" element={<AdminRoute />} />
         {/* 默认跳转到工作台 */}
         <Route path="*" element={<Navigate to="/workspace" replace />} />
       </Route>

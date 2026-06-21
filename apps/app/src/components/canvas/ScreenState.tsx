@@ -17,7 +17,7 @@ export function DialogOverlay({
 
   return (
     <div
-      className="fixed inset-0 z-[100] grid place-items-center bg-black/60 p-6"
+      className="fixed inset-0 z-100 grid place-items-center bg-black/60 p-6"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
@@ -30,7 +30,7 @@ export function DialogOverlay({
 export function ScreenState({ title, description }: { title: string; description: string }) {
   return (
     <main className="grid min-h-screen place-items-center bg-[#141414] p-6">
-      <div className="w-full max-w-[560px] rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
+      <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8 shadow-panel">
         <p className="m-0 mb-2.5 text-[10px] font-black tracking-[0.15em] uppercase text-[#666666]">
           SUPER CANVAS
         </p>

@@ -182,7 +182,7 @@ const RippleLayer = ({
   variant?: RippleVariant
 }) => (
   <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none z-0">
-    <div className="absolute inset-0 bg-current opacity-0 transition-opacity duration-200 group-hover:opacity-[0.08] group-data-[highlighted]:opacity-[0.08]" />
+    <div className="absolute inset-0 bg-current opacity-0 transition-opacity duration-200 group-hover:opacity-[0.08] group-data-highlighted:opacity-[0.08]" />
     <div
       ref={rippleRef}
       className="absolute rounded-full opacity-0 bg-current"
@@ -362,7 +362,7 @@ const DropdownMenuContent = React.forwardRef<
         } as React.CSSProperties}
         className={cn(
           'm3-content z-50 rounded-xl bg-popover/95 backdrop-blur-xl text-popover-foreground shadow-[0px_8px_32px_rgba(0,0,0,0.12)] border border-border/20 outline-none overflow-hidden relative py-0',
-          'origin-[var(--radix-dropdown-menu-content-transform-origin)]',
+          'origin-(--radix-dropdown-menu-content-transform-origin)',
           className
         )}
         {...props}
@@ -476,8 +476,8 @@ const DropdownMenuCheckboxItem = React.forwardRef<
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}
       className={cn(
-        'group relative flex cursor-pointer select-none items-stretch px-0 min-h-[48px] text-sm font-medium tracking-[0.01em] outline-none transition-colors',
-        'data-[disabled]:pointer-events-none data-[disabled]:opacity-40 overflow-hidden rounded-none',
+        'group relative flex cursor-pointer select-none items-stretch px-0 min-h-12 text-sm font-medium tracking-[0.01em] outline-none transition-colors',
+        'data-disabled:pointer-events-none data-disabled:opacity-40 overflow-hidden rounded-none',
         enterAnimation && 'm3-item-enter',
         className
       )}
@@ -529,8 +529,8 @@ const DropdownMenuRadioItem = React.forwardRef<
     <DropdownMenuPrimitive.RadioItem
       ref={ref}
       className={cn(
-        'group relative flex cursor-pointer select-none items-stretch px-0 min-h-[48px] text-sm font-medium tracking-[0.01em] outline-none transition-colors',
-        'data-[disabled]:pointer-events-none data-[disabled]:opacity-40 overflow-hidden rounded-none',
+        'group relative flex cursor-pointer select-none items-stretch px-0 min-h-12 text-sm font-medium tracking-[0.01em] outline-none transition-colors',
+        'data-disabled:pointer-events-none data-disabled:opacity-40 overflow-hidden rounded-none',
         enterAnimation && 'm3-item-enter',
         className
       )}
@@ -571,8 +571,8 @@ const DropdownMenuSeparator = React.forwardRef<
   <DropdownMenuPrimitive.Separator
     ref={ref}
     className={cn(
-      'h-[1px] w-full m3-item-enter my-0',
-      'bg-gradient-to-r from-transparent via-border to-transparent opacity-80 my-0.5',
+      'h-px w-full m3-item-enter my-0',
+      'bg-linear-to-r from-transparent via-border to-transparent opacity-80 my-0.5',
       className
     )}
     {...props}
@@ -656,11 +656,11 @@ const DropdownMenuPage = React.forwardRef<
         else if (ref) (ref as any).current = node
       }}
       className={cn(
-        'w-full absolute top-0 left-0 transition-all duration-[350ms] ease-[cubic-bezier(0.2,0,0,1)] py-0',
+        'w-full absolute top-0 left-0 transition-all duration-350 ease-[cubic-bezier(0.2,0,0,1)] py-0',
         isActive
           ? 'translate-x-0 opacity-100 scale-100 pointer-events-auto'
           : isLeft
-            ? '-translate-x-[20%] opacity-0 scale-[0.98] pointer-events-none'
+            ? 'translate-x-[-20%] opacity-0 scale-[0.98] pointer-events-none'
             : 'translate-x-[20%] opacity-0 scale-[0.98] pointer-events-none',
         className
       )}

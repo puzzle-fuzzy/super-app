@@ -24,7 +24,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/material-ui-dropdown-menu'
-import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 import { ShellContext } from './ShellContext'
@@ -38,7 +37,7 @@ const USER_MENU_LINKS = [
   { label: '传输', path: '/transfer', Icon: Send },
   { label: 'API 密钥', path: '/api-console', Icon: Key },
   { label: '文档', href: clientEnv.SUPER_PUBLIC_DOCS_URL, Icon: FileText },
-  { label: '管理', href: clientEnv.SUPER_PUBLIC_ADMIN_APP_URL, Icon: Shield },
+  { label: '管理', path: '/admin', Icon: Shield },
 ]
 
 function ShellLayoutInner({ user }: { user: CurrentUser | null }) {
@@ -91,7 +90,7 @@ function ShellLayoutInner({ user }: { user: CurrentUser | null }) {
                   <Link
                     to={item.path}
                     aria-label={item.label}
-                    className={`${btnBase} ${active ? 'border-[#3a3a3a] text-[#e5e5e5] bg-white/[0.04]' : ''}`}
+                    className={`${btnBase} ${active ? 'border-[#3a3a3a] text-[#e5e5e5] bg-white/4' : ''}`}
                   >
                     <item.Icon size={15} aria-hidden="true" />
                   </Link>

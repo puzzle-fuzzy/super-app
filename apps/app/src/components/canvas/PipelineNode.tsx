@@ -49,7 +49,7 @@ export function PipelineNode({ data }: NodeProps) {
 
   return (
     <div
-      className={`relative min-w-[260px] max-w-80 rounded-xl border-2 p-4 ${STATUS_COLORS[d.status]} transition-all ${d.disabled ? 'opacity-45' : ''}`}
+      className={`relative min-w-65 max-w-80 rounded-xl border-2 p-4 ${STATUS_COLORS[d.status]} transition-all ${d.disabled ? 'opacity-45' : ''}`}
       title={d.blockedReason}
     >
       {/* Header */}
@@ -154,7 +154,7 @@ export function PipelineNode({ data }: NodeProps) {
             />
           ) : null}
           {d.status === 'succeeded' && (
-            <p className="m-0 text-[12px] text-[#22c55e]">成片已合成</p>
+            <p className="m-0 text-[12px] text-success">成片已合成</p>
           )}
           {d.status !== 'succeeded' && !d.finalVideoUrl && (
             <p className="m-0 text-[12px] text-[#888888]">

@@ -172,12 +172,12 @@ export function WorkspaceApp({ user }: { user: CurrentUser }) {
         {/* ---------------------------------------------------------------- */}
         {/*  Hero                                                           */}
         {/* ---------------------------------------------------------------- */}
-        <section className="mb-[18px] grid grid-cols-[minmax(0,1fr)_minmax(260px,0.62fr)] gap-7 rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(26px,4vw,44px)] max-[980px]:grid-cols-1">
+        <section className="mb-4.5 grid grid-cols-[minmax(0,1fr)_minmax(260px,0.62fr)] gap-7 rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(26px,4vw,44px)] max-[980px]:grid-cols-1">
           <div>
             <p className="m-0 mb-2.5 text-[10px] font-black tracking-[0.15em] uppercase text-[#666666]">
               MVP FLOW
             </p>
-            <h2 className="m-0 max-w-[640px] text-[clamp(24px,3vw,38px)] font-semibold leading-[1.02] tracking-[-0.02em]">
+            <h2 className="m-0 max-w-160 text-[clamp(24px,3vw,38px)] font-semibold leading-[1.02] tracking-[-0.02em]">
               从这里进入资产、画布和 API 能力。
             </h2>
           </div>

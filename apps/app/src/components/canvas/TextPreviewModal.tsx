@@ -11,10 +11,10 @@ export default function TextPreviewModal() {
 
   return (
     <Dialog open={!!text} onOpenChange={(open) => { if (!open) setTextPreview(null) }}>
-      <DialogContent className="max-w-[600px]">
+      <DialogContent className="max-w-150">
         <DialogBody>
           <div
-            className="py-4 text-[14px] leading-[1.7] text-[#e5e5e5] whitespace-pre-wrap break-words"
+            className="py-4 text-[14px] leading-[1.7] text-[#e5e5e5] whitespace-pre-wrap wrap-break-word"
           >
             {text}
           </div>

@@ -50,7 +50,7 @@ export function AssetCard({
       className="relative rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] transition-colors hover:border-[#3a3a3a] hover:bg-[#202020] z-0"
     >
       <div className="min-w-0">
-        <div className="relative aspect-[4/3] rounded-t-xl bg-[#242424]">
+        <div className="relative aspect-4/3 rounded-t-xl bg-[#242424]">
           {/* 来源标签 */}
           <span className="absolute top-2.5 left-2.5 z-10 rounded-md bg-[#1c1c1c]/80 px-2 py-0.5 text-[10px] font-medium text-[#999999]">
             {asset.source === 'upload' ? '上传' :
@@ -162,7 +162,7 @@ function AssetActions({
   dark?: boolean
 }) {
   return (
-    <div className="absolute bottom-2.5 left-2.5 z-[3]">
+    <div className="absolute bottom-2.5 left-2.5 z-3">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

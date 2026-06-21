@@ -88,7 +88,7 @@ export function PipelineArtifactInfoDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-[680px] flex flex-col">
+      <DialogContent className="max-w-170 flex flex-col">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>

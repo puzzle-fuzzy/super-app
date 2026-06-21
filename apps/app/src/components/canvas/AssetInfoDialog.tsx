@@ -60,7 +60,7 @@ export function AssetInfoDialog({ open, onClose, origin, fileName, src, assetId,
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-[680px] flex flex-col">
+      <DialogContent className="max-w-170 flex flex-col">
         <DialogHeader>
           <DialogTitle>资产详情</DialogTitle>
         </DialogHeader>

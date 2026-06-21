@@ -15,7 +15,7 @@ export function EmptyState({
 }) {
   return (
     <section className="grid min-h-105 place-items-center bg-transparent px-6 py-14 text-center">
-      <div className="max-w-[440px]">
+      <div className="max-w-110">
         <p className={panelKicker}>空素材库</p>
         <h2 className="mt-2.5 text-[20px] font-semibold leading-tight tracking-[-0.02em] text-[#e5e5e5]">
           还没有资产

@@ -15,7 +15,7 @@ import {
   type VideoResolution,
 } from '@super-app/ai-models'
 import type { CanvasGenerateImageRequest } from '@super-app/contracts/canvas'
-import { Select } from '@super-app/ui-react'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@super-app/ui-react'
 import { Button } from '@/components/ui/button'
 
 import { useUIStore } from '../../stores/uiStore'
@@ -205,7 +205,7 @@ export function ImageGenerationPromptBar({
     <section className="pointer-events-none fixed right-6 bottom-6 left-6 z-40 flex justify-center">
       <form
         onSubmit={submit}
-        className="pointer-events-auto w-full max-w-[860px] overflow-hidden rounded-4xl border border-[#343434] bg-[#191919] shadow-[0_14px_42px_rgba(0,0,0,0.36)]"
+        className="pointer-events-auto w-full max-w-215 overflow-hidden rounded-4xl border border-[#343434] bg-[#191919] shadow-[0_14px_42px_rgba(0,0,0,0.36)]"
       >
         <div className="grid gap-3 p-3">
           <textarea
@@ -221,52 +221,60 @@ export function ImageGenerationPromptBar({
               <div className="grid gap-3 sm:grid-cols-[1fr_220px]">
                 <label className="grid gap-1.5">
                   <span className="text-xs font-medium text-[#a3a3a3]">模型</span>
-                  <Select
-                    value={model}
-                    onChange={setModel}
-                    options={GENERATION_MODELS.map((item) => ({
-                      value: item.id,
-                      label: item.label,
-                    }))}
-                  />
+                  <Select value={model} onValueChange={(v) => setModel(v as GenerationModelId)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择模型..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GENERATION_MODELS.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>{item.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <span className="text-xs text-[#777777]">{modelConfig.description}</span>
                 </label>
 
                 {isImageGenerationModel(modelConfig) ? (
                   <label className="grid gap-1.5">
                     <span className="text-xs font-medium text-[#a3a3a3]">图片尺寸</span>
-                    <Select
-                      value={size}
-                      onChange={setSize}
-                      options={modelConfig.sizes.map((item) => ({
-                        value: item,
-                        label: imageSizeLabel(item),
-                      }))}
-                    />
+                    <Select value={size} onValueChange={(v) => setSize(v as ImageSize)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择尺寸..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {modelConfig.sizes.map((item) => (
+                          <SelectItem key={item} value={item}>{imageSizeLabel(item)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </label>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
                     <label className="grid gap-1.5">
                       <span className="text-xs font-medium text-[#a3a3a3]">视频比例</span>
-                      <Select
-                        value={ratio}
-                        onChange={setRatio}
-                        options={modelConfig.ratios.map((item) => ({
-                          value: item,
-                          label: item,
-                        }))}
-                      />
+                      <Select value={ratio} onValueChange={(v) => setRatio(v as VideoRatio)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="选择比例..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {modelConfig.ratios.map((item) => (
+                            <SelectItem key={item} value={item}>{item}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </label>
                     <label className="grid gap-1.5">
                       <span className="text-xs font-medium text-[#a3a3a3]">清晰度</span>
-                      <Select
-                        value={resolution}
-                        onChange={setResolution}
-                        options={modelConfig.resolutions.map((item) => ({
-                          value: item,
-                          label: item,
-                        }))}
-                      />
+                      <Select value={resolution} onValueChange={(v) => setResolution(v as VideoResolution)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="选择清晰度..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {modelConfig.resolutions.map((item) => (
+                            <SelectItem key={item} value={item}>{item}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </label>
                   </div>
                 )}

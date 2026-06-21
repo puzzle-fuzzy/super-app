@@ -39,7 +39,7 @@ import {
   handleUpdateApiKeyConfig,
 } from './handlers/api-keys'
 import { handleGetGatewayClientDetail, handleListGatewayClients } from './handlers/gateway'
-import { handleCreditAdd } from './handlers/credit'
+import { handleCreditAdd, handleListCreditTransactions } from './handlers/credit'
 
 export const adminModule = new Elysia({
   name: 'admin',
@@ -336,6 +336,21 @@ export const adminModule = new Elysia({
           }),
           detail: {
             summary: '用户充值',
+            tags: ['管理后台'],
+            security: [{ bearerAuth: [] }],
+          },
+        },
+      )
+      .get(
+        '/credit-transactions',
+        async ({ query }) => handleListCreditTransactions({ limit: query.limit, offset: query.offset }),
+        {
+          query: t.Object({
+            limit: t.Optional(t.Numeric()),
+            offset: t.Optional(t.Numeric()),
+          }),
+          detail: {
+            summary: '查询充值/积分交易记录',
             tags: ['管理后台'],
             security: [{ bearerAuth: [] }],
           },

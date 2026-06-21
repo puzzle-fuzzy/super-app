@@ -33,7 +33,7 @@ export function UserMenu({
             <UserRound size={14} aria-hidden="true" />
           </span>
         )}
-        <span className="max-w-[120px] truncate text-[13px] font-medium text-[#e5e5e5]">
+        <span className="max-w-30 truncate text-[13px] font-medium text-[#e5e5e5]">
           {user.name ?? user.email}
         </span>
         <ChevronDown
@@ -42,7 +42,7 @@ export function UserMenu({
         />
       </Button>
       <div
-        className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
+        className={`absolute right-0 top-full z-50 mt-2 min-w-40 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0/0.42)] ${
           open ? 'grid' : 'hidden'
         }`}
       >

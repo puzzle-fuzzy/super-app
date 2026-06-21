@@ -1,5 +1,5 @@
 import { Save } from 'lucide-react'
-import { Select } from '@super-app/ui-react'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@super-app/ui-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -60,7 +60,7 @@ export function EditorPanel({
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onCancel() }}>
-      <DialogContent className="max-w-[680px] flex flex-col">
+      <DialogContent className="max-w-170 flex flex-col">
         <DialogHeader>
           <DialogKicker>创作编辑</DialogKicker>
           <DialogTitle>{title}</DialogTitle>
@@ -112,19 +112,29 @@ function TextEditorFields({
     <>
       <div className={fieldClass}>
         <span className={fieldLabel}>类型</span>
-        <Select
-          options={TEXT_TYPE_OPTIONS}
-          value={editor.textType}
-          onChange={(value) => setEditor({ ...editor, textType: value as TextType })}
-        />
+        <Select value={editor.textType} onValueChange={(value) => setEditor({ ...editor, textType: value as TextType })}>
+          <SelectTrigger>
+            <SelectValue placeholder="请选择..." />
+          </SelectTrigger>
+          <SelectContent>
+            {TEXT_TYPE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className={fieldClass}>
         <span className={fieldLabel}>语言</span>
-        <Select
-          options={LANGUAGE_OPTIONS}
-          value={editor.language || 'zh'}
-          onChange={(value) => setEditor({ ...editor, language: value })}
-        />
+        <Select value={editor.language || 'zh'} onValueChange={(value) => setEditor({ ...editor, language: value })}>
+          <SelectTrigger>
+            <SelectValue placeholder="请选择..." />
+          </SelectTrigger>
+          <SelectContent>
+            {LANGUAGE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <label className={fieldClass}>
         <span className={fieldLabel}>正文</span>
@@ -150,11 +160,16 @@ function SubjectEditorFields({
     <>
       <div className={fieldClass}>
         <span className={fieldLabel}>主体类型</span>
-        <Select
-          options={SUBJECT_TYPE_OPTIONS}
-          value={editor.subjectType}
-          onChange={(value) => setEditor({ ...editor, subjectType: value as SubjectType })}
-        />
+        <Select value={editor.subjectType} onValueChange={(value) => setEditor({ ...editor, subjectType: value as SubjectType })}>
+          <SelectTrigger>
+            <SelectValue placeholder="请选择..." />
+          </SelectTrigger>
+          <SelectContent>
+            {SUBJECT_TYPE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <label className={fieldClass}>
         <span className={fieldLabel}>显示名称</span>
@@ -193,16 +208,16 @@ function SubjectEditorFields({
       </label>
       <div className={fieldClass}>
         <span className={fieldLabel}>一致性</span>
-        <Select
-          options={[...CONSISTENCY_OPTIONS]}
-          value={editor.consistencyLevel}
-          onChange={(value) =>
-            setEditor({
-              ...editor,
-              consistencyLevel: value as 'low' | 'medium' | 'high',
-            })
-          }
-        />
+        <Select value={editor.consistencyLevel} onValueChange={(value) => setEditor({ ...editor, consistencyLevel: value as 'low' | 'medium' | 'high' })}>
+          <SelectTrigger>
+            <SelectValue placeholder="请选择..." />
+          </SelectTrigger>
+          <SelectContent>
+            {[...CONSISTENCY_OPTIONS].map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </>
   )
@@ -219,11 +234,16 @@ function StyleEditorFields({
     <>
       <div className={fieldClass}>
         <span className={fieldLabel}>风格类型</span>
-        <Select
-          options={STYLE_TYPE_OPTIONS}
-          value={editor.styleType}
-          onChange={(value) => setEditor({ ...editor, styleType: value as StyleType })}
-        />
+        <Select value={editor.styleType} onValueChange={(value) => setEditor({ ...editor, styleType: value as StyleType })}>
+          <SelectTrigger>
+            <SelectValue placeholder="请选择..." />
+          </SelectTrigger>
+          <SelectContent>
+            {STYLE_TYPE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <label className={fieldClass}>
         <span className={fieldLabel}>正向提示词</span>
@@ -284,11 +304,16 @@ function TemplateEditorFields({
     <>
       <div className={fieldClass}>
         <span className={fieldLabel}>模板类型</span>
-        <Select
-          options={TEMPLATE_TYPE_OPTIONS}
-          value={editor.templateType}
-          onChange={(value) => setEditor({ ...editor, templateType: value as TemplateType })}
-        />
+        <Select value={editor.templateType} onValueChange={(value) => setEditor({ ...editor, templateType: value as TemplateType })}>
+          <SelectTrigger>
+            <SelectValue placeholder="请选择..." />
+          </SelectTrigger>
+          <SelectContent>
+            {TEMPLATE_TYPE_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <label className={fieldClass}>
         <span className={fieldLabel}>模板数据 JSON（可选，如 {`{"nodes":[],"layers":[]}`})</span>
@@ -314,7 +339,7 @@ export function DeleteConfirm({
 }) {
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onCancel() }}>
-      <DialogContent className="max-w-[440px]">
+      <DialogContent className="max-w-110">
         <DialogHeader>
           <DialogKicker>确认删除</DialogKicker>
           <DialogTitle>删除「{asset.title}」？</DialogTitle>

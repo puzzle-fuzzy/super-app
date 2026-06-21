@@ -30,14 +30,14 @@ export function TransferNoticeDialog({
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
-      <DialogContent className="max-w-[440px]">
+      <DialogContent className="max-w-110">
         <DialogHeader>
           <DialogKicker>传输分享</DialogKicker>
           <DialogTitle>链接已准备好</DialogTitle>
         </DialogHeader>
         <div className="px-6 pb-5">
           <p className="text-sm leading-relaxed text-[#999999]">{notice.status}</p>
-          <code className="my-4 block [overflow-wrap:anywhere] rounded-[10px] border border-[#2a2a2a] bg-[#242424] p-3 text-[13px] leading-normal text-[#e5e5e5]">
+          <code className="my-4 block wrap-anywhere rounded-[10px] border border-[#2a2a2a] bg-[#242424] p-3 text-[13px] leading-normal text-[#e5e5e5]">
             {notice.pageUrl}
           </code>
           {notice.expiresAt ? (
