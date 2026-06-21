@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import { adminFetch, formatCents, formatDate, LoadingState, ErrorState, StatCard, statusBadge } from './helpers'
+import { adminFetch, formatCents, formatDate, LoadingState, ErrorState, StatCard, statusBadge, t } from './helpers'
 import type { AdminOverview } from './types'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 
@@ -95,9 +95,9 @@ export function OverviewPanel() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Count</TableHead>
+                  <TableHead>领域</TableHead>
+                  <TableHead>状态</TableHead>
+                  <TableHead className="text-right">数量</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -138,7 +138,7 @@ export function OverviewPanel() {
                   <TableRow key={f.id} className="border-b border-[#2a2a2a]/50">
                     <TableCell>
                       <span className="text-[11px] text-[#666666] bg-[#242424] px-1.5 py-0.5 rounded">
-                        {f.kind}
+                        {t(f.kind)}
                       </span>
                     </TableCell>
                     <TableCell className="text-[#e5e5e5] max-w-50 truncate">{f.title}</TableCell>

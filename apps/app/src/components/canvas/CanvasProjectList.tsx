@@ -14,11 +14,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/material-ui-dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogBody,
+} from '@/components/ui/dialog'
 
 import { formatRelativeTime } from '@super-app/utils'
 
 import { useProjectList } from '../../hooks/useProjectList'
-import { DialogOverlay } from './ScreenState'
 
 export function CanvasProjectList({ user: _user }: {
   user: { id: string; name?: string; email: string; avatarUrl?: string }
@@ -128,7 +135,7 @@ export function CanvasProjectList({ user: _user }: {
               <div
                 key={project.id}
                 className="group relative flex min-h-45 cursor-pointer flex-col rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-5 transition-all duration-160 hover:border-[#3a3a3a] hover:bg-[#202020]"
-                onClick={() => navigate(`/project/${project.id}`)}
+                onClick={() => navigate(`/canvas/project/${project.id}`)}
               >
                 <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
@@ -184,103 +191,85 @@ export function CanvasProjectList({ user: _user }: {
       </section>
 
       {/* Create Dialog */}
-      {createOpen && (
-        <DialogOverlay onClose={() => setCreateOpen(false)}>
-          <div className="w-full max-w-100 rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
-            <h3 className="m-0 mb-4 text-base font-semibold tracking-[-0.01em]">新建画布</h3>
+      <Dialog open={createOpen} onOpenChange={(open) => { if (!open) setCreateOpen(false) }}>
+        <DialogContent className="max-w-100">
+          <DialogHeader>
+            <DialogTitle>新建画布</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
             <input
               type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleCreate()
-                if (e.key === 'Escape') setCreateOpen(false)
+                if (e.key === 'Enter') { e.preventDefault(); handleCreate() }
               }}
               placeholder="输入项目名称"
               autoFocus
-              className="mb-4 w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a]"
+              className="w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a]"
             />
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="ghost"
-                className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
-                onClick={() => setCreateOpen(false)}
-              >
-                取消
-              </Button>
-              <Button
-                className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-semibold"
-                onClick={handleCreate}
-              >
-                创建
-              </Button>
-            </div>
-          </div>
-        </DialogOverlay>
-      )}
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="ghost" className="h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={() => setCreateOpen(false)}>
+              取消
+            </Button>
+            <Button className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-semibold" onClick={handleCreate}>
+              创建
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Rename Dialog */}
-      {renameOpen && (
-        <DialogOverlay onClose={() => setRenameOpen(false)}>
-          <div className="w-full max-w-100 rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
-            <h3 className="m-0 mb-4 text-base font-semibold tracking-[-0.01em]">重命名</h3>
+      <Dialog open={renameOpen} onOpenChange={(open) => { if (!open) setRenameOpen(false) }}>
+        <DialogContent className="max-w-100">
+          <DialogHeader>
+            <DialogTitle>重命名</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
             <input
               type="text"
               value={renameTitle}
               onChange={(e) => setRenameTitle(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleRename()
-                if (e.key === 'Escape') setRenameOpen(false)
+                if (e.key === 'Enter') { e.preventDefault(); handleRename() }
               }}
               autoFocus
-              className="mb-4 w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a]"
+              className="w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a]"
             />
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="ghost"
-                className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
-                onClick={() => setRenameOpen(false)}
-              >
-                取消
-              </Button>
-              <Button
-                className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-semibold"
-                onClick={handleRename}
-              >
-                保存
-              </Button>
-            </div>
-          </div>
-        </DialogOverlay>
-      )}
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="ghost" className="h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={() => setRenameOpen(false)}>
+              取消
+            </Button>
+            <Button className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-semibold" onClick={handleRename}>
+              保存
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation */}
-      {deleteConfirm && (
-        <DialogOverlay onClose={() => setDeleteConfirm(null)}>
-          <div className="w-full max-w-100 rounded-[18px] border border-[#3a3a3a] bg-[#1c1c1c] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.42)]">
-            <h3 className="m-0 mb-2 text-base font-semibold tracking-[-0.01em]">确认删除</h3>
-            <p className="m-0 mb-5 text-sm text-[#999999]">
+      <Dialog open={!!deleteConfirm} onOpenChange={(open) => { if (!open) setDeleteConfirm(null) }}>
+        <DialogContent className="max-w-100">
+          <DialogHeader>
+            <DialogTitle>确认删除</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <p className="text-sm text-[#999999]">
               此操作不可撤销。确定要删除这个画布项目吗？
             </p>
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="ghost"
-                className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
-                onClick={() => setDeleteConfirm(null)}
-              >
-                取消
-              </Button>
-              <Button
-                variant="destructive"
-                className="h-10 rounded-[10px] px-5 text-[13px] font-semibold"
-                onClick={() => handleDelete(deleteConfirm)}
-              >
-                删除
-              </Button>
-            </div>
-          </div>
-        </DialogOverlay>
-      )}
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="ghost" className="h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={() => setDeleteConfirm(null)}>
+              取消
+            </Button>
+            <Button variant="destructive" className="h-10 rounded-[10px] px-5 text-[13px] font-semibold" onClick={() => handleDelete(deleteConfirm!)}>
+              删除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

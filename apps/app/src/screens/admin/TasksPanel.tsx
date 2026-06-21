@@ -6,12 +6,14 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 
 import {
   adminFetch,
+  CopyButton,
   formatDate,
   formatFullDate,
   LoadingState,
   ErrorState,
   SearchInput,
   statusBadge,
+  t,
 } from './helpers'
 import { TASK_STATUS_OPTIONS, TASK_DOMAIN_OPTIONS } from './types'
 import type { AdminTaskItem, AdminTaskDetail } from './types'
@@ -90,7 +92,7 @@ export function TasksPanel() {
         <SelectContent>
           {options.map((o) => (
             <SelectItem key={o} value={o}>
-              {o || '全部'}
+              {o ? t(o) : '全部'}
             </SelectItem>
           ))}
         </SelectContent>
@@ -121,54 +123,55 @@ export function TasksPanel() {
                 <TableRow>
                   <TableHead>ID</TableHead>
                   <TableHead>类型</TableHead>
-                  <TableHead>Domain</TableHead>
+                  <TableHead>领域</TableHead>
                   <TableHead>状态</TableHead>
-                  <TableHead>Owner</TableHead>
+                  <TableHead>所有者</TableHead>
                   <TableHead>创建时间</TableHead>
                   <TableHead className="text-right">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tasks.map((t) => (
-                  <TableRow key={t.id} className="border-b border-[#2a2a2a]/50">
+                {tasks.map((task) => (
+                  <TableRow key={task.id} className="border-b border-[#2a2a2a]/50">
                     <TableCell className="text-[#e5e5e5] font-mono text-[11px] max-w-30 truncate">
-                      {t.id}
+                      {task.id}
+                      <CopyButton text={task.id} className="ml-1.5" />
                     </TableCell>
-                    <TableCell className="text-[#e5e5e5]">{t.type}</TableCell>
+                    <TableCell className="text-[#e5e5e5]">{t(task.type)}</TableCell>
                     <TableCell>
                       <span className="text-[11px] text-[#666666] bg-[#242424] px-1.5 py-0.5 rounded">
-                        {t.domain}
+                        {t(task.domain)}
                       </span>
                     </TableCell>
-                    <TableCell>{statusBadge(t.status)}</TableCell>
+                    <TableCell>{statusBadge(task.status)}</TableCell>
                     <TableCell className="text-[#666666] font-mono text-[11px] max-w-20 truncate">
-                      {t.ownerId ?? '—'}
+                      {task.ownerId ?? '—'}
                     </TableCell>
                     <TableCell className="text-[#666666] whitespace-nowrap">
-                      {formatDate(t.createdAt)}
+                      {formatDate(task.createdAt)}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => openDetail(t.id)}
+                          onClick={() => openDetail(task.id)}
                           className="text-[13px] text-[#999999] hover:text-[#e5e5e5] transition-colors"
                         >
                           详情
                         </button>
-                        {(t.status === 'failed' || t.status === 'cancelled') && (
+                        {(task.status === 'failed' || task.status === 'cancelled') && (
                           <button
-                            onClick={() => doAction(t.id, 'requeue')}
-                            disabled={actionLoading === t.id}
+                            onClick={() => doAction(task.id, 'requeue')}
+                            disabled={actionLoading === task.id}
                             className="inline-flex items-center gap-1 text-[13px] text-amber-400 hover:text-amber-300 transition-colors disabled:opacity-30"
                           >
                             <RotateCcw size={12} />
                             重排
                           </button>
                         )}
-                        {(t.status === 'queued' || t.status === 'running' || t.status === 'retrying') && (
+                        {(task.status === 'queued' || task.status === 'running' || task.status === 'retrying') && (
                           <button
-                            onClick={() => doAction(t.id, 'cancel')}
-                            disabled={actionLoading === t.id}
+                            onClick={() => doAction(task.id, 'cancel')}
+                            disabled={actionLoading === task.id}
                             className="inline-flex items-center gap-1 text-[13px] text-red-400 hover:text-red-300 transition-colors disabled:opacity-30"
                           >
                             <XCircle size={12} />
@@ -209,7 +212,10 @@ export function TasksPanel() {
               <div className="space-y-4">
                 <div>
                   <div className="text-[12px] text-[#666666]">ID</div>
-                  <div className="text-sm text-[#e5e5e5] font-mono break-all">{selectedTask.id}</div>
+                  <div className="text-sm text-[#e5e5e5] font-mono break-all">
+                    {selectedTask.id}
+                    <CopyButton text={selectedTask.id} className="ml-1.5" />
+                  </div>
                 </div>
                 <div>
                   <div className="text-[12px] text-[#666666]">类型 / Domain</div>

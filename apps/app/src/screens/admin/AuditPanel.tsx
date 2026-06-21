@@ -4,9 +4,10 @@ import { Pagination } from '@/components/ui/pagination'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@super-app/ui-react'
 import { DatePicker } from '@/components/ui/date-picker'
 
-import { adminFetch, formatFullDate, LoadingState, ErrorState } from './helpers'
+import { adminFetch, CopyButton, formatFullDate, LoadingState, ErrorState, t } from './helpers'
 import type { AdminAuditLogItem } from './types'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
+import { Input } from '@/components/ui/input'
 
 export function AuditPanel() {
   const [logs, setLogs] = useState<AdminAuditLogItem[]>([])
@@ -52,12 +53,12 @@ export function AuditPanel() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-lg font-semibold text-[#e5e5e5]">审计日志</h2>
         <div className="flex items-center gap-2 flex-wrap">
-          <input
+          <Input
             type="text"
             value={accountId}
             onChange={(e) => { setAccountId(e.target.value); setOffset(0) }}
             placeholder="操作者 ID"
-            className="w-48 rounded-lg border border-[#2a2a2a] bg-[#242424] px-3 py-2 text-sm text-[#e5e5e5] placeholder-[#666666] focus:outline-none focus:border-[#3a3a3a] transition-colors"
+            className="w-48"
           />
           <Select value={action} onValueChange={(v) => { setAction(v); setOffset(0) }}>
             <SelectTrigger className="w-40">
@@ -65,10 +66,10 @@ export function AuditPanel() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部操作</SelectItem>
-              <SelectItem value="admin_action">admin_action</SelectItem>
-              <SelectItem value="api_key_revoke">api_key_revoke</SelectItem>
-              <SelectItem value="login">login</SelectItem>
-              <SelectItem value="register">register</SelectItem>
+              <SelectItem value="admin_action">{t('admin_action')}</SelectItem>
+              <SelectItem value="api_key_revoke">{t('api_key_revoke')}</SelectItem>
+              <SelectItem value="login">{t('login')}</SelectItem>
+              <SelectItem value="register">{t('register')}</SelectItem>
             </SelectContent>
           </Select>
           <DatePicker value={from} onChange={(d) => { setFrom(d); setOffset(0) }} placeholder="开始日期" />
@@ -102,10 +103,11 @@ export function AuditPanel() {
                     </TableCell>
                     <TableCell className="text-[#e5e5e5] font-mono text-[11px] max-w-25 truncate">
                       {l.operatorId}
+                      <CopyButton text={l.operatorId} className="ml-1.5" />
                     </TableCell>
                     <TableCell>
                       <span className="text-[11px] text-[#666666] bg-[#242424] px-1.5 py-0.5 rounded">
-                        {l.action}
+                        {t(l.action)}
                       </span>
                     </TableCell>
                     <TableCell className="text-[#999999] font-mono text-[11px] max-w-25 truncate">

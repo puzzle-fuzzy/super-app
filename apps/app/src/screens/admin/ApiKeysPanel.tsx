@@ -5,6 +5,7 @@ import { Pagination } from '@/components/ui/pagination'
 
 import {
   adminFetch,
+  CopyButton,
   formatDate,
   LoadingState,
   ErrorState,
@@ -156,7 +157,10 @@ export function ApiKeysPanel() {
                 </div>
                 <div>
                   <div className="text-[12px] text-[#666666]">User ID</div>
-                  <div className="text-sm text-[#e5e5e5] font-mono">{selectedClient.summary.userId}</div>
+                  <div className="text-sm text-[#e5e5e5] font-mono break-all">
+                    {selectedClient.summary.userId}
+                    <CopyButton text={selectedClient.summary.userId} className="ml-1.5" />
+                  </div>
                 </div>
                 <div>
                   <div className="text-[12px] text-[#666666]">总调用次数</div>
@@ -193,6 +197,7 @@ export function ApiKeysPanel() {
                           </div>
                           <div className="text-[12px] text-[#666666] mt-1 font-mono">
                             {k.prefix}...
+                            <CopyButton text={`${k.prefix}...`} className="ml-1.5" />
                           </div>
                           <div className="text-[11px] text-[#666666] mt-1">
                             创建: {formatDate(k.createdAt)} · 最后使用: {formatDate(k.lastUsedAt)}

@@ -1,5 +1,7 @@
-import { RefreshCw, Search } from 'lucide-react'
+import { useCallback, useState } from 'react'
+import { Check, Copy, RefreshCw, Search } from 'lucide-react'
 
+import { Input } from '@/components/ui/input'
 import { clientEnv } from '@super-app/env/client'
 
 /* -------------------------------------------------------------------------- */
@@ -65,7 +67,7 @@ export function formatFullDate(iso: string | null): string {
 }
 
 export function statusBadge(status: string) {
-  const map: Record<string, string> = {
+  const styleMap: Record<string, string> = {
     active: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     succeeded: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -78,11 +80,102 @@ export function statusBadge(status: string) {
     healthy: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     degraded: 'bg-red-500/10 text-red-400 border-red-500/20',
   }
-  const cls = map[status] ?? 'bg-[#666666]/10 text-[#999999] border-[#666666]/20'
+  const cls = styleMap[status] ?? 'bg-[#666666]/10 text-[#999999] border-[#666666]/20'
   return (
     <span className={`inline-flex rounded-md border px-2 py-0.5 text-[11px] font-medium ${cls}`}>
-      {status}
+      {t(status)}
     </span>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Chinese translations                                                      */
+/* -------------------------------------------------------------------------- */
+
+const STATUS_CN: Record<string, string> = {
+  active: '活跃',
+  completed: '已完成',
+  succeeded: '成功',
+  inactive: '停用',
+  queued: '排队中',
+  running: '运行中',
+  retrying: '重试中',
+  failed: '失败',
+  cancelled: '已取消',
+  healthy: '健康',
+  degraded: '降级',
+  generating: '生成中',
+  draft: '草稿',
+  pending: '待处理',
+  processing: '处理中',
+}
+
+const TASK_TYPE_CN: Record<string, string> = {
+  'generate.image': '图片生成',
+  'generate.video': '视频生成',
+  'canvas.analyze': '画布分析',
+  'canvas.generate': '画布生成',
+  'pipeline.analyze': '流水线-分析',
+  'pipeline.characters': '流水线-角色',
+  'pipeline.locations': '流水线-场景',
+  'pipeline.character-refs': '流水线-角色参考',
+  'pipeline.location-refs': '流水线-场景参考',
+  'pipeline.storyboard': '流水线-分镜',
+  'pipeline.continuity': '流水线-连续性',
+  'pipeline.rebuild': '流水线-重建',
+  'pipeline.dialogue': '流水线-对白',
+  'pipeline.videos': '流水线-视频',
+  'pipeline.bgm': '流水线-配乐',
+  'pipeline.assemble': '流水线-合成',
+}
+
+const DOMAIN_CN: Record<string, string> = {
+  generation: '生成',
+  canvas: '画布',
+  pipeline: '流水线',
+  subtitle: '字幕',
+  transfer: '传输',
+}
+
+const FAILURE_KIND_CN: Record<string, string> = {
+  generation: '生成',
+  task: '任务',
+  canvas_pipeline: '画布流水线',
+}
+
+const PROVIDER_CATEGORY_CN: Record<string, string> = {
+  image: '图片',
+  video: '视频',
+  text: '文本',
+  audio: '音频',
+}
+
+const CREDIT_TYPE_CN: Record<string, string> = {
+  credit: '充值',
+  reserve: '冻结',
+  debit: '扣款',
+  refund: '退款',
+  admin_adjust: '管理员调整',
+}
+
+const AUDIT_ACTION_CN: Record<string, string> = {
+  admin_action: '管理员操作',
+  api_key_revoke: '撤销 Key',
+  login: '登录',
+  register: '注册',
+}
+
+/** Translate a single key to Chinese. Supports status, domain, kind, category, credit type, audit action. */
+export function t(key: string): string {
+  return (
+    STATUS_CN[key] ??
+    TASK_TYPE_CN[key] ??
+    DOMAIN_CN[key] ??
+    FAILURE_KIND_CN[key] ??
+    PROVIDER_CATEGORY_CN[key] ??
+    CREDIT_TYPE_CN[key] ??
+    AUDIT_ACTION_CN[key] ??
+    key
   )
 }
 
@@ -136,14 +229,43 @@ export function SearchInput({
 }) {
   return (
     <div className="relative">
-      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#666666]" />
-      <input
+      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#666666] pointer-events-none" />
+      <Input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder ?? '搜索...'}
-        className="w-64 pl-9 pr-3 py-2 rounded-lg border border-[#2a2a2a] bg-[#242424] text-sm text-[#e5e5e5] placeholder-[#666666] focus:outline-none focus:border-[#3a3a3a] transition-colors"
+        className="w-64 pl-9"
       />
     </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  CopyButton                                                                */
+/* -------------------------------------------------------------------------- */
+
+export function CopyButton({ text, className }: { text: string; className?: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // fallback silently
+    }
+  }, [text])
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className={`shrink-0 inline-flex items-center justify-center align-middle rounded transition-colors hover:text-[#e5e5e5] ${copied ? 'text-emerald-400' : 'text-[#666666]'} ${className ?? ''}`}
+      title="复制"
+    >
+      {copied ? <Check size={12} /> : <Copy size={12} />}
+    </button>
   )
 }

@@ -26,7 +26,8 @@ export function useCanvasProjectLoader() {
         const result = await canvasApi.get(id!)
         if (cancelled) return
         setProject(result as unknown as ProjectDetail)
-      } catch {
+      } catch (err) {
+        console.error('加载画布项目失败:', err)
         if (!cancelled) setError(true)
       } finally {
         if (!cancelled) setLoading(false)

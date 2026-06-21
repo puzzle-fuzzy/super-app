@@ -29,19 +29,19 @@ export function useProjectList() {
     loadProjects()
   }, [loadProjects])
 
-  async function handleCreate() {
+  const handleCreate = useCallback(async () => {
     if (!newTitle.trim()) return
     try {
       await canvasApi.create({ title: newTitle.trim() })
       setNewTitle('')
       setCreateOpen(false)
       await loadProjects()
-    } catch {
-      /* Silent */
+    } catch (err) {
+      console.error('创建项目失败:', err)
     }
-  }
+  }, [newTitle, loadProjects])
 
-  async function handleRename() {
+  const handleRename = useCallback(async () => {
     if (!renameId || !renameTitle.trim()) return
     try {
       await canvasApi.update(renameId, { title: renameTitle.trim() })
@@ -49,21 +49,21 @@ export function useProjectList() {
       setRenameId(null)
       setRenameTitle('')
       await loadProjects()
-    } catch {
-      /* Silent */
+    } catch (err) {
+      console.error('重命名项目失败:', err)
     }
-  }
+  }, [renameId, renameTitle, loadProjects])
 
-  async function handleDelete(id: string) {
+  const handleDelete = useCallback(async (id: string) => {
     try {
       await canvasApi.remove(id)
       setDeleteConfirm(null)
       setMenuOpenId(null)
       await loadProjects()
-    } catch {
-      /* Silent */
+    } catch (err) {
+      console.error('删除项目失败:', err)
     }
-  }
+  }, [loadProjects])
 
   return {
     projects,

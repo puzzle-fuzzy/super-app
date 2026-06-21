@@ -63,7 +63,7 @@ export function Pagination({
   return (
     <div className={cn('mt-6 text-[#999999]', className)} aria-label="Pagination">
       {/* ── Desktop ── */}
-      <div className="hidden justify-center sm:flex">
+      <div className="hidden justify-end sm:flex">
         <ul className="flex items-center">
           <li>
             <button

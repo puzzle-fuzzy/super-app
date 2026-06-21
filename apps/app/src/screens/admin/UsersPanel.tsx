@@ -5,6 +5,7 @@ import { Pagination } from '@/components/ui/pagination'
 
 import {
   adminFetch,
+  CopyButton,
   formatDate,
   formatFullDate,
   LoadingState,
@@ -96,7 +97,10 @@ export function UsersPanel() {
                 {users.map((u) => (
                   <TableRow key={u.id} className="border-b border-[#2a2a2a]/50">
                     <TableCell className="text-[#e5e5e5]">{u.name ?? '—'}</TableCell>
-                    <TableCell className="text-[#e5e5e5]">{u.email}</TableCell>
+                    <TableCell className="text-[#e5e5e5]">
+                      {u.email}
+                      <CopyButton text={u.email} className="ml-1.5" />
+                    </TableCell>
                     <TableCell>{statusBadge(u.status)}</TableCell>
                     <TableCell className="text-[#666666]">{formatDate(u.createdAt)}</TableCell>
                     <TableCell className="text-[#666666]">{formatDate(u.lastLoginAt)}</TableCell>
@@ -140,7 +144,10 @@ export function UsersPanel() {
               <div className="space-y-4">
                 <div>
                   <div className="text-[12px] text-[#666666]">ID</div>
-                  <div className="text-sm text-[#e5e5e5] font-mono">{selectedUser.id}</div>
+                  <div className="text-sm text-[#e5e5e5] font-mono break-all">
+                    {selectedUser.id}
+                    <CopyButton text={selectedUser.id} className="ml-1.5" />
+                  </div>
                 </div>
                 <div>
                   <div className="text-[12px] text-[#666666]">邮箱</div>

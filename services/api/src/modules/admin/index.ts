@@ -39,7 +39,7 @@ import {
   handleUpdateApiKeyConfig,
 } from './handlers/api-keys'
 import { handleGetGatewayClientDetail, handleListGatewayClients } from './handlers/gateway'
-import { handleCreditAdd, handleListCreditTransactions } from './handlers/credit'
+import { handleCreditAdd, handleGetBalance, handleListCreditTransactions } from './handlers/credit'
 
 export const adminModule = new Elysia({
   name: 'admin',
@@ -321,6 +321,18 @@ export const adminModule = new Elysia({
       )
 
       // ── 充值 ──────────────────────────────────────────────
+      .get(
+        '/credit/balance',
+        async ({ query }) => handleGetBalance(query.accountId),
+        {
+          query: t.Object({ accountId: t.String() }),
+          detail: {
+            summary: '查询用户积分余额',
+            tags: ['管理后台'],
+            security: [{ bearerAuth: [] }],
+          },
+        },
+      )
       .post(
         '/credit/add',
         async ({ body, user }) =>

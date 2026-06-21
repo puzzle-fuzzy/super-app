@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Grid3X3 } from 'lucide-react'
 
 import { SSEClient } from '@super-app/api-client'
@@ -15,8 +16,17 @@ import { useAssetsData } from '../hooks/useAssetsData'
 import { FILTERS } from '../utils/asset-helpers'
 import type { FilterKind } from '../utils/asset-helpers'
 
+const VALID_FILTERS = FILTERS.map((f) => f.value)
+
 export function AssetsApp({ user }: { user: CurrentUser }) {
   const sseRef = useRef<SSEClient | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Persist filter in URL so it survives refresh
+  const initialFilter = useMemo((): FilterKind => {
+    const fromUrl = searchParams.get('filter')
+    return fromUrl && VALID_FILTERS.includes(fromUrl as FilterKind) ? (fromUrl as FilterKind) : 'all'
+  }, [])
 
   // SSE connection
   useEffect(() => {
@@ -35,7 +45,7 @@ export function AssetsApp({ user }: { user: CurrentUser }) {
 
   const {
     filter,
-    setFilter,
+    setFilter: _setFilter,
     isListLoading,
     listError,
     saving,
@@ -57,7 +67,13 @@ export function AssetsApp({ user }: { user: CurrentUser }) {
     openEditStyle,
     openEditTemplate,
     saveEditor,
-  } = useAssetsData()
+  } = useAssetsData(initialFilter)
+
+  // Sync filter changes to URL
+  const setFilter = (v: FilterKind) => {
+    _setFilter(v)
+    setSearchParams({ filter: v }, { replace: true })
+  }
 
   const [detailAssetId, setDetailAssetId] = useState<string | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)

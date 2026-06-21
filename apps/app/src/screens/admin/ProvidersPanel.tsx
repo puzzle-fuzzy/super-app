@@ -3,7 +3,7 @@ import { RefreshCw } from 'lucide-react'
 
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@super-app/ui-react'
 
-import { adminFetch, formatCents, formatDate, LoadingState, ErrorState, statusBadge } from './helpers'
+import { adminFetch, formatCents, formatDate, LoadingState, ErrorState, statusBadge, t } from './helpers'
 import type { AdminProviderStat, AdminProviderHealthSummary } from './types'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 
@@ -106,7 +106,7 @@ export function ProvidersPanel() {
                         <TableCell className="px-4 text-[#e5e5e5] font-medium">{s.model}</TableCell>
                         <TableCell className="px-4">
                           <span className="text-[11px] text-[#666666] bg-[#242424] px-1.5 py-0.5 rounded">
-                            {s.category}
+                            {t(s.category)}
                           </span>
                         </TableCell>
                         <TableCell className="px-4 text-right text-[#e5e5e5] font-mono">{s.totalCalls}</TableCell>

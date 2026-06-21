@@ -77,8 +77,10 @@ const nodeTypes = {
 
 export function EditorRoute({
   user,
+  credits = 0,
 }: {
   user: { id: string; name?: string; email: string; avatarUrl?: string }
+  credits?: number
 }) {
   const navigate = useNavigate()
   const { project, loading, error } = useCanvasProjectLoader()
@@ -94,6 +96,7 @@ export function EditorRoute({
   return (
     <EditorView
       user={user}
+      credits={credits}
       project={project}
       onBack={() => navigate('/')}
       onLogout={async () => { await logout(); navigate('/') }}
@@ -105,6 +108,7 @@ export function EditorRoute({
 
 function EditorView(props: {
   user: { id: string; name?: string; email: string; avatarUrl?: string }
+  credits?: number
   project: ProjectDetail
   onBack: () => void
   onLogout: () => void
@@ -120,11 +124,13 @@ function EditorView(props: {
 
 function EditorViewInner({
   user,
+  credits = 0,
   project,
   onBack,
   onLogout,
 }: {
   user: { id: string; name?: string; email: string; avatarUrl?: string }
+  credits?: number
   project: ProjectDetail
   onBack: () => void
   onLogout: () => void
@@ -230,6 +236,7 @@ function EditorViewInner({
         edgeCount={edgeCount}
         saveStatus={saveStatus}
         user={user}
+        credits={credits}
         userMenuOpen={userMenuOpen}
         setUserMenuOpen={setUserMenuOpen}
         onBack={onBack}

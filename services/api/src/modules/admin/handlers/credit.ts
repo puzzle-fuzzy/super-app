@@ -1,7 +1,7 @@
-import { addCredit, createAuditLog, db, getOrCreateCreditAccount } from '@super-app/db'
+import { addCredit, createAuditLog, creditBalance, db, getOrCreateCreditAccount } from '@super-app/db'
 import { creditTransactions } from '@super-app/db'
 import { count, desc } from 'drizzle-orm'
-import { ConflictError } from '../../../shared/errors'
+import { ConflictError, NotFoundError } from '../../../shared/errors'
 
 export async function handleCreditAdd(
   body: { accountId: string; amountCents: number; description?: string },
@@ -39,6 +39,20 @@ export async function handleCreditAdd(
       amountCents: Number(tx.amountCents),
       balanceAfterCents: Number(tx.balanceAfterCents),
       createdAt: tx.createdAt.toISOString(),
+    },
+  }
+}
+
+/** 管理员查询任意用户的余额 */
+export async function handleGetBalance(accountId: string) {
+  const balance = await creditBalance(accountId)
+  if (!balance) throw new NotFoundError('用户积分账户不存在')
+  return {
+    success: true,
+    data: {
+      ownerId: accountId,
+      availableCents: Number(balance.availableCents),
+      frozenCents: Number(balance.frozenCents),
     },
   }
 }

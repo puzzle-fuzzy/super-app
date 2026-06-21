@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { Pagination } from '@/components/ui/pagination'
+import { Input } from '@/components/ui/input'
 
-import { adminFetch, formatCents, formatFullDate, LoadingState, ErrorState } from './helpers'
+import { adminFetch, CopyButton, formatCents, formatFullDate, LoadingState, ErrorState, t } from './helpers'
 import type { AdminCreditTransaction } from './types'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 
@@ -12,6 +13,17 @@ export function CreditPanel() {
   const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
+
+  // Balance check (standalone)
+  const [queryAccountId, setQueryAccountId] = useState('')
+  const [queryBalance, setQueryBalance] = useState<{ availableCents: number; frozenCents: number } | null>(null)
+  const [queryLoading, setQueryLoading] = useState(false)
+  const [queryError, setQueryError] = useState<string | null>(null)
+
+  // Balance check (inline with recharge form)
+  const [balance, setBalance] = useState<{ availableCents: number; frozenCents: number } | null>(null)
+  const [balanceLoading, setBalanceLoading] = useState(false)
+  const [balanceError, setBalanceError] = useState<string | null>(null)
 
   // Transaction history
   const [txs, setTxs] = useState<AdminCreditTransaction[]>([])
@@ -46,13 +58,34 @@ export function CreditPanel() {
     fetchTransactions()
   }, [fetchTransactions])
 
+  // Real-time yuan equivalent
+  const amountNum = Number(amountCents)
+  const yuanAmount = Number.isFinite(amountNum) && amountNum > 0 ? (amountNum / 100).toFixed(2) : null
+
+  const checkBalance = async () => {
+    if (!accountId.trim()) return
+    setBalanceLoading(true)
+    setBalanceError(null)
+    try {
+      const res = await adminFetch<{
+        success: boolean
+        data: { ownerId: string; availableCents: number; frozenCents: number }
+      }>(`/credit/balance?accountId=${encodeURIComponent(accountId.trim())}`)
+      setBalance(res.data)
+    } catch (err) {
+      setBalanceError(err instanceof Error ? err.message : '查询失败')
+      setBalance(null)
+    } finally {
+      setBalanceLoading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!accountId.trim() || !amountCents) return
 
-    const amountNum = Number(amountCents)
     if (!Number.isFinite(amountNum) || amountNum < 1) {
-      setResult({ success: false, message: '金额必须为正整数（单位：分）' })
+      setResult({ success: false, message: '积分数量必须为正整数' })
       return
     }
 
@@ -78,10 +111,14 @@ export function CreditPanel() {
       })
       const pts = res.data.amountCents
       const yuan = (pts / 100).toFixed(2)
+      const afterPts = Number(res.data.balanceAfterCents)
+      const afterYuan = (afterPts / 100).toFixed(2)
       setResult({
         success: true,
-        message: `充值成功！${res.data.ownerId}\n金额: ${pts} 积分 (¥${yuan})\n充值后余额: ${Number(res.data.balanceAfterCents)} 积分 (¥${(Number(res.data.balanceAfterCents) / 100).toFixed(2)})`,
+        message: `充值成功！\n添加: ${pts} 积分 (¥${yuan})\n充值后余额: ${afterPts} 积分 (¥${afterYuan})`,
       })
+      // Update balance display
+      setBalance({ availableCents: afterPts, frozenCents: 0 })
       setAmountCents('')
       setDescription('')
       // Refresh transaction history
@@ -97,52 +134,148 @@ export function CreditPanel() {
     }
   }
 
+  // Standalone balance query
+  const doQueryBalance = async () => {
+    if (!queryAccountId.trim()) return
+    setQueryLoading(true)
+    setQueryError(null)
+    setQueryBalance(null)
+    try {
+      const res = await adminFetch<{
+        success: boolean
+        data: { ownerId: string; availableCents: number; frozenCents: number }
+      }>(`/credit/balance?accountId=${encodeURIComponent(queryAccountId.trim())}`)
+      setQueryBalance(res.data)
+    } catch (err) {
+      setQueryError(err instanceof Error ? err.message : '查询失败')
+    } finally {
+      setQueryLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-[#e5e5e5]">用户充值</h2>
 
+      {/* ── Balance query card ── */}
+      <div className="max-w-md rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] p-6">
+        <h3 className="text-sm font-medium text-[#e5e5e5] mb-4">查询积分余额</h3>
+        <div className="flex gap-2">
+          <Input
+            type="text"
+            value={queryAccountId}
+            onChange={(e) => { setQueryAccountId(e.target.value); setQueryBalance(null); setQueryError(null) }}
+            placeholder="输入用户 UUID"
+            className="flex-1"
+          />
+          <button
+            type="button"
+            onClick={doQueryBalance}
+            disabled={queryLoading || !queryAccountId.trim()}
+            className="shrink-0 px-4 py-2 rounded-lg border border-[#2a2a2a] bg-[#242424] text-[13px] text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5] transition-colors disabled:opacity-30"
+          >
+            {queryLoading ? '查询中...' : '查询'}
+          </button>
+        </div>
+        {queryError && (
+          <p className="text-[12px] text-red-400 mt-2">{queryError}</p>
+        )}
+        {queryBalance && (
+          <div className="mt-3 rounded-lg border border-[#2a2a2a] bg-[#242424] p-3 space-y-1.5">
+            <div className="flex justify-between text-[13px]">
+              <span className="text-[#999999]">可用积分</span>
+              <span className="text-emerald-400 font-mono">{queryBalance.availableCents}</span>
+            </div>
+            <div className="flex justify-between text-[13px]">
+              <span className="text-[#999999]">折合人民币</span>
+              <span className="text-[#e5e5e5] font-mono">¥{(queryBalance.availableCents / 100).toFixed(2)}</span>
+            </div>
+            {queryBalance.frozenCents > 0 && (
+              <div className="flex justify-between text-[13px]">
+                <span className="text-[#999999]">冻结积分</span>
+                <span className="text-amber-400 font-mono">{queryBalance.frozenCents}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Recharge form ── */}
       <form
         onSubmit={handleSubmit}
         className="max-w-md space-y-4 rounded-xl border border-[#2a2a2a] bg-[#1c1c1c] p-6"
       >
+        {/* Account ID + balance check */}
         <div>
           <label className="block text-[13px] text-[#999999] mb-1.5">账户 ID (User ID)</label>
-          <input
-            type="text"
-            value={accountId}
-            onChange={(e) => setAccountId(e.target.value)}
-            placeholder="输入用户 UUID"
-            required
-            className="w-full rounded-lg border border-[#2a2a2a] bg-[#242424] px-3 py-2 text-sm text-[#e5e5e5] placeholder-[#666666] focus:outline-none focus:border-[#3a3a3a] transition-colors"
-          />
+          <div className="flex gap-2">
+            <Input
+              type="text"
+              value={accountId}
+              onChange={(e) => { setAccountId(e.target.value); setBalance(null); setBalanceError(null) }}
+              placeholder="输入用户 UUID"
+              required
+              className="flex-1"
+            />
+            <button
+              type="button"
+              onClick={checkBalance}
+              disabled={balanceLoading || !accountId.trim()}
+              className="shrink-0 px-3 py-2 rounded-lg border border-[#2a2a2a] bg-[#242424] text-[13px] text-[#999999] hover:bg-[#2a2a2a] hover:text-[#e5e5e5] transition-colors disabled:opacity-30"
+            >
+              {balanceLoading ? '查询中...' : '查询余额'}
+            </button>
+          </div>
+          {/* Balance display */}
+          {balanceError && (
+            <p className="text-[12px] text-red-400 mt-1.5">{balanceError}</p>
+          )}
+          {balance && (
+            <div className="mt-2 flex gap-4 text-[12px]">
+              <span className="text-[#999999]">
+                可用: <span className="text-emerald-400 font-mono">{balance.availableCents} 积分</span>
+                <span className="text-[#666666] ml-1">(¥{(balance.availableCents / 100).toFixed(2)})</span>
+              </span>
+              {balance.frozenCents > 0 && (
+                <span className="text-[#999999]">
+                  冻结: <span className="text-amber-400 font-mono">{balance.frozenCents} 积分</span>
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
+        {/* Amount */}
         <div>
           <label className="block text-[13px] text-[#999999] mb-1.5">
-            积分数量 <span className="text-[#666666] ml-1">1积分 = 1分钱 · 100积分 = ¥1.00</span>
+            积分数量
+            <span className="text-[#666666] ml-1">1元 = 100积分</span>
           </label>
-          <input
+          <Input
             type="number"
             value={amountCents}
             onChange={(e) => setAmountCents(e.target.value)}
-            placeholder="例如: 10000 表示 ¥100.00"
+            placeholder="输入积分数，如 10000 = ¥100.00"
             min={1}
             required
-            className="w-full rounded-lg border border-[#2a2a2a] bg-[#242424] px-3 py-2 text-sm text-[#e5e5e5] placeholder-[#666666] focus:outline-none focus:border-[#3a3a3a] transition-colors"
           />
+          {yuanAmount && (
+            <p className="text-[12px] text-[#666666] mt-1">
+              等于 <span className="text-[#e5e5e5] font-mono">¥{yuanAmount}</span> 元
+            </p>
+          )}
         </div>
 
         <div>
           <label className="block text-[13px] text-[#999999] mb-1.5">
             描述 <span className="text-[#666666]">(选填)</span>
           </label>
-          <input
+          <Input
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="充值说明"
             maxLength={500}
-            className="w-full rounded-lg border border-[#2a2a2a] bg-[#242424] px-3 py-2 text-sm text-[#e5e5e5] placeholder-[#666666] focus:outline-none focus:border-[#3a3a3a] transition-colors"
           />
         </div>
 
@@ -169,9 +302,7 @@ export function CreditPanel() {
 
       {/* ── Recharge history ── */}
       <div>
-        <h3 className="text-base font-semibold text-[#e5e5e5] mb-4">
-          充值记录
-        </h3>
+        <h3 className="text-base font-semibold text-[#e5e5e5] mb-4">充值记录</h3>
         {txLoading ? (
           <LoadingState />
         ) : txError ? (
@@ -198,31 +329,32 @@ export function CreditPanel() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    txs.map((t) => (
-                      <TableRow key={t.id} className="border-b border-[#2a2a2a]/50">
+                    txs.map((tx) => (
+                      <TableRow key={tx.id} className="border-b border-[#2a2a2a]/50">
                         <TableCell className="text-[#666666] whitespace-nowrap">
-                          {formatFullDate(t.createdAt)}
+                          {formatFullDate(tx.createdAt)}
                         </TableCell>
                         <TableCell className="text-[#e5e5e5] font-mono text-[11px] max-w-25 truncate">
-                          {t.ownerId}
+                          {tx.ownerId}
+                          <CopyButton text={tx.ownerId} className="ml-1.5" />
                         </TableCell>
                         <TableCell>
                           <span className={`inline-flex rounded-md border px-1.5 py-0.5 text-[11px] font-medium ${
-                            t.type === 'credit'
+                            tx.type === 'credit'
                               ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                               : 'bg-[#666666]/10 text-[#999999] border-[#666666]/20'
                           }`}>
-                            {t.type}
+                            {t(tx.type)}
                           </span>
                         </TableCell>
                         <TableCell className="text-right text-[#e5e5e5] font-mono">
-                          {formatCents(t.amountCents)}
+                          {formatCents(tx.amountCents)}
                         </TableCell>
                         <TableCell className="text-right text-[#e5e5e5] font-mono">
-                          {formatCents(t.balanceAfterCents)}
+                          {formatCents(tx.balanceAfterCents)}
                         </TableCell>
                         <TableCell className="text-[#666666] max-w-50 truncate">
-                          {t.description ?? '—'}
+                          {tx.description ?? '—'}
                         </TableCell>
                       </TableRow>
                     ))

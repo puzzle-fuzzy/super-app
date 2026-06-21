@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Shield } from 'lucide-react'
 
 import { useRequireAuth } from '@super-app/auth-client/react'
@@ -15,10 +16,22 @@ import { ApiKeysPanel } from './admin/ApiKeysPanel'
 import { CreditPanel } from './admin/CreditPanel'
 import { AuditPanel } from './admin/AuditPanel'
 
+const VALID_TABS = NAV_ITEMS.map((i) => i.id)
+
 export function AdminApp() {
   const { user, isLoading } = useRequireAuth()
-  const [activeTab, setActiveTab] = useState('overview')
+  const [searchParams, setSearchParams] = useSearchParams()
   const [adminCheck, setAdminCheck] = useState<'loading' | 'granted' | 'denied'>('loading')
+
+  // Persist tab in URL so it survives refresh
+  const activeTab = useMemo(() => {
+    const fromUrl = searchParams.get('tab')
+    return fromUrl && VALID_TABS.includes(fromUrl) ? fromUrl : 'overview'
+  }, [searchParams])
+
+  const setActiveTab = (tab: string) => {
+    setSearchParams({ tab }, { replace: true })
+  }
 
   useEffect(() => {
     if (!user) return

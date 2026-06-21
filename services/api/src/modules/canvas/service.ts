@@ -48,7 +48,7 @@ export async function createCanvasProject({
     .insert(canvasDocuments)
     .values({
       projectId: project.id,
-      data: input.data ?? {},
+      ...(input.data ? { data: input.data } : {}),
       version: 1,
     })
     .returning()
@@ -342,9 +342,14 @@ function toCanvasProjectDetailDto(
   project: typeof canvasProjects.$inferSelect,
   document: typeof canvasDocuments.$inferSelect
 ): CanvasProjectDetailDto {
+  // Normalize empty object to null for schema compatibility
+  const docData = document.data
+  const normalized = docData && typeof docData === 'object' && !Array.isArray(docData) && Object.keys(docData).length > 0
+    ? docData
+    : null
   return {
     ...toCanvasProjectSummaryDto(project),
-    data: (document.data ?? null) as unknown as CanvasDocumentData | null,
+    data: normalized as unknown as CanvasDocumentData | null,
     version: document.version,
   }
 }

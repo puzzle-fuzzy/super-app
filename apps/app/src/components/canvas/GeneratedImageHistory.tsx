@@ -3,7 +3,6 @@ import { History, ImageIcon } from 'lucide-react'
 
 import { assetsApi } from '@super-app/api-client'
 import type { AssetDto } from '@super-app/contracts/assets'
-import { Button } from '@/components/ui/button'
 
 export function isGeneratedMediaAsset(asset: AssetDto): boolean {
   return (
@@ -56,16 +55,15 @@ export function GeneratedImageHistory({
 
   return (
     <div className="relative">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-8 gap-1.5 rounded-lg px-3 text-[12px] font-medium"
+      <button
+        type="button"
+        className="inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12px] font-medium text-[#999999] transition-colors hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
         aria-label="生成历史"
         onClick={() => setOpen((value) => !value)}
       >
         <History size={15} aria-hidden="true" />
         <span className="hidden sm:inline">生成历史</span>
-      </Button>
+      </button>
 
       {open ? (
         <div className="absolute top-12 right-0 z-50 flex w-90 max-h-80 min-h-56 flex-col gap-2 overflow-y-auto rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] px-3 py-3 shadow-[0_18px_48px_rgba(0,0,0,0.4)]">
@@ -86,10 +84,10 @@ export function GeneratedImageHistory({
               const label = generatedAssetPrompt(asset)
               const imageUrl = asset.files.find((file) => file.role === 'original')?.url
               return (
-                <Button
+                <button
                   key={asset.id}
-                  variant="ghost"
-                  className="w-full justify-start gap-3 rounded-lg p-2.5 text-left"
+                  type="button"
+                  className="flex w-full items-center gap-3 rounded-lg p-2.5 text-left transition-colors hover:bg-[#2a2a2a]"
                   aria-label={`添加 ${label}`}
                   onClick={() => {
                     onAddAsset(asset)
@@ -100,11 +98,11 @@ export function GeneratedImageHistory({
                     <img
                       src={imageUrl}
                       alt=""
-                      className="h-14 w-14 rounded-lg object-cover"
+                      className="h-14 w-14 shrink-0 rounded-lg object-cover"
                       loading="lazy"
                     />
                   ) : (
-                    <span className="flex h-14 w-14 items-center justify-center rounded-lg bg-[#141414] text-[#777777]">
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-[#141414] text-[#777777]">
                       <ImageIcon size={16} aria-hidden="true" />
                     </span>
                   )}
@@ -114,7 +112,7 @@ export function GeneratedImageHistory({
                     </span>
                     <span className="mt-1 block text-xs text-[#777777]">点击添加到画布</span>
                   </span>
-                </Button>
+                </button>
               )
             })
           )}

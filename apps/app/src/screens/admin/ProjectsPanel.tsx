@@ -85,7 +85,7 @@ export function ProjectsPanel() {
               <TableHeader>
                 <TableRow>
                   <TableHead>项目</TableHead>
-                  <TableHead>Owner</TableHead>
+                  <TableHead>所有者</TableHead>
                   <TableHead>状态</TableHead>
                   <TableHead>镜头</TableHead>
                   <TableHead>模型</TableHead>

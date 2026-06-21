@@ -45,7 +45,7 @@ function ShellLayoutInner({ user }: { user: CurrentUser | null }) {
   const [credits, setCredits] = useState<number>(0)
   const isGuest = !user
 
-  // 拉取积分余额 (仅登录用户)
+  // 拉取积分余额 (登录用户，路由切换时刷新)
   useEffect(() => {
     if (isGuest) return
     let cancelled = false
@@ -54,13 +54,16 @@ function ShellLayoutInner({ user }: { user: CurrentUser | null }) {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (!cancelled && typeof data?.availableCents === 'number') {
-          setCredits(data.availableCents / 100)
+        // API returns { success: true, data: { availableCents, frozenCents, totalCents } }
+        const raw = data?.data?.availableCents ?? data?.availableCents
+        const cents = Number(raw)
+        if (!cancelled && Number.isFinite(cents)) {
+          setCredits(cents)
         }
       })
       .catch(() => { })
     return () => { cancelled = true }
-  }, [isGuest])
+  }, [isGuest, location.pathname])
 
   const handleLogout = useCallback(async () => {
     await logout()
@@ -108,7 +111,7 @@ function ShellLayoutInner({ user }: { user: CurrentUser | null }) {
                 >
                   <span className="text-[11px] text-[#666666]">积分</span>
                   <span className="text-[11px] font-semibold text-[#e5e5e5] tabular-nums leading-none">
-                    {Math.round(credits)}
+                    {credits}
                   </span>
                 </div>
               </span>

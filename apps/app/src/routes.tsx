@@ -1,6 +1,8 @@
-import React from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 
+import { useRequireAuth } from '@super-app/auth-client/react'
+import { clientEnv } from '@super-app/env/client'
 import { RoseLoader } from '@super-app/ui-react'
 
 import { ShellLayout } from './components/ShellLayout'
@@ -25,6 +27,11 @@ const TransferApp = React.lazy(() =>
 )
 const AdminApp = React.lazy(() =>
   import('./screens/AdminApp').then((m) => ({ default: m.AdminApp }))
+)
+
+// Canvas editor — full-screen, no ShellLayout
+const EditorRoute = React.lazy(() =>
+  import('./components/canvas/EditorView').then((m) => ({ default: m.EditorRoute }))
 )
 
 function AppFallback() {
@@ -89,11 +96,47 @@ function AdminRoute() {
   )
 }
 
+/** 全屏画布编辑器 — 不使用 ShellLayout，有自己的工具栏 */
+function CanvasEditorRoute() {
+  const { user, isLoading } = useRequireAuth()
+  const [credits, setCredits] = useState(0)
+
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    fetch(`${clientEnv.SUPER_PUBLIC_API_BASE_URL}/billing/balance`, {
+      credentials: 'include',
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const raw = data?.data?.availableCents ?? data?.availableCents
+        const cents = Number(raw)
+        if (!cancelled && Number.isFinite(cents)) {
+          setCredits(cents)
+        }
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [user])
+
+  if (isLoading) return <AppFallback />
+  if (!user) return null
+
+  return (
+    <React.Suspense fallback={<AppFallback />}>
+      <EditorRoute user={user} credits={credits} />
+    </React.Suspense>
+  )
+}
+
 export function AppRoutes() {
   return (
     <Routes>
       {/* 公开路由：无需登录 */}
       <Route path="/auth/*" element={<AuthApp />} />
+
+      {/* 全屏画布编辑器（无 ShellLayout，独立工具栏） */}
+      <Route path="/canvas/project/:id" element={<CanvasEditorRoute />} />
 
       {/* 认证路由：需要登录 */}
       <Route element={<ShellLayout />}>

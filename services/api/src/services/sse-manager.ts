@@ -17,7 +17,7 @@ import type { NotificationNotifyPayload, TaskStatusNotifyPayload } from '@super-
 
 // ===== SSE 连接管理 =====
 
-const eventHub = new UserEventHub(10_000, 3)
+const eventHub = new UserEventHub(10_000, 10)
 
 /** 添加一个 SSE 连接。返回 AddConnectionResult，路由层应检查 accepted 字段 */
 export function addConnection(userId: string, send: EventSender): AddConnectionResult {

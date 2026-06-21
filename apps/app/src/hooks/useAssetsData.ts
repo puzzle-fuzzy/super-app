@@ -100,8 +100,8 @@ export interface TransferNotice {
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useAssetsData() {
-  const [filter, setFilter] = useState<FilterKind>('all')
+export function useAssetsData(initialFilter: FilterKind = 'all') {
+  const [filter, setFilter] = useState<FilterKind>(initialFilter)
   const [searchQuery, setSearchQuery] = useState('')
   const [items, setItems] = useState<AssetDto[]>([])
   const [isListLoading, setIsListLoading] = useState(false)
