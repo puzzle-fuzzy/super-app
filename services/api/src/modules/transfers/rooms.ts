@@ -4,8 +4,8 @@ import { eq, lt } from 'drizzle-orm'
 
 export interface TransferRoom {
   roomId: string
-  assetId: string
-  ownerId: string
+  assetId: string | null
+  ownerId: string | null
   title: string
   storageKey: string
   mimeType: string
@@ -21,8 +21,8 @@ export interface TransferPeer {
 
 export interface RegisterTransferRoomInput {
   roomId: string
-  assetId: string
-  ownerId: string
+  assetId?: string | null
+  ownerId?: string | null
   title: string
   storageKey: string
   mimeType: string
@@ -55,7 +55,17 @@ export async function registerTransferRoom(
   const peers = new Map<string, TransferPeer>()
   peerStore.set(input.roomId, peers)
 
-  const room: TransferRoom = { ...input, peers }
+  const room: TransferRoom = {
+    roomId: input.roomId,
+    assetId: input.assetId ?? null,
+    ownerId: input.ownerId ?? null,
+    title: input.title,
+    storageKey: input.storageKey,
+    mimeType: input.mimeType,
+    size: input.size,
+    expiresAt: input.expiresAt,
+    peers,
+  }
   return room
 }
 

@@ -12,12 +12,8 @@ export const transferRooms = transferSchema.table(
   {
     id: idColumn(),
     roomId: varchar('room_id', { length: 128 }).notNull().unique(),
-    assetId: uuid('asset_id')
-      .notNull()
-      .references(() => assets.id, { onDelete: 'cascade' }),
-    ownerId: uuid('owner_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+    assetId: uuid('asset_id').references(() => assets.id, { onDelete: 'set null' }),
+    ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'set null' }),
     title: varchar('title', { length: 240 }).notNull(),
     storageKey: varchar('storage_key', { length: 512 }).notNull(),
     mimeType: varchar('mime_type', { length: 128 }).notNull(),

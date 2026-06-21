@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowDownToLine, Loader, Wifi, WifiOff } from 'lucide-react'
+import { ArrowDownToLine, ArrowUpToLine, Check, Copy, Loader, Upload, Wifi, WifiOff } from 'lucide-react'
 
 import { clientEnv } from '@super-app/env/client'
 import type { CurrentUser } from '@super-app/contracts/auth'
@@ -31,26 +31,270 @@ interface CompletedFile {
   size: number
 }
 
+interface CreatedRoom {
+  roomId: string
+  fileName: string
+  fileSize: number
+  pageUrl: string
+  wsUrl: string
+}
+
+type PageMode = 'choose' | 'send' | 'receive'
+
 /* -------------------------------------------------------------------------- */
 /*  TransferApp                                                                */
 /* -------------------------------------------------------------------------- */
 
 export function TransferApp({ user: _user }: { user: CurrentUser | null }) {
-  const roomId = new URLSearchParams(window.location.search).get('room')
-  const [status, setStatus] = useState(roomId ? '正在连接传输房间…' : '缺少传输房间参数')
+  const roomIdFromUrl = new URLSearchParams(window.location.search).get('room')
+  const [mode, setMode] = useState<PageMode>(roomIdFromUrl ? 'receive' : 'choose')
+
+  return (
+    <main className="min-h-screen bg-[#141414] text-[#e5e5e5]">
+      <section className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5">
+        <div className="flex min-h-[80vh] items-center justify-center">
+          {mode === 'choose' && <ChooseMode onSend={() => setMode('send')} onReceive={() => setMode('receive')} />}
+          {mode === 'send' && <SendMode onBack={() => setMode('choose')} />}
+          {mode === 'receive' && (
+            <ReceiveMode roomIdFromUrl={roomIdFromUrl} onBack={roomIdFromUrl ? undefined : () => setMode('choose')} />
+          )}
+        </div>
+      </section>
+    </main>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Choose Mode                                                                */
+/* -------------------------------------------------------------------------- */
+
+function ChooseMode({ onSend, onReceive }: { onSend: () => void; onReceive: () => void }) {
+  return (
+    <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+      <h1 className="m-0 mb-2 text-[28px] font-bold tracking-[-0.02em]">
+        点对点文件传输
+      </h1>
+      <p className="mt-4 leading-[1.7] text-[#999999]">
+        无需登录，点对点传输文件。上传后生成链接，对方打开即可接收。
+      </p>
+
+      <div className="mt-8 grid grid-cols-2 gap-4 max-[680px]:grid-cols-1">
+        <button
+          type="button"
+          className="flex flex-col items-center gap-4 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-8 cursor-pointer transition-all hover:border-[#3a3a3a] hover:bg-[#1c1c1c]"
+          onClick={onSend}
+        >
+          <span className="grid h-14 w-14 place-items-center rounded-xl bg-[#1c1c1c] border border-[#2a2a2a] text-[#e5e5e5]">
+            <Upload size={24} />
+          </span>
+          <div className="text-center">
+            <p className="m-0 text-[17px] font-semibold">发送文件</p>
+            <p className="mt-1 text-[13px] text-[#666666]">上传文件生成分享链接</p>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          className="flex flex-col items-center gap-4 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-8 cursor-pointer transition-all hover:border-[#3a3a3a] hover:bg-[#1c1c1c]"
+          onClick={onReceive}
+        >
+          <span className="grid h-14 w-14 place-items-center rounded-xl bg-[#1c1c1c] border border-[#2a2a2a] text-[#e5e5e5]">
+            <ArrowDownToLine size={24} />
+          </span>
+          <div className="text-center">
+            <p className="m-0 text-[17px] font-semibold">接收文件</p>
+            <p className="mt-1 text-[13px] text-[#666666]">输入房间号或打开分享链接</p>
+          </div>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Send Mode — upload file, create room, get link                             */
+/* -------------------------------------------------------------------------- */
+
+function SendMode({ onBack }: { onBack: () => void }) {
+  const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [room, setRoom] = useState<CreatedRoom | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  async function handleCreateRoom() {
+    if (!file) return
+    setUploading(true)
+    setError(null)
+
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('fileName', file.name)
+
+      const res = await fetch(`${apiBaseUrl()}/transfers/rooms`, {
+        method: 'POST',
+        body: form,
+        credentials: 'include',
+      })
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error((body as { message?: string }).message ?? '创建传输房间失败')
+      }
+
+      const body = (await res.json()) as { data: CreatedRoom }
+      setRoom(body.data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '创建传输房间失败')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  function handleCopy() {
+    if (!room) return
+    navigator.clipboard.writeText(room.pageUrl).catch(() => {})
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1800)
+  }
+
+  if (room) {
+    return (
+      <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+        <h1 className="m-0 mb-2 text-[28px] font-bold tracking-[-0.02em]">
+          分享链接给接收方
+        </h1>
+        <p className="mt-4 leading-[1.7] text-[#999999]">
+          将以下链接发送给对方，对方打开后即可接收文件。链接有效期 {serverEnvTransferTtlSeconds()} 秒。
+        </p>
+
+        <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
+          <p className="m-0 mb-1 text-[12px] font-semibold tracking-[0.08em] text-[#666666]">
+            文件信息
+          </p>
+          <p className="m-0 text-[20px] font-bold tracking-[-0.01em] break-all">
+            {room.fileName}
+          </p>
+          <p className="m-0 mt-1 text-[13px] text-[#999999]">{formatFileSize(room.fileSize)}</p>
+
+          <div className="mt-4 flex items-center gap-2">
+            <code className="flex-1 truncate rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-4 py-3 text-[13px] text-[#e5e5e5]">
+              {room.pageUrl}
+            </code>
+            <button
+              type="button"
+              className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-[10px] border border-[#2a2a2a] bg-[#1c1c1c] text-[#e5e5e5] transition-colors hover:bg-[#2a2a2a]"
+              onClick={handleCopy}
+              title="复制链接"
+            >
+              {copied ? <Check size={16} className="text-[#34d399]" /> : <Copy size={16} />}
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="mt-4 text-[13px] font-medium text-[#666666] bg-transparent border-0 cursor-pointer hover:text-[#e5e5e5]"
+          onClick={onBack}
+        >
+          ← 返回
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+      <h1 className="m-0 mb-2 text-[28px] font-bold tracking-[-0.02em]">
+        发送文件
+      </h1>
+      <p className="mt-4 leading-[1.7] text-[#999999]">
+        选择要发送的文件，生成一个安全链接分享给对方。
+      </p>
+
+      <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
+        <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-[#2a2a2a] p-10 transition-colors hover:border-[#3a3a3a]">
+          <Upload size={28} className="text-[#666666]" />
+          <span className="text-[14px] font-medium text-[#e5e5e5]">
+            {file ? file.name : '点击选择文件'}
+          </span>
+          <span className="text-[12px] text-[#666666]">
+            {file ? formatFileSize(file.size) : '任意类型，最大 100 MB'}
+          </span>
+          <input
+            type="file"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) setFile(f)
+            }}
+          />
+        </label>
+
+        {error && (
+          <p className="mt-4 m-0 text-[13px] text-[#f87171]">{error}</p>
+        )}
+
+        <button
+          type="button"
+          disabled={!file || uploading}
+          className="mt-5 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-md border-0 bg-[#e5e5e5] text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed"
+          onClick={handleCreateRoom}
+        >
+          {uploading ? (
+            <>
+              <Loader size={16} className="animate-spin" />
+              创建传输房间…
+            </>
+          ) : (
+            <>
+              <ArrowUpToLine size={16} />
+              生成分享链接
+            </>
+          )}
+        </button>
+      </div>
+
+      <button
+        type="button"
+        className="mt-4 text-[13px] font-medium text-[#666666] bg-transparent border-0 cursor-pointer hover:text-[#e5e5e5]"
+        onClick={onBack}
+      >
+        ← 返回
+      </button>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Receive Mode — join room, receive file                                     */
+/* -------------------------------------------------------------------------- */
+
+function ReceiveMode({ roomIdFromUrl, onBack }: { roomIdFromUrl: string | null; onBack?: () => void }) {
+  const [roomId, setRoomId] = useState(roomIdFromUrl ?? '')
+  const [joined, setJoined] = useState(!!roomIdFromUrl)
+  const [status, setStatus] = useState(roomIdFromUrl ? '正在连接传输房间…' : '')
   const [peerId, setPeerId] = useState<string | null>(null)
   const [offer, setOffer] = useState<FileOffer | null>(null)
   const [progress, setProgress] = useState(0)
   const [completed, setCompleted] = useState<CompletedFile | null>(null)
   const [connected, setConnected] = useState(false)
+  const [joinError, setJoinError] = useState<string | null>(null)
   const socketRef = useRef<WebSocket | null>(null)
   const offerRef = useRef<FileOffer | null>(null)
   const connectionRef = useRef<RTCPeerConnection | null>(null)
   const chunksRef = useRef<ArrayBuffer[]>([])
   const receivedRef = useRef(0)
 
+  function joinRoom() {
+    if (!roomId.trim()) return
+    setJoinError(null)
+    setJoined(true)
+  }
+
   useEffect(() => {
-    if (!roomId) return
+    if (!joined || !roomId) return
 
     void loadRoomFileInfo(roomId)
 
@@ -109,12 +353,13 @@ export function TransferApp({ user: _user }: { user: CurrentUser | null }) {
       connectionRef.current?.close()
       if (completed?.url) URL.revokeObjectURL(completed.url)
     }
-  }, [roomId])
+  }, [joined, roomId])
 
   async function loadRoomFileInfo(id: string) {
     const response = await fetch(`${apiBaseUrl()}/transfers/${encodeURIComponent(id)}/file-info`)
     if (!response.ok) {
-      setStatus('传输房间不存在或已过期')
+      setJoinError('传输房间不存在或已过期')
+      setJoined(false)
       return
     }
 
@@ -227,119 +472,145 @@ export function TransferApp({ user: _user }: { user: CurrentUser | null }) {
     }
   }
 
-  /* ---- Render ---------------------------------------------------------- */
+  // Join room form (manual entry, no ?room= in URL)
+  if (!joined) {
+    return (
+      <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+        <h1 className="m-0 mb-2 text-[28px] font-bold tracking-[-0.02em]">
+          接收文件
+        </h1>
+        <p className="mt-4 leading-[1.7] text-[#999999]">
+          输入发送方分享的房间 ID 或完整链接。
+        </p>
 
-  const hasError = !roomId
-  const isConnecting = !!roomId && !offer && !completed
+        <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
+          <input
+            type="text"
+            value={roomId}
+            onChange={(e) => setRoomId(extractRoomId(e.target.value))}
+            onKeyDown={(e) => e.key === 'Enter' && joinRoom()}
+            placeholder="输入房间 ID 或粘贴链接"
+            className="w-full h-12 border border-[#2a2a2a] rounded-[10px] bg-[#242424] px-4 text-[14px] text-[#e5e5e5] outline-none focus:border-[#3a3a3a] placeholder:text-[#666666]"
+          />
+
+          {joinError && (
+            <p className="mt-3 m-0 text-[13px] text-[#f87171]">{joinError}</p>
+          )}
+
+          <button
+            type="button"
+            disabled={!roomId.trim()}
+            className="mt-4 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-md border-0 bg-[#e5e5e5] text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed"
+            onClick={joinRoom}
+          >
+            <ArrowDownToLine size={16} />
+            加入房间
+          </button>
+        </div>
+
+        {onBack && (
+          <button
+            type="button"
+            className="mt-4 text-[13px] font-medium text-[#666666] bg-transparent border-0 cursor-pointer hover:text-[#e5e5e5]"
+            onClick={onBack}
+          >
+            ← 返回
+          </button>
+        )}
+      </div>
+    )
+  }
+
+  // Receiver mode — connected
+  const isConnecting = !completed && !offer
   const isReady = !!offer && !completed
   const isDone = !!completed
 
   return (
-    <main className="min-h-screen bg-[#141414] text-[#e5e5e5]">
-      <section className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5">
-        {/* Card — vertically centered */}
-        <div className="flex min-h-[80vh] items-center justify-center">
-          <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
-            {/* Kicker + Title */}
-            <p className="mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
-              P2P FILE TRANSFER
-            </p>
-            <h1 className="m-0 text-[clamp(36px,7vw,56px)] font-bold leading-[0.98] tracking-[-0.02em]">
-              局域网文件接收
-            </h1>
+    <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+      <h1 className="m-0 mb-2 text-[28px] font-bold tracking-[-0.02em]">
+        接收文件
+      </h1>
 
-            {/* Connection indicator */}
-            <div className="mt-5 flex items-center gap-2">
-              {connected ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#064e3b] px-3 py-1 text-[12px] font-semibold text-[#34d399]">
-                  <Wifi size={12} />
-                  已连接
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#2a1f1f] px-3 py-1 text-[12px] font-semibold text-[#f87171]">
-                  <WifiOff size={12} />
-                  {roomId ? '未连接' : '无房间'}
-                </span>
-              )}
-              {peerId && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1e293b] px-3 py-1 text-[12px] font-semibold text-[#60a5fa]">
-                  设备 {peerId.slice(0, 8)}
-                </span>
-              )}
-            </div>
+      {/* Connection indicator */}
+      <div className="mt-5 flex items-center gap-2">
+        {connected ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#064e3b] px-3 py-1 text-[12px] font-semibold text-[#34d399]">
+            <Wifi size={12} />
+            已连接
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#2a1f1f] px-3 py-1 text-[12px] font-semibold text-[#f87171]">
+            <WifiOff size={12} />
+            未连接
+          </span>
+        )}
+        {peerId && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1e293b] px-3 py-1 text-[12px] font-semibold text-[#60a5fa]">
+            设备 {peerId.slice(0, 8)}
+          </span>
+        )}
+      </div>
 
-            {/* Status */}
-            <p className="mt-5 leading-[1.7] text-[#999999]">{status}</p>
+      <p className="mt-5 leading-[1.7] text-[#999999]">{status}</p>
 
-            {/* File Offer Card */}
-            {isReady && offer && (
-              <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
-                <p className="m-0 mb-1 text-[12px] font-semibold tracking-[0.08em] text-[#666666]">
-                  待接收文件
-                </p>
-                <p className="m-0 text-[20px] font-bold tracking-[-0.01em] break-all">
-                  {offer.fileName}
-                </p>
-                <p className="m-0 mt-1 text-[13px] text-[#999999]">{formatFileSize(offer.fileSize)}</p>
-                <button
-                  type="button"
-                  className="mt-5 flex h-11 cursor-pointer items-center gap-2 rounded-md border-0 bg-[#e5e5e5] px-6 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
-                  onClick={acceptOffer}
-                >
-                  <ArrowDownToLine size={16} />
-                  接收文件
-                </button>
-              </div>
-            )}
+      {/* File Offer Card */}
+      {isReady && offer && (
+        <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
+          <p className="m-0 mb-1 text-[12px] font-semibold tracking-[0.08em] text-[#666666]">
+            待接收文件
+          </p>
+          <p className="m-0 text-[20px] font-bold tracking-[-0.01em] break-all">
+            {offer.fileName}
+          </p>
+          <p className="m-0 mt-1 text-[13px] text-[#999999]">{formatFileSize(offer.fileSize)}</p>
+          <button
+            type="button"
+            className="mt-5 flex h-11 cursor-pointer items-center gap-2 rounded-md border-0 bg-[#e5e5e5] px-6 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
+            onClick={acceptOffer}
+          >
+            <ArrowDownToLine size={16} />
+            接收文件
+          </button>
+        </div>
+      )}
 
-            {/* Connecting state */}
-            {isConnecting && (
-              <div className="mt-6 flex items-center gap-3 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
-                <Loader size={20} className="animate-spin text-[#666666]" />
-                <p className="m-0 text-[14px] text-[#999999]">等待发送方接入…</p>
-              </div>
-            )}
+      {/* Connecting state */}
+      {isConnecting && (
+        <div className="mt-6 flex items-center gap-3 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
+          <Loader size={20} className="animate-spin text-[#666666]" />
+          <p className="m-0 text-[14px] text-[#999999]">等待发送方接入…</p>
+        </div>
+      )}
 
-            {/* Error state */}
-            {hasError && (
-              <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
-                <p className="m-0 text-[14px] text-[#999999]">
-                  请使用资产库中的「传输」功能生成的链接来访问此页面。
-                </p>
-              </div>
-            )}
-
-            {/* Progress */}
-            {progress > 0 && !completed && (
-              <div className="mt-6">
-                <div className="mb-2 flex items-center justify-between text-[12px] text-[#666666]">
-                  <span>接收进度</span>
-                  <span>{progress}%</span>
-                </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-[#2a2a2a]">
-                  <div
-                    className="h-full rounded-full bg-[#e5e5e5] transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Completed Download */}
-            {isDone && completed && (
-              <a
-                className="mt-6 flex h-11 cursor-pointer items-center justify-center gap-2 rounded-md border-0 bg-[#064e3b] px-6 text-[13px] font-semibold text-[#34d399] no-underline transition-colors hover:bg-[#065f46]"
-                href={completed.url}
-                download={completed.fileName}
-              >
-                <ArrowDownToLine size={16} />
-                下载 {completed.fileName}（{formatFileSize(completed.size)}）
-              </a>
-            )}
+      {/* Progress */}
+      {progress > 0 && !completed && (
+        <div className="mt-6">
+          <div className="mb-2 flex items-center justify-between text-[12px] text-[#666666]">
+            <span>接收进度</span>
+            <span>{progress}%</span>
+          </div>
+          <div className="h-2.5 overflow-hidden rounded-full bg-[#2a2a2a]">
+            <div
+              className="h-full rounded-full bg-[#e5e5e5] transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
           </div>
         </div>
-      </section>
-    </main>
+      )}
+
+      {/* Completed Download */}
+      {isDone && completed && (
+        <a
+          className="mt-6 flex h-11 cursor-pointer items-center justify-center gap-2 rounded-md border-0 bg-[#064e3b] px-6 text-[13px] font-semibold text-[#34d399] no-underline transition-colors hover:bg-[#065f46]"
+          href={completed.url}
+          download={completed.fileName}
+        >
+          <ArrowDownToLine size={16} />
+          下载 {completed.fileName}（{formatFileSize(completed.size)}）
+        </a>
+      )}
+    </div>
   )
 }
 
@@ -366,4 +637,17 @@ function parseSignalingMessage(raw: unknown): SignalingMessage | null {
   } catch {
     return null
   }
+}
+
+function extractRoomId(input: string): string {
+  try {
+    const url = new URL(input)
+    return url.searchParams.get('room') ?? input.trim()
+  } catch {
+    return input.trim()
+  }
+}
+
+function serverEnvTransferTtlSeconds(): number {
+  return 180
 }

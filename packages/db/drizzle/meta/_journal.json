@@ -127,6 +127,13 @@
       "when": 1782018980574,
       "tag": "0017_asset-references",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1782041303734,
+      "tag": "0018_fearless_carnage",
+      "breakpoints": true
     }
   ]
 }

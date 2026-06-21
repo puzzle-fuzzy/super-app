@@ -1,6 +1,8 @@
 import React from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
+import { RoseLoader } from '@super-app/ui-react'
+
 import { ShellLayout } from './components/ShellLayout'
 import { useShell, useShellUser } from './components/ShellContext'
 import { AuthApp } from './screens/AuthApp'
@@ -25,7 +27,7 @@ const TransferApp = React.lazy(() =>
 function AppFallback() {
   return (
     <div className="grid min-h-screen place-items-center bg-[#141414]">
-      <p className="text-[#999999]">加载中…</p>
+      <RoseLoader />
     </div>
   )
 }

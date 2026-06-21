@@ -3,6 +3,7 @@ import React from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { SSEClient } from '@super-app/api-client'
+import { RoseLoader } from '@super-app/ui-react'
 import type { CurrentUser } from '@super-app/contracts/auth'
 
 import { useCanvasStore } from '../stores/canvasStore'
@@ -91,7 +92,7 @@ export function CanvasApp({ user }: { user: CurrentUser }) {
       <Route
         path="/pipeline"
         element={
-          <React.Suspense fallback={<div className="grid min-h-screen place-items-center bg-[#141414]"><p className="text-[#999999]">加载中…</p></div>}>
+          <React.Suspense fallback={<div className="grid min-h-screen place-items-center bg-[#141414]"><RoseLoader /></div>}>
             <PipelineList user={user} />
           </React.Suspense>
         }
@@ -99,7 +100,7 @@ export function CanvasApp({ user }: { user: CurrentUser }) {
       <Route
         path="/pipeline/:id"
         element={
-          <React.Suspense fallback={<div className="grid min-h-screen place-items-center bg-[#141414]"><p className="text-[#999999]">加载中…</p></div>}>
+          <React.Suspense fallback={<div className="grid min-h-screen place-items-center bg-[#141414]"><RoseLoader /></div>}>
             <PipelineEditorRoute user={user} />
           </React.Suspense>
         }

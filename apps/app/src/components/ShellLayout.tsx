@@ -1,5 +1,6 @@
-import { Suspense, useCallback, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
+import { RoseLoader } from '@super-app/ui-react'
 import {
   FileText,
   FolderOpen,
@@ -228,7 +229,7 @@ function ShellLayoutInner({ user }: { user: CurrentUser | null }) {
           <Suspense
             fallback={
               <div className="grid min-h-[60vh] place-items-center">
-                <p className="text-[#999999]">加载中…</p>
+                <RoseLoader />
               </div>
             }
           >
@@ -244,31 +245,61 @@ export function ShellLayout() {
   const location = useLocation()
   const isTransferRoute = location.pathname.startsWith('/transfer')
   const { user, isLoading, error } = useCurrentUser()
+  const [overlay, setOverlay] = useState<'visible' | 'fading' | 'hidden'>('visible')
+  const startedRef = useRef(0)
 
-  // 加载中
-  if (isLoading) {
-    return (
-      <main className="grid min-h-screen place-items-center bg-[#141414] p-6">
-        <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8">
-          <h1 className="m-0 mb-3 text-[34px] font-bold text-[#e5e5e5]">
-            正在确认登录状态
-          </h1>
-          <p className="m-0 text-[#999999]">Super 正在连接你的云端工作区。</p>
-        </div>
-      </main>
-    )
-  }
+  // 管理 loading overlay：至少展示 500ms，然后淡出
+  useEffect(() => {
+    if (isLoading) {
+      startedRef.current = performance.now()
+      setOverlay('visible')
+      return
+    }
 
-  // transfer 页面：游客可进入（不重定向）
-  if (isTransferRoute) {
-    return <ShellLayoutInner user={user ?? null} />
-  }
+    // isLoading 结束 → 确保至少过了 500ms 再淡出
+    const elapsed = performance.now() - startedRef.current
+    const remaining = Math.max(0, 500 - elapsed)
 
-  // 其他页面：必须登录
-  if (error || !user) {
-    redirectToLogin()
+    const timer = setTimeout(() => setOverlay('fading'), remaining)
+    return () => clearTimeout(timer)
+  }, [isLoading])
+
+  // 淡出完成后移除 overlay
+  useEffect(() => {
+    if (overlay !== 'fading') return
+    const timer = setTimeout(() => setOverlay('hidden'), 500)
+    return () => clearTimeout(timer)
+  }, [overlay])
+
+  // 实际要渲染的内容
+  const content = (() => {
+    if (isTransferRoute) {
+      return <ShellLayoutInner user={user ?? null} />
+    }
+    if (!isLoading && (error || !user)) {
+      redirectToLogin()
+      return null
+    }
+    if (user) {
+      return <ShellLayoutInner user={user} />
+    }
     return null
-  }
+  })()
 
-  return <ShellLayoutInner user={user} />
+  return (
+    <>
+      {content}
+
+      {/* Loading overlay — 始终在内容之上 */}
+      {overlay !== 'hidden' && (
+        <div
+          className={`fixed inset-0 z-100 grid place-items-center bg-[#141414] transition-opacity duration-500 ${
+            overlay === 'fading' ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+        >
+          <RoseLoader />
+        </div>
+      )}
+    </>
+  )
 }

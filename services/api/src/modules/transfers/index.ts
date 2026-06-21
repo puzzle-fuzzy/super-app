@@ -10,6 +10,7 @@ import {
   addTransferPeer,
   broadcastToTransferRoom,
   getTransferRoom,
+  registerTransferRoom,
   removeTransferPeer,
   sendToTransferPeer,
 } from './rooms'
@@ -22,8 +23,58 @@ interface SignalingMessage {
 
 const socketPeers = new WeakMap<object, string>()
 
+function transferRoomTtlMs(): number {
+  return serverEnv.TRANSFER_ROOM_TTL_SECONDS * 1000
+}
+
 export const transfersModule = new Elysia({ name: 'transfers', detail: { tags: ['传输'] } })
   .use(storagePlugin)
+  // 公开端点：创建传输房间（无需登录），接受文件上传
+  .post(
+    '/transfers/rooms',
+    async ({ storage, body }) => {
+      const roomId = crypto.randomUUID()
+      const fileName = body.fileName ?? body.file.name
+      const fileBuffer = Buffer.from(await body.file.arrayBuffer())
+      const storageKey = `transfers/guest/${roomId}/${fileName}`
+
+      await storage.put({
+        key: storageKey,
+        body: fileBuffer,
+        mimeType: body.file.type || 'application/octet-stream',
+      })
+
+      const expiresAt = new Date(Date.now() + transferRoomTtlMs())
+      const transferBaseUrl = serverEnv.TRANSFER_APP_URL.replace(/\/?$/, '/')
+      const apiBaseUrl = serverEnv.API_BASE_URL.replace(/\/$/, '')
+      const wsBaseUrl = apiBaseUrl.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:')
+
+      registerTransferRoom({
+        roomId,
+        expiresAt,
+        title: fileName,
+        storageKey,
+        mimeType: body.file.type || 'application/octet-stream',
+        size: body.file.size,
+      })
+
+      return ok({
+        roomId,
+        fileName,
+        fileSize: body.file.size,
+        pageUrl: `${transferBaseUrl}?room=${encodeURIComponent(roomId)}`,
+        wsUrl: `${wsBaseUrl}/transfers/${encodeURIComponent(roomId)}/ws`,
+        expiresAt: expiresAt.toISOString(),
+      })
+    },
+    {
+      body: t.Object({
+        file: t.File({ type: 'application/octet-stream' }),
+        fileName: t.Optional(t.String()),
+      }),
+      detail: { summary: '创建传输房间（公开，无需登录）', tags: ['传输'] },
+    }
+  )
   .get(
     '/transfers/:roomId/file-info',
     async ({ params }) => {
