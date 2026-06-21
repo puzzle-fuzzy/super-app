@@ -4,7 +4,7 @@ import { Box, ChevronDown, Image, Key, LogOut, Send, UserRound } from 'lucide-re
 import { assetsApi, canvasApi } from '@super-app/api-client'
 import { clientEnv } from '@super-app/env/client'
 import { logout } from '@super-app/auth-client'
-import { useRequireAuth } from '@super-app/auth-client/react'
+import type { CurrentUser } from '@super-app/contracts/auth'
 import type { AssetDto } from '@super-app/contracts/assets'
 import type { CanvasProjectDto } from '@super-app/contracts/canvas'
 
@@ -87,8 +87,7 @@ function toRecentProject(project: CanvasProjectDto): RecentItem {
 /*  WorkspaceApp                                                              */
 /* -------------------------------------------------------------------------- */
 
-export function WorkspaceApp() {
-  const { user, isLoading, error } = useRequireAuth()
+export function WorkspaceApp({ user }: { user: CurrentUser }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [recentAssets, setRecentAssets] = useState<RecentItem[]>([])
   const [recentProjects, setRecentProjects] = useState<RecentItem[]>([])
@@ -149,14 +148,6 @@ export function WorkspaceApp() {
       cancelled = true
     }
   }, [user, dataLoaded])
-
-  if (isLoading) {
-    return <ScreenState title="正在确认登录状态" description="Super 正在连接你的云端工作区。" />
-  }
-
-  if (error || !user) {
-    return <ScreenState title="需要登录" description="正在跳转到统一登录中心。" />
-  }
 
   async function handleLogout() {
     await logout()
@@ -394,24 +385,4 @@ function formatRelativeTime(iso: string): string {
   if (diffHrs < 24) return `${diffHrs} 小时前`
   if (diffDays < 30) return `${diffDays} 天前`
   return date.toLocaleDateString('zh-CN')
-}
-
-/* -------------------------------------------------------------------------- */
-/*  ScreenState                                                               */
-/* -------------------------------------------------------------------------- */
-
-function ScreenState({ title, description }: { title: string; description: string }) {
-  return (
-    <main className="grid min-h-screen place-items-center bg-[#141414] p-6">
-      <div className="w-full max-w-[560px] rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.24)]">
-        <p className="m-0 mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
-          SUPER WORKSPACE
-        </p>
-        <h1 className="m-0 mb-3 text-[34px] font-bold leading-tight tracking-[-0.02em] text-[#e5e5e5]">
-          {title}
-        </h1>
-        <p className="m-0 text-[#999999]">{description}</p>
-      </div>
-    </main>
-  )
 }

@@ -29,7 +29,7 @@ export function ConsoleApp() {
   return <ConsoleAppContent user={user} />
 }
 
-function ConsoleAppContent({
+export function ConsoleAppContent({
   user,
 }: {
   user: { id: string; name?: string | undefined; email: string; avatarUrl?: string | undefined }

@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react'
 import React from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { SSEClient } from '@super-app/api-client'
-import { useRequireAuth } from '@super-app/auth-client/react'
+import type { CurrentUser } from '@super-app/contracts/auth'
 
 import { useCanvasStore } from '../stores/canvasStore'
 import type { AppNode, ImageNodeType, VideoNodeType } from '../types'
@@ -11,7 +11,6 @@ import { buildAiGeneratedOrigin } from '../utils/assetNodeMapping'
 
 import { CanvasProjectList } from '../components/CanvasProjectList'
 import { EditorRoute } from '../components/EditorView'
-import { ScreenState } from '../components/ScreenState'
 
 // Pipeline routes (lazy) — CanvasApp.tsx 主包体不包含 Pipeline 代码，
 // 仅在用户导航到 /pipeline 或 /pipeline/:id 时按需加载。
@@ -30,8 +29,7 @@ function isMediaNode(node: AppNode): node is ImageNodeType | VideoNodeType {
 /*  CanvasApp  — entry point with router                                       */
 /* -------------------------------------------------------------------------- */
 
-export function CanvasApp() {
-  const { user, isLoading, error } = useRequireAuth()
+export function CanvasApp({ user }: { user: CurrentUser }) {
   const sseRef = useRef<SSEClient | null>(null)
 
   // SSE 连接 — 接收 task_status 事件，回填 canvas 节点
@@ -86,37 +84,27 @@ export function CanvasApp() {
     }
   }, [user])
 
-  if (isLoading) {
-    return <ScreenState title="正在确认登录状态" description="Super 正在连接你的云端工作区。" />
-  }
-
-  if (error || !user) {
-    return <ScreenState title="需要登录" description="正在跳转到统一登录中心。" />
-  }
-
   return (
-    <BrowserRouter basename="/canvas">
-      <Routes>
-        <Route path="/" element={<CanvasProjectList user={user} />} />
-        <Route path="/project/:id" element={<EditorRoute user={user} />} />
-        <Route
-          path="/pipeline"
-          element={
-            <React.Suspense fallback={<div className="grid min-h-screen place-items-center bg-[#141414]"><p className="text-[#999999]">加载中…</p></div>}>
-              <PipelineList user={user} />
-            </React.Suspense>
-          }
-        />
-        <Route
-          path="/pipeline/:id"
-          element={
-            <React.Suspense fallback={<div className="grid min-h-screen place-items-center bg-[#141414]"><p className="text-[#999999]">加载中…</p></div>}>
-              <PipelineEditorRoute user={user} />
-            </React.Suspense>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<CanvasProjectList user={user} />} />
+      <Route path="/project/:id" element={<EditorRoute user={user} />} />
+      <Route
+        path="/pipeline"
+        element={
+          <React.Suspense fallback={<div className="grid min-h-screen place-items-center bg-[#141414]"><p className="text-[#999999]">加载中…</p></div>}>
+            <PipelineList user={user} />
+          </React.Suspense>
+        }
+      />
+      <Route
+        path="/pipeline/:id"
+        element={
+          <React.Suspense fallback={<div className="grid min-h-screen place-items-center bg-[#141414]"><p className="text-[#999999]">加载中…</p></div>}>
+            <PipelineEditorRoute user={user} />
+          </React.Suspense>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }

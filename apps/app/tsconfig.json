@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@app/workspace/*": ["../workspace/src/*"],
+      "@app/assets/*": ["../assets/src/*"],
+      "@app/canvas/*": ["../canvas/src/*"],
+      "@app/console/*": ["../console/src/*"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

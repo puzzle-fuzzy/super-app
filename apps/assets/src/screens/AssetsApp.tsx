@@ -1,31 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+  ArrowLeftRight,
   Grid3X3,
-  House,
-  LayoutTemplate,
+  Images,
+  Key,
   LogOut,
-  Palette,
-  Search,
-  Upload,
+  PenTool,
   UserRound,
 } from 'lucide-react'
-import { FileText } from 'lucide-react'
 
 import { SSEClient } from '@super-app/api-client'
-import { useRequireAuth } from '@super-app/auth-client/react'
+import type { CurrentUser } from '@super-app/contracts/auth'
 import { clientEnv } from '@super-app/env/client'
 import { AssetCard } from '../components/AssetCard'
 import { AssetDetailDialog } from '../components/AssetDetailDialog'
 import { EditorPanel, DeleteConfirm } from '../components/AssetEditorDialogs'
 import { EmptyState } from '../components/EmptyState'
 import { LoadingState } from '../components/LoadingState'
-import { StateScreen } from '../components/StateScreen'
 import { TransferNoticeDialog } from '../components/TransferNoticeDialog'
 import { useAssetsData } from '../hooks/useAssetsData'
-import { FILTERS, menuItem, primaryButton, secondaryButton } from '../utils/asset-helpers'
+import { FILTERS, menuItem } from '../utils/asset-helpers'
 
-export function AssetsApp() {
-  const { user, isLoading, error } = useRequireAuth()
+export function AssetsApp({ user }: { user: CurrentUser }) {
   const sseRef = useRef<SSEClient | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -47,12 +43,9 @@ export function AssetsApp() {
   const {
     filter,
     setFilter,
-    searchQuery,
-    setSearchQuery,
     isListLoading,
     listError,
     uploading,
-    uploadProgress,
     saving,
     editor,
     setEditor,
@@ -132,15 +125,6 @@ export function AssetsApp() {
     }
   }, [userMenuOpen])
 
-  // early state screens
-  if (isLoading) {
-    return <StateScreen title="正在确认登录状态" description="Super 正在连接资产中心。" />
-  }
-
-  if (error || !user) {
-    return <StateScreen title="需要登录" description="正在跳转到统一登录中心。" />
-  }
-
   function openNewText() {
     setEditor({ kind: 'text', title: '', textType: 'prompt', content: '', language: 'zh' })
   }
@@ -155,28 +139,6 @@ export function AssetsApp() {
       appearancePrompt: '',
       negativePrompt: '',
       consistencyLevel: 'medium',
-    })
-  }
-
-  function openNewStyle() {
-    setEditor({
-      kind: 'style',
-      title: '',
-      styleType: 'visual',
-      positivePrompt: '',
-      negativePrompt: '',
-      recommendedModel: '',
-      colorPalette: '',
-      recommendedParams: '',
-    })
-  }
-
-  function openNewTemplate() {
-    setEditor({
-      kind: 'template',
-      title: '',
-      templateType: 'prompt',
-      templateData: '',
     })
   }
 
@@ -197,7 +159,7 @@ export function AssetsApp() {
               </p>
             </div>
             <div className="flex items-center justify-end gap-3 max-[920px]:flex-wrap max-[920px]:justify-start">
-              <label className="relative flex w-[min(100%,264px)] items-center max-[920px]:w-full">
+              {/* <label className="relative flex w-[min(100%,264px)] items-center max-[920px]:w-full">
                 <Search
                   className="pointer-events-none absolute left-3 text-[#666666]"
                   size={16}
@@ -222,8 +184,8 @@ export function AssetsApp() {
                     ? `上传中 ${uploadProgress}`
                     : '上传中...'
                   : '上传素材'}
-              </button>
-              <button type="button" className={secondaryButton} onClick={openNewText}>
+              </button> */}
+              {/* <button type="button" className={secondaryButton} onClick={openNewText}>
                 <FileText size={16} aria-hidden="true" />
                 新建文本
               </button>
@@ -238,15 +200,46 @@ export function AssetsApp() {
               <button type="button" className={secondaryButton} onClick={openNewTemplate}>
                 <LayoutTemplate size={16} aria-hidden="true" />
                 新建模板
-              </button>
-              <a
-                href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
-                className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-                aria-label="首页"
-                title="首页"
+              </button> */}
+              <div
+                className="inline-flex h-10 gap-1 min-w-10 shrink-0 cursor-pointer items-center justify-center rounded-[17px] border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999]"
               >
-                <House size={16} aria-hidden="true" />
-              </a>
+                <a
+                  href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
+                  className="inline-flex h-9.5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-white text-[#141414] no-underline transition-colors hover:bg-white hover:text-[#141414]"
+                  aria-label="资产"
+                  title="资产"
+                >
+                  <Images size={16} aria-hidden="true" />
+                </a>
+
+                <a
+                  href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
+                  className="inline-flex  h-9.5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-[#1c1c1c] text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
+                  aria-label="画布"
+                  title="画布"
+                >
+                  <PenTool size={16} aria-hidden="true" />
+                </a>
+
+                <a
+                  href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
+                  className="inline-flex  h-9.5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-[#1c1c1c] text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
+                  aria-label="传输"
+                  title="传输"
+                >
+                  <ArrowLeftRight size={16} aria-hidden="true" />
+                </a>
+
+                <a
+                  href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
+                  className="inline-flex  h-9.5 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-[#1c1c1c] text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
+                  aria-label="API 密钥"
+                  title="API 密钥"
+                >
+                  <Key size={16} aria-hidden="true" />
+                </a>
+              </div>
               <div className="relative" data-user-menu-root>
                 <button
                   type="button"
@@ -269,9 +262,8 @@ export function AssetsApp() {
                   )}
                 </button>
                 <div
-                  className={`absolute top-full right-0 z-50 mt-2 min-w-52 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${
-                    userMenuOpen ? 'grid' : 'hidden'
-                  }`}
+                  className={`absolute top-full right-0 z-50 mt-2 min-w-52 overflow-hidden rounded-[10px] border border-[#3a3a3a] bg-[#1d1d1d] p-1.5 shadow-[0_12px_32px_rgb(0_0_0_/_0.42)] ${userMenuOpen ? 'grid' : 'hidden'
+                    }`}
                 >
                   <div className="grid gap-1 border-b border-[#2a2a2a] px-2.5 py-2.5">
                     <strong className="truncate text-[13px] leading-tight font-semibold text-[#e5e5e5]">
@@ -322,11 +314,10 @@ export function AssetsApp() {
                 aria-label={option.label}
                 aria-selected={filter === option.value}
                 disabled={option.disabled}
-                className={`inline-flex min-h-12 cursor-pointer items-center whitespace-nowrap border-b-2 bg-transparent px-5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${
-                  filter === option.value
-                    ? 'border-[#e5e5e5] text-[#e5e5e5]'
-                    : 'border-transparent text-[#999999] hover:text-[#e5e5e5]'
-                }`}
+                className={`inline-flex min-h-12 cursor-pointer items-center whitespace-nowrap border-b-2 bg-transparent px-5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${filter === option.value
+                  ? 'border-[#e5e5e5] text-[#e5e5e5]'
+                  : 'border-transparent text-[#999999] hover:text-[#e5e5e5]'
+                  }`}
                 onClick={() => !option.disabled && setFilter(option.value)}
               >
                 <span>{option.label}</span>

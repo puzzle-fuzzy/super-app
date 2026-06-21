@@ -26,6 +26,7 @@ COPY apps/transfer/package.json apps/transfer/
 COPY apps/docs/package.json apps/docs/
 COPY apps/canvas/package.json apps/canvas/
 COPY apps/console/package.json apps/console/
+COPY apps/app/package.json apps/app/
 COPY apps/site/package.json apps/site/
 COPY apps/admin/package.json apps/admin/
 COPY services/api/package.json services/api/

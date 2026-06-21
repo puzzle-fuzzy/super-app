@@ -1,0 +1,132 @@
+@import '@super-app/design-tokens/css';
+@import 'tailwindcss';
+@import 'overlayscrollbars/overlayscrollbars.css';
+
+@source "../../packages/ui-react/src/**/*.tsx";
+
+/* ── Reset ────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  min-width: 320px;
+  min-height: 100%;
+  background: #141414;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #e5e5e5;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* ── Focus ───────────────────────────────────────────────── */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #3a3a3a;
+}
+
+/* ── Reduced motion ──────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── OverlayScrollbars dark theme ─────────────────────────── */
+
+.os-theme-dark {
+  --os-handle-bg: #3a3a3a;
+  --os-handle-bg-hover: #4a4a4a;
+  --os-handle-bg-active: #555555;
+  --os-track-bg: transparent;
+  --os-track-bg-hover: transparent;
+  --os-track-bg-active: transparent;
+}
+
+/* ── Canvas-specific ──────────────────────────────────────── */
+
+.media-node {
+  border-radius: 14px;
+  background: #1c1c1c;
+  border: 1px solid #2a2a2a;
+  overflow: hidden;
+}
+
+.media-node-info-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #3a3a3a;
+  background: #1c1c1c;
+  color: #999999;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.media-node:hover .media-node-info-btn {
+  display: flex;
+}
+
+.media-node-info-btn:hover {
+  background: #2a2a2a;
+  color: #e5e5e5;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

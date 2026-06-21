@@ -1,0 +1,79 @@
+import React from 'react'
+import { Navigate, Route, Routes } from 'react-router-dom'
+
+import { ShellLayout } from './components/ShellLayout'
+import { useShellUser } from './components/ShellContext'
+
+// Lazy-load each app module — keeps per-app bundle sizes small
+const WorkspaceApp = React.lazy(() =>
+  import('@app/workspace/screens/WorkspaceApp').then((m) => ({ default: m.WorkspaceApp }))
+)
+const AssetsApp = React.lazy(() =>
+  import('@app/assets/screens/AssetsApp').then((m) => ({ default: m.AssetsApp }))
+)
+const CanvasApp = React.lazy(() =>
+  import('@app/canvas/screens/CanvasApp').then((m) => ({ default: m.CanvasApp }))
+)
+const ConsoleAppContent = React.lazy(() =>
+  import('@app/console/screens/ConsoleApp').then((m) => ({ default: m.ConsoleAppContent }))
+)
+
+function AppFallback() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-[#141414]">
+      <p className="text-[#999999]">加载中…</p>
+    </div>
+  )
+}
+
+/** 从 ShellContext 取 user 然后传给 app 组件的包装器 */
+function WorkspaceRoute() {
+  const user = useShellUser()
+  return (
+    <React.Suspense fallback={<AppFallback />}>
+      <WorkspaceApp user={user} />
+    </React.Suspense>
+  )
+}
+
+function AssetsRoute() {
+  const user = useShellUser()
+  return (
+    <React.Suspense fallback={<AppFallback />}>
+      <AssetsApp user={user} />
+    </React.Suspense>
+  )
+}
+
+function CanvasRoute() {
+  const user = useShellUser()
+  return (
+    <React.Suspense fallback={<AppFallback />}>
+      <CanvasApp user={user} />
+    </React.Suspense>
+  )
+}
+
+function ConsoleRoute() {
+  const user = useShellUser()
+  return (
+    <React.Suspense fallback={<AppFallback />}>
+      <ConsoleAppContent user={user} />
+    </React.Suspense>
+  )
+}
+
+export function AppRoutes() {
+  return (
+    <Routes>
+      <Route element={<ShellLayout />}>
+        <Route path="/workspace/*" element={<WorkspaceRoute />} />
+        <Route path="/assets/*" element={<AssetsRoute />} />
+        <Route path="/canvas/*" element={<CanvasRoute />} />
+        <Route path="/api-console/*" element={<ConsoleRoute />} />
+        {/* 默认跳转到工作台 */}
+        <Route path="*" element={<Navigate to="/workspace" replace />} />
+      </Route>
+    </Routes>
+  )
+}
