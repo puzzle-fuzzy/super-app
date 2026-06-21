@@ -47,7 +47,7 @@ export function CanvasApp() {
         store.setNodes((prev) =>
           prev.map((node) =>
             isMediaNode(node) && node.data?.taskId === data.taskId
-              ? { ...node, data: { ...node.data, src: mediaUrl, uploading: undefined } }
+              ? { ...node, data: { ...node.data, src: mediaUrl, uploading: undefined, generationStatus: 'succeeded' as const } }
               : node
           )
         )
@@ -56,7 +56,7 @@ export function CanvasApp() {
         useCanvasStore.getState().setNodes((prev) =>
           prev.map((node) =>
             isMediaNode(node) && node.data?.taskId === data.taskId
-              ? { ...node, data: { ...node.data, uploading: undefined, fileName: '生成失败' } }
+              ? { ...node, data: { ...node.data, uploading: undefined, generationStatus: 'failed' as const, fileName: '生成失败', errorMessage: data.error?.message } }
               : node
           )
         )

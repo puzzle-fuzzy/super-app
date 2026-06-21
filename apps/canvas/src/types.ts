@@ -8,12 +8,16 @@ export interface UploadState {
 }
 
 // ========== 图片节点 ==========
+export type GenerationStatus = 'queued' | 'submitting' | 'generating' | 'saving' | 'succeeded' | 'failed'
+
 export interface ImageNodeData {
   src: string
   fileName: string
   width?: number
   height?: number
   uploading?: UploadState
+  generationStatus?: GenerationStatus
+  errorMessage?: string
   groupId?: string
   assetId?: string
   assetSource?: AssetSource
@@ -31,6 +35,8 @@ export interface VideoNodeData {
   width?: number
   height?: number
   uploading?: UploadState
+  generationStatus?: GenerationStatus
+  errorMessage?: string
   groupId?: string
   assetId?: string
   assetSource?: AssetSource

@@ -30,6 +30,7 @@ export function useCanvasGeneration(
         fileName: input.prompt,
         width: dimensions.width,
         height: dimensions.height,
+        generationStatus: 'generating',
         uploading: {
           progress: 0.35,
           fileName: isVideo ? '正在生成视频...' : '正在生成图片...',

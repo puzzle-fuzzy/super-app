@@ -29,9 +29,15 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
     }
   }, [])
 
-  // 上传中 → 显示进度
-  if (data.uploading) {
-    const percent = Math.round(Math.max(0, Math.min(1, data.uploading.progress)) * 100)
+  // 生成中（占位态）或失败
+  if (data.uploading || data.generationStatus) {
+    const status = data.generationStatus
+    const statusLabel = status === 'queued' ? '排队中…'
+      : status === 'submitting' ? '提交中…'
+      : status === 'generating' ? (isVideo ? '正在生成视频...' : '正在生成图片...')
+      : status === 'saving' ? '保存中…'
+      : status === 'failed' ? '生成失败'
+      : data.uploading?.fileName ?? '处理中...'
 
     return (
       <div
@@ -39,6 +45,7 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
         style={{
           width: nodeWidth,
           height: nodeHeight,
+          position: 'relative',
         }}
       >
         <div
@@ -51,47 +58,53 @@ export default function MediaNode({ data, type }: MediaNodeProps) {
             minWidth: 0,
           }}
         >
-          <span style={{ display: 'flex', alignItems: 'center', color: '#999999' }}>
+          <span style={{ display: 'flex', alignItems: 'center', color: status === 'failed' ? '#ef4444' : '#999999' }}>
             {isVideo ? <Film size={20} /> : <ImageIcon size={20} />}
           </span>
           <span
             style={{
               fontSize: 13,
               fontWeight: 500,
-              color: '#e5e5e5',
+              color: status === 'failed' ? '#ef4444' : '#e5e5e5',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
             }}
           >
-            {data.uploading.fileName}
+            {statusLabel}
           </span>
-          {data.uploading.fileName === '正在生成图片...' ? (
+          {status === 'generating' && (
             <span style={{ fontSize: 12, color: '#9ca3af' }}>
               保持画布比例，生成完成后自动替换。
             </span>
-          ) : null}
-          <div
-            style={{
-              width: '100%',
-              height: 6,
-              background: '#374151',
-              borderRadius: 3,
-              overflow: 'hidden',
-            }}
-          >
+          )}
+          {status === 'failed' && data.errorMessage && (
+            <span style={{ fontSize: 11, color: '#f87171', lineClamp: 2 }}>
+              {data.errorMessage}
+            </span>
+          )}
+          {status !== 'failed' && (
             <div
               style={{
-                height: '100%',
-                background: '#60a5fa',
+                width: '100%',
+                height: 6,
+                background: '#374151',
                 borderRadius: 3,
-                transformOrigin: 'left',
-                transition: 'transform 0.2s',
-                transform: `scaleX(${percent / 100})`,
+                overflow: 'hidden',
               }}
-            />
-          </div>
-          <span style={{ fontSize: 11, color: '#9ca3af' }}>{percent}%</span>
+            >
+              <div
+                style={{
+                  height: '100%',
+                  background: '#60a5fa',
+                  borderRadius: 3,
+                  transformOrigin: 'left',
+                  transition: 'transform 0.2s',
+                  transform: `scaleX(${(data.uploading?.progress ?? 0.35) * 100}%)`,
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
     )
