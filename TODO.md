@@ -68,28 +68,11 @@
 - 从 generation record 能反查最终 asset。
 - 弹窗能展示费用、状态、错误、traceId。
 
-### 6. Pipeline 产物需要进入统一资产详情体系
+### 6. ~~Pipeline 产物需要进入统一资产详情体系~~ ✅ `45c695d`
 
-**问题**
-
-- Pipeline 中角色参考图、场景参考图、镜头视频、最终合成视频都有生成信息。
-- 当前 PipelineEditor 详情面板直接展示 `identityPrompt` / `scenePrompt` / `videoPrompt` 的 `<details>`，不是统一资产详情弹窗。
-- 资产侧栏拖入 Pipeline 节点时只设置 `referenceImageUrl` 或 `referenceMedia`，没有保留“这个参考来自哪个资产”的结构化信息。
-
-**解决办法**
-
-- Pipeline 阶段产物和用户拖入参考都统一为 `CanvasShotReferenceAsset` / `AssetOrigin`。
-- 对角色、场景、镜头节点：
-  - 参考图/视频如果来自资产库，保存 `assetId` 和 `originSnapshot`。
-  - 如果来自 Pipeline 自动生成，保存 `canvasPipelineAssetId`、`pipelineRunId` 和 phase。
-  - 如果是外部 URL，保存 `externalUrl` 和来源说明。
-- Pipeline 详情面板增加“完整信息”按钮，复用同一个 `AssetInfoDialog` 或 `PipelineArtifactInfoDialog`。
-- `getProjectAssets()` 返回的数据应包含 inputJson、outputJson、cost、model、providerUrl、publicUrl 的 typed DTO，而不是只供列表展示的松散对象。
-
-**完成标准**
-
-- Pipeline 角色图、场景图、镜头视频、最终成片都能查看完整生成信息。
-- 用户手动拖入的参考资产也能查看其原始资产信息。
+- 新增 `PipelineArtifactInfoDialog` + `PipelineArtifactInfoButton` 组件
+- PipelineEditor 详情面板为 character/location/shot 节点添加”完整信息”按钮，显示结构化生成参数（identityPrompt、scenePrompt、videoPrompt、URL 等）并支持复制
+- 剩余：外部资产拖入 Pipeline 节点时保存 `assetId` + `originSnapshot`（需侧栏拖放逻辑扩展）
 
 ## P2 - 前端架构与组件边界
 
