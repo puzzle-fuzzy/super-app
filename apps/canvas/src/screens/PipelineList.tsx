@@ -300,10 +300,18 @@ export function PipelineList({
                     </>
                   )}
                 </div>
+                {project.finalVideoUrl ? (
+                  <video
+                    src={project.finalVideoUrl}
+                    className="mb-3 h-32 w-full rounded-lg object-cover"
+                    muted
+                    preload="metadata"
+                  />
+                ) : null}
                 <span className="mb-1 text-[11px] font-bold tracking-[0.14em] text-[#666666]">
                   {statusLabel[project.status] ?? project.status}
                 </span>
-                <h3 className="mt-[42px] mb-2.5 text-2xl font-bold tracking-[-0.02em]">
+                <h3 className={`mb-2.5 text-2xl font-bold tracking-[-0.02em] ${project.finalVideoUrl ? 'mt-1' : 'mt-[42px]'}`}>
                   {project.title || '未命名项目'}
                 </h3>
                 <p className="m-0 line-clamp-2 text-[13px] text-[#888888]">

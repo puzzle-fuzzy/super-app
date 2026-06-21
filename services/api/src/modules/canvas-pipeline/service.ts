@@ -402,13 +402,15 @@ export async function getAsset({ owner, assetId }: GetAssetInput) {
 
 // ── DTO Mappers ─────────────────────────────────────────────────
 
-function toProjectSummary(p: { id: string; ownerId: string; title: string | null; storyText: string; status: string; createdAt: Date; updatedAt: Date }) {
+function toProjectSummary(p: { id: string; ownerId: string; title: string | null; storyText: string; status: string; bgmUrl?: string | null; finalVideoUrl?: string | null; createdAt: Date; updatedAt: Date }) {
   return {
     id: p.id,
     accountId: p.ownerId,
     title: p.title,
     storyText: p.storyText,
     status: p.status,
+    bgmUrl: p.bgmUrl ?? null,
+    finalVideoUrl: p.finalVideoUrl ?? null,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
   }
@@ -429,6 +431,8 @@ function toProjectDTO(detail: NonNullable<Awaited<ReturnType<typeof getCanvasPro
     shots: shots.map(toShotDTO),
     continuityIssues: (latestContinuity?.issuesJson ?? []) as ProjectDTO['continuityIssues'],
     canvasLayout: project.canvasLayout as ProjectDTO['canvasLayout'],
+    bgmUrl: project.bgmUrl ?? null,
+    finalVideoUrl: project.finalVideoUrl ?? null,
     createdAt: project.createdAt.toISOString(),
     updatedAt: project.updatedAt.toISOString(),
   }

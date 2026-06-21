@@ -415,6 +415,7 @@ function PipelineEditor({
       data: {
         ...phaseNodeData('assemble'),
         phase: 'assemble' as const,
+        finalVideoUrl: project.finalVideoUrl ?? undefined,
       },
     })
 

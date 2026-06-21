@@ -69,6 +69,8 @@ export const PipelineProjectSummarySchema = z.object({
   title: z.string().nullable(),
   storyText: z.string(),
   status: z.string(),
+  bgmUrl: z.string().nullable(),
+  finalVideoUrl: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 })
@@ -159,6 +161,8 @@ export const PipelineProjectDtoSchema = z.object({
   shots: z.array(PipelineShotDtoSchema),
   continuityIssues: z.array(PipelineJsonObjectSchema),
   canvasLayout: PipelineJsonObjectSchema.nullable(),
+  bgmUrl: z.string().nullable(),
+  finalVideoUrl: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 })

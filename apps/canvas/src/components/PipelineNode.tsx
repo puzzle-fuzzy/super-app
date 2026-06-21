@@ -143,10 +143,19 @@ export function PipelineNode({ data }: NodeProps) {
 
       {isAssemble && (
         <div>
+          {d.finalVideoUrl ? (
+            <video
+              src={d.finalVideoUrl}
+              className="mb-2 w-full rounded-lg"
+              controls
+              muted
+              preload="metadata"
+            />
+          ) : null}
           {d.status === 'succeeded' && (
             <p className="m-0 text-[12px] text-[#22c55e]">成片已合成</p>
           )}
-          {d.status !== 'succeeded' && (
+          {d.status !== 'succeeded' && !d.finalVideoUrl && (
             <p className="m-0 text-[12px] text-[#888888]">
               将镜头和配乐合成为最终视频
             </p>

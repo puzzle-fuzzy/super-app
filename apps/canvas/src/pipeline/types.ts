@@ -25,5 +25,7 @@ export interface PipelineNodeData {
   disabled?: boolean
   /** 不可触发的 UI tooltip 提示 */
   blockedReason?: string
+  /** 最终合成视频 URL（assemble 节点专用） */
+  finalVideoUrl?: string
   errorMessage?: string
 }

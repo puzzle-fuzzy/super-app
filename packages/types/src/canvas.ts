@@ -285,6 +285,8 @@ export interface ProjectDTO {
   shots: ShotDTO[]
   continuityIssues: ContinuityIssue[]
   canvasLayout: CanvasLayoutDto | null
+  bgmUrl: string | null
+  finalVideoUrl: string | null
   createdAt: string
   updatedAt: string
 }
