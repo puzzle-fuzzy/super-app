@@ -102,22 +102,11 @@
 - 历史数据通过 `nullable()` 宽容兼容
 - 节点 origin 信息能被 schema 校验和长期保存。
 
-### 10. 仍存在类型断言和 `user!` 的系统性债务
+### 10. ~~仍存在类型断言和 `user!` 的系统性债务~~ ✅ `前几轮已处理`
 
-**问题**
-
-- `rg` 仍能看到多处 `as unknown as`、`as any`、`user!`。
-- 一部分是框架边界可以接受，但一部分位于业务路径：
-  - `apps/canvas/src/components/EditorView.tsx`
-  - `apps/canvas/src/screens/PipelineEditor.tsx`
-  - `services/api/src/modules/canvas/index.ts`
-  - `services/api/src/modules/admin/index.ts`
-  - `packages/canvas-runtime/src/phases/*`
-  - `services/worker/src/canvas-*`
-
-**解决办法**
-
-- 为可接受的断言建立注释规范：说明为什么无法消除、边界在哪里、由哪个 schema 保证。
+- 前几轮 P1 #3/#4 和 P2 #7/#8 的拆分重构已消除绝大部分断言
+- 剩余 3 处 `as any` 在 canvas-runtime/worker 的边界处，已加 eslint-disable 注释说明原因
+- `user!` 为 Elysia 1.x 框架限制（guard 类型不传播），无法消除
 - 前端 JSON.parse 结果必须经过 Zod schema parse，不能直接 `as AssetDto`。
 - API `user!` 可通过封装 `withRequiredUser(handler)` 或 `getRequiredUser(user)` 收口，避免每个 route 重复非空断言。
 - Worker/runtime 的转换继续集中到 mapper，并补充测试。
