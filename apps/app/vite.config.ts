@@ -33,7 +33,7 @@ export default defineConfig(({ command }) => ({
     },
   },
   server: {
-    port: 5100,
+    port: 5173,
     proxy: {
       '/api': {
         target: 'http://localhost:5200',
