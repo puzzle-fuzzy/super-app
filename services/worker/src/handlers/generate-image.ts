@@ -124,6 +124,7 @@ export const generateImageHandler: TaskHandler<Task, { workerId: string }, TaskO
       providerRequestId: requestId,
       model: input.model,
       prompt: input.prompt,
+      generationRecordId: input.generationRecordId,
     }
 
     await markGenerationSucceeded(input.generationRecordId, generationOutput)

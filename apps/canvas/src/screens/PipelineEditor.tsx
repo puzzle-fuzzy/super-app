@@ -1,10 +1,11 @@
 import { useCallback } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Background, Controls, ReactFlow, ReactFlowProvider } from '@xyflow/react'
+import { Background, Controls, ReactFlow, ReactFlowProvider, useReactFlow } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
-import type { AssetKind } from '@super-app/contracts/assets'
+import type { AssetDto, AssetKind } from '@super-app/contracts/assets'
+import { pipelineApi } from '@super-app/api-client'
 
 import { PipelineNode } from '../components/PipelineNode'
 import { PipelineDetailPanel } from '../components/PipelineDetailPanel'
@@ -71,6 +72,7 @@ function PipelineEditor({
   } = usePipelineProject(projectId, user.id)
 
   const { assets, assetFilter, setAssetFilter, assetSidebarOpen, setAssetSidebarOpen } = usePipelineAssets()
+  const reactFlowInstance = useReactFlow()
 
   const { nodes, edges } = usePipelineGraph({ project, runs, onTriggerPhase: handleTriggerPhase })
 
@@ -85,6 +87,81 @@ function PipelineEditor({
         )
       )
     }, [setRuns]),
+  )
+
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
+  }, [])
+
+  const onDrop = useCallback(
+    async (event: React.DragEvent<HTMLDivElement>) => {
+      event.preventDefault()
+
+      const rawData = event.dataTransfer.getData('application/json')
+      if (!rawData) return
+
+      let asset: AssetDto
+      try {
+        asset = JSON.parse(rawData) as AssetDto
+      } catch {
+        return
+      }
+
+      const imageUrl = asset.files?.[0]?.url ?? asset.thumbnailUrl ?? ''
+      if (!imageUrl) return
+
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      })
+
+      // 粗略匹配：检查 drop 位置落在哪个 pipeline 节点的区域内
+      const targetNode = nodes.find((n) => {
+        const w = 300
+        const h = 220
+        return (
+          position.x >= n.position.x &&
+          position.x <= n.position.x + w &&
+          position.y >= n.position.y &&
+          position.y <= n.position.y + h
+        )
+      })
+      if (!targetNode) return
+
+      const entityId = (targetNode.data as { entityId?: string }).entityId
+      if (!entityId) return
+
+      try {
+        if (targetNode.id?.startsWith('character-')) {
+          await pipelineApi.updateCharacter(projectId, entityId, {
+            referenceImageUrl: imageUrl,
+          } as Record<string, unknown>)
+        } else if (targetNode.id?.startsWith('location-')) {
+          await pipelineApi.updateLocation(projectId, entityId, {
+            referenceImageUrl: imageUrl,
+          } as Record<string, unknown>)
+        } else if (targetNode.id?.startsWith('shot-')) {
+          await pipelineApi.updateShot(projectId, entityId, {
+            referenceAssetsJson: [
+              {
+                assetId: asset.id,
+                url: imageUrl,
+                role: 'reference_image',
+                label: asset.title,
+                source: 'asset_library',
+              },
+            ],
+          } as Record<string, unknown>)
+        }
+
+        // 重新加载项目以更新 UI
+        await loadProject()
+      } catch (err) {
+        console.error('[PipelineEditor] drop asset failed:', err)
+      }
+    },
+    [projectId, nodes, reactFlowInstance, loadProject],
   )
 
   /* ---- Loading / Error ───────────────────────────────────────────── */
@@ -209,6 +286,8 @@ function PipelineEditor({
             fitView
             fitViewOptions={{ padding: 0.3 }}
             onNodeClick={(_e, node) => setSelectedNode(node)}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
             minZoom={0.1}
             maxZoom={2}
           >

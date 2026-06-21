@@ -20,7 +20,7 @@ import {
 } from '@super-app/db'
 import { Elysia, t } from 'elysia'
 
-import { authPlugin, requireUser } from '../../plugins/auth'
+import { authPlugin, getRequiredUser, requireUser } from '../../plugins/auth'
 import { ok } from '../../shared/response'
 import { AppError } from '../../shared/errors'
 
@@ -55,7 +55,7 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
         '/records',
         async ({ user, query }) => {
           const result = await listGenerationRecords({
-            ownerId: user!.id,
+            ownerId: getRequiredUser(user).id,
             category: query.category as string | undefined,
             status: query.status as string | undefined,
             limit: query.limit ? Number(query.limit) : undefined,
@@ -78,7 +78,7 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
       )
       // 详情
       .get('/records/:id', async ({ user, params }) => {
-        const record = await getGenerationRecordByIdForOwner(params.id, user!.id)
+        const record = await getGenerationRecordByIdForOwner(params.id, getRequiredUser(user).id)
         if (!record) {
           throw new AppError(404, 'NOT_FOUND', '生成记录不存在')
         }
@@ -88,7 +88,7 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
       })
       // 隐藏（软删除）
       .delete('/records/:id', async ({ user, params }) => {
-        const record = await getGenerationRecordByIdForOwner(params.id, user!.id)
+        const record = await getGenerationRecordByIdForOwner(params.id, getRequiredUser(user).id)
         if (!record) {
           throw new AppError(404, 'NOT_FOUND', '生成记录不存在')
         }
@@ -99,7 +99,7 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
       })
       // 重试
       .post('/records/:id/retry', async ({ user, params }) => {
-        const record = await getGenerationRecordByIdForOwner(params.id, user!.id)
+        const record = await getGenerationRecordByIdForOwner(params.id, getRequiredUser(user).id)
         if (!record) {
           throw new AppError(404, 'NOT_FOUND', '生成记录不存在')
         }
@@ -119,7 +119,7 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
         const task = await createTask({
           type: taskType,
           domain: 'generate',
-          ownerId: user!.id,
+          ownerId: getRequiredUser(user).id,
           input: {
             generationRecordId: record.id,
             model: record.model,
@@ -127,7 +127,7 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
               ?.prompt ?? '',
             kind: isVideo ? 'video' : 'image',
             estimatedCostCents: record.totalPriceCents ?? 0,
-            ownerId: user!.id,
+            ownerId: getRequiredUser(user).id,
           },
           generationRecordId: record.id,
           maxAttempts: isVideo ? 3 : 1,
@@ -143,7 +143,7 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
       })
       // 取消
       .post('/records/:id/cancel', async ({ user, params }) => {
-        const record = await getGenerationRecordByIdForOwner(params.id, user!.id)
+        const record = await getGenerationRecordByIdForOwner(params.id, getRequiredUser(user).id)
         if (!record) {
           throw new AppError(404, 'NOT_FOUND', '生成记录不存在')
         }
@@ -156,7 +156,7 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
         // 退还冻结资金
         try {
           await refundCredit({
-            ownerId: user!.id,
+            ownerId: getRequiredUser(user).id,
             generationRecordId: params.id,
             description: '用户取消生成',
           })
@@ -164,7 +164,7 @@ export const recordsModule = new Elysia({ name: 'records', detail: { tags: ['生
           // 退款失败不阻塞取消操作
         }
 
-        const updated = await getGenerationRecordByIdForOwner(params.id, user!.id)
+        const updated = await getGenerationRecordByIdForOwner(params.id, getRequiredUser(user).id)
         return ok(serialize(updated!))
       }, {
         detail: { summary: '取消生成记录', tags: ['生成记录'] },

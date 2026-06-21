@@ -15,6 +15,7 @@ import { SSEClient } from '@super-app/api-client'
 import { useRequireAuth } from '@super-app/auth-client/react'
 import { clientEnv } from '@super-app/env/client'
 import { AssetCard } from '../components/AssetCard'
+import { AssetDetailDialog } from '../components/AssetDetailDialog'
 import { EditorPanel, DeleteConfirm } from '../components/AssetEditorDialogs'
 import { EmptyState } from '../components/EmptyState'
 import { LoadingState } from '../components/LoadingState'
@@ -76,6 +77,7 @@ export function AssetsApp() {
   } = useAssetsData()
 
   const [openActionAssetId, setOpenActionAssetId] = useState<string | null>(null)
+  const [detailAssetId, setDetailAssetId] = useState<string | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   // close action menu on outside click / Escape
@@ -389,6 +391,7 @@ export function AssetsApp() {
                   }}
                   onShare={() => handleCreateShareLink(asset)}
                   onTransfer={() => handleStartTransfer(asset)}
+                  onViewDetails={() => setDetailAssetId(asset.id)}
                   sharing={sharingAssetId === asset.id}
                   transferring={transferringAssetId === asset.id}
                   menuOpen={openActionAssetId === asset.id}
@@ -424,6 +427,17 @@ export function AssetsApp() {
       {transferNotice ? (
         <TransferNoticeDialog notice={transferNotice} onClose={() => setTransferNotice(null)} />
       ) : null}
+
+      {(() => {
+        const detailAsset = detailAssetId ? visibleItems.find((a) => a.id === detailAssetId) : null
+        return detailAsset ? (
+          <AssetDetailDialog
+            open
+            asset={detailAsset}
+            onClose={() => setDetailAssetId(null)}
+          />
+        ) : null
+      })()}
     </main>
   )
 }

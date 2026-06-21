@@ -45,6 +45,19 @@ export function requireUser({ user, set }: AuthGuardContext) {
 }
 
 /**
+ * 在 guarded route 中获取已认证的 user。因 Elysia 1.x guard 不传播类型，
+ * user 在 handler 内仍为 `CurrentUser | null`。此 helper 收口非空断言。
+ *
+ * 用法：const uid = getRequiredUser(user).id
+ */
+export function getRequiredUser(user: CurrentUser | null): CurrentUser {
+  if (!user) {
+    throw new Error('BUG: requireUser guard must be applied before accessing user')
+  }
+  return user
+}
+
+/**
  * Admin 鉴权守卫：先校验登录态，再检查用户是否在管理员名单中。
  * 管理员名单通过 ADMIN_USER_IDS 环境变量配置（逗号分隔的 UUID 列表）。
  * 非管理员直接 403，handler 不再手写守卫。

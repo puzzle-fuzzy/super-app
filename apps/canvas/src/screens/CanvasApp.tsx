@@ -43,11 +43,49 @@ export function CanvasApp() {
         const mediaUrl = (output.videoUrl || output.imageUrl || '') as string
         if (!mediaUrl) return
 
+        // 从 SSE output 构造最小 ai_generated origin
+        const generationRecordId = (output.generationRecordId as string) ?? undefined
+        const origin = generationRecordId
+          ? {
+              kind: 'ai_generated' as const,
+              prompt: (output.prompt as string) ?? '',
+              negativePrompt: null,
+              model: (output.model as string) ?? '',
+              provider: 'dashscope',
+              mediaKind: (output.videoUrl ? 'video' : 'image') as string,
+              size: null,
+              ratio: null,
+              resolution: null,
+              duration: null,
+              seed: null,
+              promptExtend: false,
+              watermark: false,
+              requestId: (output.providerRequestId as string | null) ?? null,
+              providerTaskId: (output.providerTaskId as string | null) ?? null,
+              generationRecordId,
+              taskId: data.taskId,
+              costCents: null,
+              providerUrl: (output.providerImageUrl || output.providerVideoUrl || null) as string | null,
+            }
+          : undefined
+
         const store = useCanvasStore.getState()
         store.setNodes((prev) =>
           prev.map((node) =>
             isMediaNode(node) && node.data?.taskId === data.taskId
-              ? { ...node, data: { ...node.data, src: mediaUrl, uploading: undefined, generationStatus: 'succeeded' as const } }
+              ? {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    src: mediaUrl,
+                    uploading: undefined,
+                    generationStatus: 'succeeded' as const,
+                    taskId: data.taskId,
+                    generationRecordId,
+                    assetSource: 'ai_generation' as const,
+                    assetOrigin: origin,
+                  },
+                }
               : node
           )
         )

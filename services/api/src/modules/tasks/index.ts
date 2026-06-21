@@ -8,7 +8,7 @@ import type { UserTaskDTO, UserTaskListQuery } from '@super-app/contracts'
 import { listUserTasks, getUserTaskById, type UserTaskRow } from '@super-app/db'
 import { Elysia, t } from 'elysia'
 
-import { authPlugin, requireUser } from '../../plugins/auth'
+import { authPlugin, getRequiredUser, requireUser } from '../../plugins/auth'
 import { ok } from '../../shared/response'
 import { AppError } from '../../shared/errors'
 
@@ -59,7 +59,7 @@ export const tasksModule = new Elysia({ name: 'tasks', detail: { tags: ['任务�
             offset: query.offset ? Number(query.offset) : undefined,
           }
 
-          const result = await listUserTasks(user!.id, q)
+          const result = await listUserTasks(getRequiredUser(user).id, q)
           return ok({
             items: result.items.map(toDTO),
             total: result.total,
@@ -76,7 +76,7 @@ export const tasksModule = new Elysia({ name: 'tasks', detail: { tags: ['任务�
         }
       )
       .get('/tasks/:id', async ({ user, params }) => {
-        const row = await getUserTaskById(user!.id, params.id)
+        const row = await getUserTaskById(getRequiredUser(user).id, params.id)
         if (!row) {
           throw new AppError(404, 'NOT_FOUND', '任务不存在')
         }

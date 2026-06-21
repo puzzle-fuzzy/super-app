@@ -14,7 +14,7 @@ import {
 } from '@super-app/db'
 import { Elysia, t } from 'elysia'
 
-import { authPlugin, requireUser } from '../../plugins/auth'
+import { authPlugin, getRequiredUser, requireUser } from '../../plugins/auth'
 import { ok } from '../../shared/response'
 import { AppError } from '../../shared/errors'
 
@@ -34,7 +34,7 @@ export const notificationsModule = new Elysia({ name: 'notifications', detail: {
         async ({ user, query }) => {
           const limit = query.limit ? Number(query.limit) : 40
           const offset = query.offset ? Number(query.offset) : 0
-          const rows = await listNotifications(user!.id, limit, offset)
+          const rows = await listNotifications(getRequiredUser(user).id, limit, offset)
           return ok({ items: rows.map(serialize), total: rows.length })
         },
         {
@@ -46,20 +46,20 @@ export const notificationsModule = new Elysia({ name: 'notifications', detail: {
         }
       )
       .get('/notifications/unread', async ({ user }) => {
-        const count = await getUnreadCount(user!.id)
+        const count = await getUnreadCount(getRequiredUser(user).id)
         return ok({ count })
       }, {
         detail: { summary: '获取未读通知数', tags: ['通知'] },
       })
       .patch('/notifications/:id/read', async ({ user, params }) => {
-        const ok_ = await markNotificationRead(params.id, user!.id)
+        const ok_ = await markNotificationRead(params.id, getRequiredUser(user).id)
         if (!ok_) throw new AppError(404, 'NOT_FOUND', '通知不存在')
         return ok({ read: true })
       }, {
         detail: { summary: '标记通知已读', tags: ['通知'] },
       })
       .post('/notifications/read-all', async ({ user }) => {
-        const count = await markAllNotificationsRead(user!.id)
+        const count = await markAllNotificationsRead(getRequiredUser(user).id)
         return ok({ count })
       }, {
         detail: { summary: '全部标记已读', tags: ['通知'] },

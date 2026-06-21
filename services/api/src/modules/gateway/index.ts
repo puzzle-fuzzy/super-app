@@ -25,7 +25,7 @@ import {
 import { getModelPricing } from '@super-app/billing'
 import { Elysia, t } from 'elysia'
 
-import { authPlugin, requireUser } from '../../plugins/auth'
+import { authPlugin, getRequiredUser, requireUser } from '../../plugins/auth'
 import {
   setupGatewayCall,
   settleGatewaySuccess,
@@ -42,7 +42,7 @@ export const gatewayModule = new Elysia({ name: 'gateway', detail: { tags: ['网
       .post(
     '/v1/chat/completions',
     async ({ user, body, set }) => {
-      const owner = user!
+      const owner = getRequiredUser(user)
 
       // 1. 校验模型（必须使用 DashScope 真实模型名）
       if (!isTextModelSupported(body.model)) {

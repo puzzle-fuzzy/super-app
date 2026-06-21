@@ -1,4 +1,4 @@
-import { Ellipsis, FileText, Send, Share2, Download, Trash2, Video } from 'lucide-react'
+import { Ellipsis, FileText, Info, Send, Share2, Download, Trash2, Video } from 'lucide-react'
 
 import type { AssetDto } from '@super-app/contracts/assets'
 import {
@@ -15,6 +15,7 @@ export function AssetCard({
   onEdit,
   onShare,
   onTransfer,
+  onViewDetails,
   sharing,
   transferring,
   menuOpen,
@@ -26,6 +27,7 @@ export function AssetCard({
   onEdit: () => void
   onShare: () => void
   onTransfer: () => void
+  onViewDetails?: () => void
   sharing: boolean
   transferring: boolean
   menuOpen: boolean
@@ -93,6 +95,7 @@ export function AssetCard({
             onEdit={onEdit}
             onShare={onShare}
             onTransfer={onTransfer}
+            onViewDetails={onViewDetails}
             sharing={sharing}
             transferring={transferring}
             menuOpen={menuOpen}
@@ -145,6 +148,7 @@ function AssetActions({
   onEdit,
   onShare,
   onTransfer,
+  onViewDetails,
   sharing,
   transferring,
   menuOpen,
@@ -159,6 +163,7 @@ function AssetActions({
   onEdit: () => void
   onShare: () => void
   onTransfer: () => void
+  onViewDetails?: () => void
   sharing: boolean
   transferring: boolean
   menuOpen: boolean
@@ -193,6 +198,12 @@ function AssetActions({
             menuOpen ? 'grid' : 'hidden'
           }`}
         >
+          {onViewDetails ? (
+            <button className={menuItem} type="button" onClick={() => runAction(onViewDetails)}>
+              <Info size={15} aria-hidden="true" />
+              查看详情
+            </button>
+          ) : null}
           {canTransfer ? (
             <button
               className={menuItem}

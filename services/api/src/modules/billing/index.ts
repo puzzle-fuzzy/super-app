@@ -14,7 +14,7 @@ import {
 } from '@super-app/db'
 import { Elysia, t } from 'elysia'
 
-import { authPlugin, requireUser } from '../../plugins/auth'
+import { authPlugin, getRequiredUser, requireUser } from '../../plugins/auth'
 import { ok } from '../../shared/response'
 
 export const billingModule = new Elysia({ name: 'billing', detail: { tags: ['计费'] } })
@@ -22,7 +22,7 @@ export const billingModule = new Elysia({ name: 'billing', detail: { tags: ['计
   .guard({ beforeHandle: requireUser }, (guarded) =>
     guarded
       .get('/billing/statistics', async ({ user }) => {
-        const owner = user!
+        const owner = getRequiredUser(user)
         const now = new Date()
         const from = new Date(now.getFullYear(), now.getMonth(), now.getDate())
         from.setDate(from.getDate() - 29)
@@ -45,7 +45,7 @@ export const billingModule = new Elysia({ name: 'billing', detail: { tags: ['计
         detail: { summary: '获取近 30 天计费统计', tags: ['计费'] },
       })
       .get('/billing/balance', async ({ user }) => {
-        const balance = await creditBalance(user!.id)
+        const balance = await creditBalance(getRequiredUser(user).id)
         return ok({
           availableCents: balance.availableCents,
           frozenCents: balance.frozenCents,
@@ -59,7 +59,7 @@ export const billingModule = new Elysia({ name: 'billing', detail: { tags: ['计
         async ({ user, query }) => {
           const limit = query.limit ? Number(query.limit) : 50
           const offset = query.offset ? Number(query.offset) : 0
-          const transactions = await listCreditTransactions(user!.id, limit, offset)
+          const transactions = await listCreditTransactions(getRequiredUser(user).id, limit, offset)
           return ok(transactions)
         },
         {

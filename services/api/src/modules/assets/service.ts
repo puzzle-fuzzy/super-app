@@ -532,6 +532,21 @@ function buildAssetOrigin(
       }
     }
 
+    case 'canvas_pipeline': {
+      return {
+        kind: 'canvas_pipeline',
+        projectId: (meta.projectId as string) ?? '',
+        projectTitle: (meta.projectTitle as string | null) ?? null,
+        phase: (meta.phase as string) ?? '',
+        targetEntityType: (meta.targetEntityType as string) ?? '',
+        targetEntityId: (meta.targetEntityId as string) ?? '',
+        pipelineRunId: (meta.pipelineRunId as string | null) ?? null,
+        canvasPipelineAssetId: (meta.canvasPipelineAssetId as string | null) ?? null,
+        model: (meta.model as string | null) ?? null,
+        costCents: (meta.costCents as number | null) ?? null,
+      }
+    }
+
     case 'canvas_export':
       return { kind: 'canvas_export' }
 

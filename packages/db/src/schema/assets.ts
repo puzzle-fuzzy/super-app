@@ -40,6 +40,7 @@ export const assetVisibilityEnum = assetsSchema.enum('asset_visibility', [
 export const assetSourceEnum = assetsSchema.enum('asset_source', [
   'upload',
   'ai_generation',
+  'canvas_pipeline',
   'canvas_export',
   'transfer',
   'manual',

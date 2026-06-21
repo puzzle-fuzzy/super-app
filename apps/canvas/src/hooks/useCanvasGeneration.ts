@@ -42,11 +42,12 @@ export function useCanvasGeneration(
     try {
       const result = await canvasApi.generateImage(input)
       const taskId = (result as Record<string, unknown>).taskId as string | undefined
-      if (taskId) {
+      const generationRecordId = (result as Record<string, unknown>).generationRecordId as string | undefined
+      if (taskId || generationRecordId) {
         setNodes((prev) =>
           prev.map((node) =>
             node.id === nodeId
-              ? ({ ...node, data: { ...node.data, taskId } } as AppNode)
+              ? ({ ...node, data: { ...node.data, taskId, generationRecordId } } as AppNode)
               : node
           )
         )

@@ -1,4 +1,4 @@
-import { Copy, ImageIcon, Video } from 'lucide-react'
+import { Copy } from 'lucide-react'
 import type { AssetOrigin } from '@super-app/contracts/assets'
 import { Modal } from '@super-app/ui-react'
 import type { GenerationStatus } from '../types'

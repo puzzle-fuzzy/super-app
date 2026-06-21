@@ -7,8 +7,99 @@ import {
   AssetDtoSchema,
 } from '../src/assets'
 
+describe('UploadedOriginSchema', () => {
+  test('parses with all fields', () => {
+    const result = UploadedOriginSchema.parse({
+      kind: 'uploaded',
+      originalFileName: 'photo.jpg',
+      mimeType: 'image/jpeg',
+      size: 1024000,
+      width: 1920,
+      height: 1080,
+      duration: 30,
+    })
+    expect(result.originalFileName).toBe('photo.jpg')
+    expect(result.mimeType).toBe('image/jpeg')
+    expect(result.width).toBe(1920)
+    expect(result.duration).toBe(30)
+  })
+
+  test('allows nullable fields', () => {
+    const result = UploadedOriginSchema.parse({
+      kind: 'uploaded',
+      originalFileName: 'doc.pdf',
+      mimeType: 'application/pdf',
+      size: 5000,
+      width: null,
+      height: null,
+      duration: null,
+    })
+    expect(result.width).toBeNull()
+    expect(result.duration).toBeNull()
+  })
+})
+
+describe('AiGeneratedOriginSchema', () => {
+  test('parses with all fields', () => {
+    const result = AiGeneratedOriginSchema.parse({
+      kind: 'ai_generated',
+      prompt: 'a cat in space',
+      negativePrompt: 'blurry',
+      model: 'qwen-image-2.0-pro',
+      provider: 'dashscope',
+      mediaKind: 'image',
+      size: '2048*2048',
+      ratio: '1:1',
+      resolution: null,
+      duration: null,
+      seed: 12345,
+      promptExtend: true,
+      watermark: false,
+      requestId: 'req-abc',
+      providerTaskId: null,
+      generationRecordId: 'gen-123',
+      taskId: null,
+      costCents: 5,
+      providerUrl: 'https://example.com/img.png',
+    })
+    expect(result.prompt).toBe('a cat in space')
+    expect(result.model).toBe('qwen-image-2.0-pro')
+    expect(result.provider).toBe('dashscope')
+    expect(result.seed).toBe(12345)
+    expect(result.costCents).toBe(5)
+    expect(result.promptExtend).toBe(true)
+  })
+
+  test('parses minimal fields', () => {
+    const result = AiGeneratedOriginSchema.parse({
+      kind: 'ai_generated',
+      prompt: 'hello world',
+      negativePrompt: null,
+      model: 'test-model',
+      provider: 'test',
+      mediaKind: 'image',
+      size: null,
+      ratio: null,
+      resolution: null,
+      duration: null,
+      seed: null,
+      promptExtend: false,
+      watermark: false,
+      requestId: null,
+      providerTaskId: null,
+      generationRecordId: null,
+      taskId: null,
+      costCents: null,
+      providerUrl: null,
+    })
+    expect(result.prompt).toBe('hello world')
+    expect(result.seed).toBeNull()
+    expect(result.costCents).toBeNull()
+  })
+})
+
 describe('AssetOrigin schemas', () => {
-  test('parses uploaded origin', () => {
+  test('parses uploaded origin via discriminated union', () => {
     const result = AssetOriginSchema.parse({
       kind: 'uploaded',
       originalFileName: 'photo.jpg',
@@ -24,7 +115,7 @@ describe('AssetOrigin schemas', () => {
     expect(result.mimeType).toBe('image/jpeg')
   })
 
-  test('parses AI generated origin with all fields', () => {
+  test('parses AI generated origin via discriminated union', () => {
     const result = AssetOriginSchema.parse({
       kind: 'ai_generated',
       prompt: 'a cat in space',
@@ -75,6 +166,23 @@ describe('AssetOrigin schemas', () => {
 
     const exported = AssetOriginSchema.parse({ kind: 'canvas_export' })
     expect(exported.kind).toBe('canvas_export')
+
+    const transfer = AssetOriginSchema.parse({ kind: 'transfer', roomId: 'room-1' })
+    expect(transfer.kind).toBe('transfer')
+
+    const pipeline = AssetOriginSchema.parse({
+      kind: 'canvas_pipeline',
+      projectId: 'proj-1',
+      projectTitle: 'test',
+      phase: 'character',
+      targetEntityType: 'character',
+      targetEntityId: 'char-1',
+      pipelineRunId: null,
+      canvasPipelineAssetId: null,
+      model: null,
+      costCents: null,
+    })
+    expect(pipeline.kind).toBe('canvas_pipeline')
   })
 })
 
@@ -103,5 +211,128 @@ describe('AssetDto with origin', () => {
       updatedAt: '2026-06-20T00:00:00.000Z',
     })
     expect(dto.origin.kind).toBe('uploaded')
+  })
+
+  test('validates AssetDto with ai_generated origin', () => {
+    const dto = AssetDtoSchema.parse({
+      id: 'asset-2',
+      kind: 'image',
+      title: 'AI 生成的图片',
+      tags: [],
+      status: 'active',
+      visibility: 'private',
+      source: 'ai_generation',
+      origin: {
+        kind: 'ai_generated',
+        prompt: 'a cat in space',
+        negativePrompt: null,
+        model: 'qwen-image-2.0-pro',
+        provider: 'dashscope',
+        mediaKind: 'image',
+        size: null,
+        ratio: null,
+        resolution: null,
+        duration: null,
+        seed: null,
+        promptExtend: false,
+        watermark: false,
+        requestId: null,
+        providerTaskId: null,
+        generationRecordId: 'gen-123',
+        taskId: 'task-1',
+        costCents: 5,
+        providerUrl: null,
+      },
+      metadata: {},
+      files: [],
+      createdAt: '2026-06-20T00:00:00.000Z',
+      updatedAt: '2026-06-20T00:00:00.000Z',
+    })
+    expect(dto.origin.kind).toBe('ai_generated')
+    if (dto.origin.kind !== 'ai_generated') return
+    expect(dto.origin.generationRecordId).toBe('gen-123')
+    expect(dto.origin.costCents).toBe(5)
+  })
+
+  test('validates AssetDto with canvas_pipeline origin', () => {
+    const dto = AssetDtoSchema.parse({
+      id: 'asset-3',
+      kind: 'image',
+      title: 'Pipeline 产物',
+      tags: [],
+      status: 'active',
+      visibility: 'private',
+      source: 'canvas_pipeline',
+      origin: {
+        kind: 'canvas_pipeline',
+        projectId: 'proj-1',
+        projectTitle: '测试项目',
+        phase: 'character',
+        targetEntityType: 'character',
+        targetEntityId: 'char-1',
+        pipelineRunId: 'run-1',
+        canvasPipelineAssetId: 'cpa-1',
+        model: 'qwen-image-2.0-pro',
+        costCents: 100,
+      },
+      metadata: {},
+      files: [],
+      createdAt: '2026-06-20T00:00:00.000Z',
+      updatedAt: '2026-06-20T00:00:00.000Z',
+    })
+    expect(dto.origin.kind).toBe('canvas_pipeline')
+    if (dto.origin.kind !== 'canvas_pipeline') return
+    expect(dto.origin.projectId).toBe('proj-1')
+    expect(dto.origin.phase).toBe('character')
+    expect(dto.origin.model).toBe('qwen-image-2.0-pro')
+    expect(dto.origin.costCents).toBe(100)
+  })
+
+  test('accepts AssetDto with transfer origin', () => {
+    const dto = AssetDtoSchema.parse({
+      id: 'asset-4',
+      kind: 'image',
+      title: '传输的图片',
+      tags: [],
+      status: 'active',
+      visibility: 'private',
+      source: 'transfer',
+      origin: { kind: 'transfer', roomId: 'room-abc' },
+      metadata: {},
+      files: [],
+      createdAt: '2026-06-20T00:00:00.000Z',
+      updatedAt: '2026-06-20T00:00:00.000Z',
+    })
+    expect(dto.origin.kind).toBe('transfer')
+  })
+
+  test('accepts AssetDto with canvas_pipeline source', () => {
+    const dto = AssetDtoSchema.parse({
+      id: 'asset-5',
+      kind: 'image',
+      title: 'Pipeline 产物',
+      tags: [],
+      status: 'active',
+      visibility: 'private',
+      source: 'canvas_pipeline',
+      origin: {
+        kind: 'canvas_pipeline',
+        projectId: 'proj-1',
+        projectTitle: null,
+        phase: 'shot',
+        targetEntityType: 'shot',
+        targetEntityId: 'shot-1',
+        pipelineRunId: null,
+        canvasPipelineAssetId: null,
+        model: 'test',
+        costCents: null,
+      },
+      metadata: {},
+      files: [],
+      createdAt: '2026-06-20T00:00:00.000Z',
+      updatedAt: '2026-06-20T00:00:00.000Z',
+    })
+    expect(dto.source).toBe('canvas_pipeline')
+    expect(dto.origin.kind).toBe('canvas_pipeline')
   })
 })

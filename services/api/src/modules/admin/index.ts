@@ -16,7 +16,7 @@
  */
 import { Elysia, t } from 'elysia'
 
-import { authPlugin, requireAdmin } from '../../plugins/auth'
+import { authPlugin, getRequiredUser, requireAdmin } from '../../plugins/auth'
 
 import { handleGetOverview } from './handlers/overview'
 import {
@@ -174,7 +174,7 @@ export const adminModule = new Elysia({
       .post(
         '/provider-health/:model/restore',
         async ({ params, user }) =>
-          handleRestoreProviderHealth(params.model, user!.id),
+          handleRestoreProviderHealth(params.model, getRequiredUser(user).id),
         {
           params: t.Object({ model: t.String() }),
           detail: {
@@ -245,7 +245,7 @@ export const adminModule = new Elysia({
       .patch(
         '/api-keys/:id/config',
         async ({ params, body, user }) =>
-          handleUpdateApiKeyConfig(params.id, body as { userId: string; name?: string; expiresAt?: string | null }, user!.id),
+          handleUpdateApiKeyConfig(params.id, body as { userId: string; name?: string; expiresAt?: string | null }, getRequiredUser(user).id),
         {
           params: t.Object({ id: t.String() }),
           body: t.Object({
@@ -262,7 +262,7 @@ export const adminModule = new Elysia({
       )
       .post(
         '/api-keys/:id/reset-quota',
-        async ({ params, user }) => handleResetApiKeyQuota(params.id, user!.id),
+        async ({ params, user }) => handleResetApiKeyQuota(params.id, getRequiredUser(user).id),
         {
           params: t.Object({ id: t.String() }),
           detail: {
@@ -274,7 +274,7 @@ export const adminModule = new Elysia({
       )
       .post(
         '/api-keys/:id/revoke',
-        async ({ params, user }) => handleRevokeApiKey(params.id, user!.id),
+        async ({ params, user }) => handleRevokeApiKey(params.id, getRequiredUser(user).id),
         {
           params: t.Object({ id: t.String() }),
           detail: {
@@ -326,7 +326,7 @@ export const adminModule = new Elysia({
         async ({ body, user }) =>
           handleCreditAdd(
             body as { accountId: string; amountCents: number; description?: string },
-            user!.id,
+            getRequiredUser(user).id,
           ),
         {
           body: t.Object({

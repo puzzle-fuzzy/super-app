@@ -13,7 +13,7 @@
 import { Elysia, t } from 'elysia'
 
 import { dbPlugin } from '../../plugins/db'
-import { authPlugin, requireUser } from '../../plugins/auth'
+import { authPlugin, getRequiredUser, requireUser } from '../../plugins/auth'
 import { NotFoundError } from '../../shared/errors'
 import { ok } from '../../shared/response'
 
@@ -68,7 +68,7 @@ interface HandlerCtx {
 
 function makePhaseHandler(phase: CanvasPipelinePhase) {
   return async ({ db, user, params }: HandlerCtx) => {
-    const result = await triggerPhase({ db, owner: user!, projectId: params.id, phase })
+    const result = await triggerPhase({ db, owner: getRequiredUser(user), projectId: params.id, phase })
     return ok(result)
   }
 }
@@ -97,7 +97,7 @@ export const canvasPipelineModule = new Elysia({
         async ({ db, user, query }) => {
           const result = await listProjects({
             db,
-            owner: user!,
+            owner: getRequiredUser(user),
             search: query.search,
             status: query.status,
             limit: query.limit ? Number(query.limit) : 20,
@@ -121,7 +121,7 @@ export const canvasPipelineModule = new Elysia({
         async ({ db, user, body }) => {
           const project = await createProject({
             db,
-            owner: user!,
+            owner: getRequiredUser(user),
             name: body.name,
             storyText: body.storyText,
           })
@@ -137,7 +137,7 @@ export const canvasPipelineModule = new Elysia({
       )
 
       .get('/projects/:id', async ({ db, user, params }) => {
-        const project = await getProject({ db, owner: user!, id: params.id })
+        const project = await getProject({ db, owner: getRequiredUser(user), id: params.id })
         if (!project) throw new NotFoundError('项目不存在')
         return ok(project)
       }, {
@@ -146,7 +146,7 @@ export const canvasPipelineModule = new Elysia({
       })
 
       .delete('/projects/:id', async ({ db, user, params }) => {
-        await deleteProject({ db, owner: user!, id: params.id })
+        await deleteProject({ db, owner: getRequiredUser(user), id: params.id })
         return ok({ message: '项目已删除' })
       }, {
         params: t.Object({ id: t.String() }),
@@ -158,7 +158,7 @@ export const canvasPipelineModule = new Elysia({
         async ({ db, user, params, body }) => {
           const result = await updateProject({
             db,
-            owner: user!,
+            owner: getRequiredUser(user),
             id: params.id,
             title: body.title,
             storyText: body.storyText,
@@ -192,7 +192,7 @@ export const canvasPipelineModule = new Elysia({
 
       // ── Pipeline 控制 ─────────────────────────────────
       .post('/projects/:id/cancel', async ({ db, user, params }) => {
-        const result = await cancelPipeline({ db, owner: user!, projectId: params.id })
+        const result = await cancelPipeline({ db, owner: getRequiredUser(user), projectId: params.id })
         return ok(result)
       }, {
         params: t.Object({ id: t.String() }),
@@ -200,7 +200,7 @@ export const canvasPipelineModule = new Elysia({
       })
 
       .post('/projects/:id/retry', async ({ db, user, params }) => {
-        const result = await retryPipeline({ db, owner: user!, projectId: params.id })
+        const result = await retryPipeline({ db, owner: getRequiredUser(user), projectId: params.id })
         return ok(result)
       }, {
         params: t.Object({ id: t.String() }),
@@ -208,7 +208,7 @@ export const canvasPipelineModule = new Elysia({
       })
 
       .get('/projects/:id/runs', async ({ db, user, params }) => {
-        const runs = await getProjectRuns({ db, owner: user!, projectId: params.id })
+        const runs = await getProjectRuns({ db, owner: getRequiredUser(user), projectId: params.id })
         return ok(runs)
       }, {
         params: t.Object({ id: t.String() }),
@@ -217,7 +217,7 @@ export const canvasPipelineModule = new Elysia({
 
       // ── 角色管理 ───────────────────────────────────────
       .get('/projects/:id/characters', async ({ db, user, params }) => {
-        const characters = await getProjectCharacters({ db, owner: user!, projectId: params.id })
+        const characters = await getProjectCharacters({ db, owner: getRequiredUser(user), projectId: params.id })
         return ok(characters)
       }, {
         params: t.Object({ id: t.String() }),
@@ -229,7 +229,7 @@ export const canvasPipelineModule = new Elysia({
         async ({ db, user, params, body }) => {
           const result = await updateCharacter({
             db,
-            owner: user!,
+            owner: getRequiredUser(user),
             characterId: params.characterId,
             data: body,
           })
@@ -244,7 +244,7 @@ export const canvasPipelineModule = new Elysia({
 
       // ── 场景管理 ───────────────────────────────────────
       .get('/projects/:id/locations', async ({ db, user, params }) => {
-        const locations = await getProjectLocations({ db, owner: user!, projectId: params.id })
+        const locations = await getProjectLocations({ db, owner: getRequiredUser(user), projectId: params.id })
         return ok(locations)
       }, {
         params: t.Object({ id: t.String() }),
@@ -256,7 +256,7 @@ export const canvasPipelineModule = new Elysia({
         async ({ db, user, params, body }) => {
           const result = await updateLocation({
             db,
-            owner: user!,
+            owner: getRequiredUser(user),
             locationId: params.locationId,
             data: body,
           })
@@ -271,7 +271,7 @@ export const canvasPipelineModule = new Elysia({
 
       // ── 镜头管理 ───────────────────────────────────────
       .get('/projects/:id/shots', async ({ db, user, params }) => {
-        const shots = await getProjectShots({ db, owner: user!, projectId: params.id })
+        const shots = await getProjectShots({ db, owner: getRequiredUser(user), projectId: params.id })
         return ok(shots)
       }, {
         params: t.Object({ id: t.String() }),
@@ -283,7 +283,7 @@ export const canvasPipelineModule = new Elysia({
         async ({ db, user, params, body }) => {
           const result = await updateShot({
             db,
-            owner: user!,
+            owner: getRequiredUser(user),
             shotId: params.shotId,
             data: body,
           })
@@ -298,7 +298,7 @@ export const canvasPipelineModule = new Elysia({
 
       // ── 资产管理 ───────────────────────────────────────
       .get('/projects/:id/assets', async ({ db, user, params }) => {
-        const assets = await getProjectAssets({ db, owner: user!, projectId: params.id })
+        const assets = await getProjectAssets({ db, owner: getRequiredUser(user), projectId: params.id })
         return ok(assets)
       }, {
         params: t.Object({ id: t.String() }),
@@ -306,7 +306,7 @@ export const canvasPipelineModule = new Elysia({
       })
 
       .get('/assets/:assetId', async ({ db, user, params }) => {
-        const asset = await getAsset({ db, owner: user!, assetId: params.assetId })
+        const asset = await getAsset({ db, owner: getRequiredUser(user), assetId: params.assetId })
         if (!asset) throw new NotFoundError('资产不存在')
         return ok(asset)
       }, {

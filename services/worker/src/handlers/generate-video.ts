@@ -140,6 +140,7 @@ export const generateVideoHandler: TaskHandler<Task, { workerId: string }, TaskO
       providerTaskId,
       model: input.model,
       prompt: input.prompt,
+      generationRecordId: input.generationRecordId,
     }
 
     await markGenerationSucceeded(input.generationRecordId, generationOutput)

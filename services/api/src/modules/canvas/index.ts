@@ -8,7 +8,7 @@ import { Elysia } from 'elysia'
 import { getGenerationModel, isVideoGenerationModel } from '@super-app/ai-models'
 import { estimateCost, getModelPricing } from '@super-app/billing'
 import { createDedupeKey, createTask, markGenerationFailed, markGenerationSubmitting } from '@super-app/db'
-import { authPlugin, requireUser } from '../../plugins/auth'
+import { authPlugin, getRequiredUser, requireUser } from '../../plugins/auth'
 import { ok } from '../../shared/response'
 import { checkDedupe, createGenerationRequest } from '../generation/service'
 import { reserveAndTrack } from '../../services/billing-ledger'
@@ -27,7 +27,7 @@ export const canvasModule = new Elysia({ name: 'canvas', detail: { tags: ['画�
       .post(
         '/canvas/generate-image',
         async ({ user, body, set }) => {
-          const owner = user!
+          const owner = getRequiredUser(user)
 
           // 计算去重键
           const dedupeKey = await createDedupeKey({
@@ -116,7 +116,7 @@ export const canvasModule = new Elysia({ name: 'canvas', detail: { tags: ['画�
           .post(
             '/',
             async ({ user, db, body }) => {
-              const project = await createCanvasProject({ db, owner: user!, input: body })
+              const project = await createCanvasProject({ db, owner: getRequiredUser(user), input: body })
               return ok(project)
             },
             { body: CreateCanvasProjectRequestSchema, detail: { summary: '创建画布项目', tags: ['画布'] } }
@@ -124,7 +124,7 @@ export const canvasModule = new Elysia({ name: 'canvas', detail: { tags: ['画�
           .get('/', async ({ user, db, query }) => {
             const result = await listCanvasProjects({
               db,
-              owner: user!,
+              owner: getRequiredUser(user),
               limit: query.limit ? Number(query.limit) : undefined,
               cursor: query.cursor,
             })
@@ -133,7 +133,7 @@ export const canvasModule = new Elysia({ name: 'canvas', detail: { tags: ['画�
             detail: { summary: '获取画布项目列表', tags: ['画布'] },
           })
           .get('/:id', async ({ user, db, params }) => {
-            const project = await getCanvasProject({ db, owner: user!, id: params.id })
+            const project = await getCanvasProject({ db, owner: getRequiredUser(user), id: params.id })
             return ok(project)
           }, {
             detail: { summary: '获取画布项目详情', tags: ['画布'] },
@@ -143,7 +143,7 @@ export const canvasModule = new Elysia({ name: 'canvas', detail: { tags: ['画�
             async ({ user, db, params, body }) => {
               const project = await updateCanvasProject({
                 db,
-                owner: user!,
+                owner: getRequiredUser(user),
                 id: params.id,
                 input: body,
               })
@@ -152,7 +152,7 @@ export const canvasModule = new Elysia({ name: 'canvas', detail: { tags: ['画�
             { body: UpdateCanvasProjectRequestSchema, detail: { summary: '更新画布项目', tags: ['画布'] } }
           )
           .delete('/:id', async ({ user, db, params }) => {
-            await deleteCanvasProject({ db, owner: user!, id: params.id })
+            await deleteCanvasProject({ db, owner: getRequiredUser(user), id: params.id })
             return ok({ deleted: true })
           }, {
             detail: { summary: '删除画布项目', tags: ['画布'] },

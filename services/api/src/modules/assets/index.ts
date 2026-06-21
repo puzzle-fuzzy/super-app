@@ -3,7 +3,7 @@ import { AssetSourceSchema } from '@super-app/contracts/assets'
 import { buildContentDisposition } from '@super-app/utils'
 import { Elysia, t } from 'elysia'
 
-import { authPlugin, requireUser } from '../../plugins/auth'
+import { authPlugin, getRequiredUser, requireUser } from '../../plugins/auth'
 import { storagePlugin } from '../../plugins/storage'
 import { AppError } from '../../shared/errors'
 import { ok } from '../../shared/response'
@@ -69,7 +69,7 @@ export const assetsModule = new Elysia({ name: 'assets', detail: { tags: ['资�
               const asset = await uploadAsset({
                 db,
                 storage,
-                owner: user!,
+                owner: getRequiredUser(user),
                 fileName: file.name,
                 mimeType: file.type,
                 size: bytes.byteLength,
@@ -89,7 +89,7 @@ export const assetsModule = new Elysia({ name: 'assets', detail: { tags: ['资�
             const parsedQuery = parseAssetListQuery(query)
             const result = await listAssets({
               db,
-              owner: user!,
+              owner: getRequiredUser(user),
               kind: parsedQuery.kind,
               source: parsedQuery.source,
               limit: parsedQuery.limit,
@@ -100,25 +100,25 @@ export const assetsModule = new Elysia({ name: 'assets', detail: { tags: ['资�
             detail: { summary: '获取资产列表', tags: ['资产'] },
           })
           .get('/:id', async ({ user, db, params }) => {
-            const asset = await getAsset({ db, owner: user!, id: params.id })
+            const asset = await getAsset({ db, owner: getRequiredUser(user), id: params.id })
             return ok(asset)
           }, {
             detail: { summary: '获取资产详情', tags: ['资产'] },
           })
           .post('/:id/share-link', async ({ user, db, params }) => {
-            const share = await createAssetShareLink({ db, owner: user!, id: params.id })
+            const share = await createAssetShareLink({ db, owner: getRequiredUser(user), id: params.id })
             return ok(share)
           }, {
             detail: { summary: '创建资产分享链接', tags: ['资产'] },
           })
           .post('/:id/transfer-session', async ({ user, db, params }) => {
-            const session = await createAssetTransferSession({ db, owner: user!, id: params.id })
+            const session = await createAssetTransferSession({ db, owner: getRequiredUser(user), id: params.id })
             return ok(session)
           }, {
             detail: { summary: '创建资产传输会话', tags: ['资产'] },
           })
           .delete('/:id', async ({ user, db, params }) => {
-            await deleteAsset({ db, owner: user!, id: params.id })
+            await deleteAsset({ db, owner: getRequiredUser(user), id: params.id })
             return ok({ deleted: true })
           }, {
             detail: { summary: '删除资产', tags: ['资产'] },

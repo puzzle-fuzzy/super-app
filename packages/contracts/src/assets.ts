@@ -18,6 +18,7 @@ export type AssetKind = z.infer<typeof AssetKindSchema>
 export const AssetSourceSchema = z.enum([
   'upload',
   'ai_generation',
+  'canvas_pipeline',
   'canvas_export',
   'transfer',
   'manual',
