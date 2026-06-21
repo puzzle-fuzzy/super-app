@@ -54,27 +54,10 @@
 
 ## P1 - 数据关联与后端契约
 
-### 5. AI 生成资产需要关联 generation record
+### 5. ~~AI 生成资产需要关联 generation record~~ ✅ `20b89a1`
 
-**问题**
-
-- `services/api/src/modules/canvas/generate-image.ts` 直接调用 provider 并上传资产，但从当前返回结构看，资产 metadata 没有稳定包含 `generationRecordId`。
-- `services/api/src/modules/canvas/index.ts` 生成请求会创建 generation record 和 task input，但同步生成路径、异步 task 路径、资产入库路径之间的关联需要重新核对。
-- 没有 `generationRecordId`，完整信息弹窗无法稳定展示费用、状态、错误、重试次数、traceId、取消状态。
-
-**解决办法**
-
-- 明确普通 Canvas 生成链路：
-  - 请求创建 `generation_records`
-  - 创建或执行 task
-  - provider 返回结果
-  - 稳定上传到 asset library
-  - asset metadata/origin 写入 `generationRecordId`
-  - generation record output 写入 `assetId`
-- 如果当前存在同步生成和异步生成两条路径，必须统一返回同一种 `CanvasGenerateImageData`。
-- `CanvasGenerateImageDataSchema` 增加：
-  - `assetId`
-  - `generationRecordId`
+- generate-image.ts: 图片/视频生成前创建 generation record，record ID 写入 asset metadata
+- 现有 `buildAssetOrigin()` 能自动从 metadata 提取 `generationRecordId` 到 `origin`
   - `origin`
   - `status`
 - `records` API 或 assets API 提供 generation detail 查询能力。
