@@ -159,7 +159,7 @@ export function RoseLoader() {
   return (
     <div
       ref={containerRef}
-      className="w-[min(14vmin,52px)] aspect-square text-[#999999]"
+      style={{ width: 60, height: 60, color: '#999999' }}
     />
   )
 }
