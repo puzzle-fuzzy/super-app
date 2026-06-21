@@ -402,6 +402,7 @@ export function toAssetDto(
     status: asset.status,
     visibility: asset.visibility,
     source: asset.source,
+    origin: buildAssetOrigin(asset, files),
     thumbnailUrl: asset.thumbnailKey ? resolveStoragePublicUrl(asset.thumbnailKey) : undefined,
     previewUrl: asset.previewKey ? resolveStoragePublicUrl(asset.previewKey) : undefined,
     metadata: asset.metadata,
@@ -481,5 +482,69 @@ function decodeCursor(cursor: string | null | undefined): [Date, string] | null 
     return [date, id]
   } catch {
     return null
+  }
+}
+
+// ── Asset Origin 构建 ────────────────────────────────────────
+import type { AssetOrigin } from '@super-app/contracts/assets'
+
+function buildAssetOrigin(
+  asset: typeof assets.$inferSelect,
+  files: (typeof assetFiles.$inferSelect)[],
+): AssetOrigin {
+  const meta = asset.metadata ?? {} as Record<string, unknown>
+  const originalFile = files.find((f) => f.role === 'original')
+
+  switch (asset.source) {
+    case 'upload': {
+      return {
+        kind: 'uploaded',
+        originalFileName: originalFile?.storageKey ?? (meta.fileName as string) ?? asset.title,
+        mimeType: originalFile?.mimeType ?? '',
+        size: originalFile?.size ?? 0,
+        width: originalFile?.width ?? null,
+        height: originalFile?.height ?? null,
+        duration: originalFile?.duration ?? null,
+      }
+    }
+
+    case 'ai_generation': {
+      return {
+        kind: 'ai_generated',
+        prompt: (meta.prompt as string) ?? '',
+        negativePrompt: (meta.negativePrompt as string | null) ?? null,
+        model: (meta.model as string) ?? '',
+        provider: (meta.provider as string) ?? 'dashscope',
+        mediaKind: (meta.kind as string) ?? 'image',
+        size: (meta.size as string | null) ?? null,
+        ratio: (meta.ratio as string | null) ?? null,
+        resolution: (meta.resolution as string | null) ?? null,
+        duration: (meta.duration as number | null) ?? null,
+        seed: (meta.seed as number | null) ?? null,
+        promptExtend: (meta.promptExtend as boolean) ?? false,
+        watermark: (meta.watermark as boolean) ?? false,
+        requestId: (meta.requestId as string | null) ?? null,
+        providerTaskId: (meta.providerTaskId as string | null) ?? null,
+        generationRecordId: (meta.generationRecordId as string | null) ?? null,
+        taskId: (meta.taskId as string | null) ?? null,
+        costCents: (meta.costCents as number | null) ?? null,
+        providerUrl: ((meta.providerImageUrl ?? meta.providerVideoUrl) as string | null) ?? null,
+      }
+    }
+
+    case 'canvas_export':
+      return { kind: 'canvas_export' }
+
+    case 'transfer':
+      return { kind: 'transfer', roomId: (meta.roomId as string) ?? '' }
+
+    case 'manual':
+      return { kind: 'manual' }
+
+    case 'import':
+      return { kind: 'imported' }
+
+    default:
+      return { kind: 'manual' }
   }
 }

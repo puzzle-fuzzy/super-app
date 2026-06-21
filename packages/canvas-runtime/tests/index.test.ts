@@ -94,13 +94,13 @@ describe('resolveShotVideoReferences', () => {
         characterIdsJson: [],
         locationId: null,
         referenceAssetsJson: [
-          { assetId: 'asset-1', url: 'https://example.com/user.jpg', role: 'user' },
+          { assetId: 'asset-1', url: 'https://example.com/user.jpg', role: 'other' },
         ],
       },
       characters: [],
       locations: [],
     })
     expect(result).toHaveLength(1)
-    expect(result[0]!.role).toBe('user')
+    expect(result[0]!.role).toBe('other')
   })
 })

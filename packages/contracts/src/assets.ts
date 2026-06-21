@@ -26,6 +26,108 @@ export const AssetSourceSchema = z.enum([
 
 export type AssetSource = z.infer<typeof AssetSourceSchema>
 
+// ── Asset Origin (类型化溯源信息) ───────────────────────────────
+
+export const AssetOriginKindSchema = z.enum([
+  'uploaded',
+  'ai_generated',
+  'canvas_pipeline',
+  'canvas_export',
+  'transfer',
+  'manual',
+  'imported',
+])
+
+export type AssetOriginKind = z.infer<typeof AssetOriginKindSchema>
+
+export const UploadedOriginSchema = z.object({
+  kind: z.literal('uploaded'),
+  originalFileName: z.string(),
+  mimeType: z.string(),
+  size: z.number(),
+  width: z.number().nullable(),
+  height: z.number().nullable(),
+  duration: z.number().nullable(),
+})
+
+export type UploadedOrigin = z.infer<typeof UploadedOriginSchema>
+
+export const AiGeneratedOriginSchema = z.object({
+  kind: z.literal('ai_generated'),
+  prompt: z.string(),
+  negativePrompt: z.string().nullable(),
+  model: z.string(),
+  provider: z.string(),
+  mediaKind: z.string(),
+  size: z.string().nullable(),
+  ratio: z.string().nullable(),
+  resolution: z.string().nullable(),
+  duration: z.number().nullable(),
+  seed: z.number().nullable(),
+  promptExtend: z.boolean(),
+  watermark: z.boolean(),
+  requestId: z.string().nullable(),
+  providerTaskId: z.string().nullable(),
+  generationRecordId: z.string().nullable(),
+  taskId: z.string().nullable(),
+  costCents: z.number().nullable(),
+  providerUrl: z.string().nullable(),
+})
+
+export type AiGeneratedOrigin = z.infer<typeof AiGeneratedOriginSchema>
+
+export const CanvasPipelineOriginSchema = z.object({
+  kind: z.literal('canvas_pipeline'),
+  projectId: z.string(),
+  projectTitle: z.string().nullable(),
+  phase: z.string(),
+  targetEntityType: z.string(),
+  targetEntityId: z.string(),
+  pipelineRunId: z.string().nullable(),
+  canvasPipelineAssetId: z.string().nullable(),
+  model: z.string().nullable(),
+  costCents: z.number().nullable(),
+})
+
+export type CanvasPipelineOrigin = z.infer<typeof CanvasPipelineOriginSchema>
+
+export const CanvasExportOriginSchema = z.object({
+  kind: z.literal('canvas_export'),
+})
+
+export type CanvasExportOrigin = z.infer<typeof CanvasExportOriginSchema>
+
+export const TransferOriginSchema = z.object({
+  kind: z.literal('transfer'),
+  roomId: z.string(),
+})
+
+export type TransferOrigin = z.infer<typeof TransferOriginSchema>
+
+export const ManualOriginSchema = z.object({
+  kind: z.literal('manual'),
+})
+
+export type ManualOrigin = z.infer<typeof ManualOriginSchema>
+
+export const ImportedOriginSchema = z.object({
+  kind: z.literal('imported'),
+})
+
+export type ImportedOrigin = z.infer<typeof ImportedOriginSchema>
+
+export const AssetOriginSchema = z.discriminatedUnion('kind', [
+  UploadedOriginSchema,
+  AiGeneratedOriginSchema,
+  CanvasPipelineOriginSchema,
+  CanvasExportOriginSchema,
+  TransferOriginSchema,
+  ManualOriginSchema,
+  ImportedOriginSchema,
+])
+
+export type AssetOrigin = z.infer<typeof AssetOriginSchema>
+
 export const AssetStatusSchema = z.enum(['active', 'archived', 'deleted'])
 export type AssetStatus = z.infer<typeof AssetStatusSchema>
 
@@ -69,6 +171,7 @@ export const AssetDtoSchema = z.object({
   status: AssetStatusSchema,
   visibility: AssetVisibilitySchema,
   source: AssetSourceSchema,
+  origin: AssetOriginSchema,
   thumbnailUrl: z.string().url().optional(),
   previewUrl: z.string().url().optional(),
   metadata: z.record(z.unknown()),
