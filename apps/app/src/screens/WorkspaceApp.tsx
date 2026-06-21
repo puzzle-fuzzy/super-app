@@ -44,7 +44,7 @@ const SHORTCUTS: Shortcut[] = [
   {
     label: '传输',
     description: 'P2P 文本与文件传输，完成后可保存到资产中心。',
-    href: clientEnv.SUPER_PUBLIC_TRANSFER_APP_URL,
+    href: `${clientEnv.SUPER_PUBLIC_SITE_URL}/transfer`,
     status: '可用',
     icon: Send,
   },

@@ -157,7 +157,6 @@ function getAllowedReturnOrigins() {
       clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL,
       clientEnv.SUPER_PUBLIC_CANVAS_APP_URL,
       clientEnv.SUPER_PUBLIC_ASSETS_APP_URL,
-      clientEnv.SUPER_PUBLIC_TRANSFER_APP_URL,
       clientEnv.SUPER_PUBLIC_CONSOLE_APP_URL,
       clientEnv.SUPER_PUBLIC_ADMIN_APP_URL,
     ].map((value) => new URL(value).origin)

@@ -8,24 +8,23 @@ const localEnv = {
   ...(isCI ? {} : { DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/super' }),
   NODE_ENV: 'development',
   APP_ENV: 'local',
-  SUPER_PUBLIC_SITE_URL: 'http://localhost:5101',
-  SUPER_PUBLIC_DOCS_URL: 'http://localhost:5102',
-  SUPER_PUBLIC_AUTH_APP_URL: 'http://localhost:5100/auth/',
-  SUPER_PUBLIC_WORKSPACE_APP_URL: 'http://localhost:5103/workspace/',
-  SUPER_PUBLIC_CANVAS_APP_URL: 'http://localhost:5104/canvas/',
-  SUPER_PUBLIC_ASSETS_APP_URL: 'http://localhost:5105/assets/',
-  SUPER_PUBLIC_TRANSFER_APP_URL: 'http://localhost:5106/transfer/',
-  SUPER_PUBLIC_CONSOLE_APP_URL: 'http://localhost:5107/api-console/',
+  SUPER_PUBLIC_SITE_URL: 'http://localhost:5102',
+  SUPER_PUBLIC_DOCS_URL: 'http://localhost:5102/docs/',
+  SUPER_PUBLIC_AUTH_APP_URL: 'http://localhost:5173/auth/',
+  SUPER_PUBLIC_WORKSPACE_APP_URL: 'http://localhost:5173/workspace/',
+  SUPER_PUBLIC_CANVAS_APP_URL: 'http://localhost:5173/canvas/',
+  SUPER_PUBLIC_ASSETS_APP_URL: 'http://localhost:5173/assets/',
+  SUPER_PUBLIC_CONSOLE_APP_URL: 'http://localhost:5173/api-console/',
   SUPER_PUBLIC_API_BASE_URL: 'http://localhost:5200/api',
   SUPER_PUBLIC_STORAGE_BASE_URL: 'http://localhost:5200/storage',
-  SITE_URL: 'http://localhost:5101',
-  DOCS_URL: 'http://localhost:5102',
-  AUTH_APP_URL: 'http://localhost:5100/auth/',
-  WORKSPACE_APP_URL: 'http://localhost:5103/workspace/',
-  CANVAS_APP_URL: 'http://localhost:5104/canvas/',
-  ASSETS_APP_URL: 'http://localhost:5105/assets/',
-  TRANSFER_APP_URL: 'http://localhost:5106/transfer/',
-  CONSOLE_APP_URL: 'http://localhost:5107/api-console/',
+  SITE_URL: 'http://localhost:5102',
+  DOCS_URL: 'http://localhost:5102/docs/',
+  AUTH_APP_URL: 'http://localhost:5173/auth/',
+  WORKSPACE_APP_URL: 'http://localhost:5173/workspace/',
+  CANVAS_APP_URL: 'http://localhost:5173/canvas/',
+  ASSETS_APP_URL: 'http://localhost:5173/assets/',
+  TRANSFER_APP_URL: 'http://localhost:5173/transfer/',
+  CONSOLE_APP_URL: 'http://localhost:5173/api-console/',
   API_BASE_URL: 'http://localhost:5200/api',
   API_PORT: '5200',
   COOKIE_SECURE: 'false',
@@ -79,46 +78,19 @@ export default defineConfig({
     },
     {
       command: isCI
-        ? `cd apps/auth && bun run dev`
-        : `${loadLocalEnv} pnpm --filter @super-app/auth dev`,
+        ? `cd apps/app && bun run dev`
+        : `${loadLocalEnv} pnpm --filter @super-app/app dev`,
       env: localEnv,
-      url: 'http://localhost:5100/auth/',
+      url: 'http://localhost:5173/',
       reuseExistingServer: !isCI,
       timeout: 60_000,
     },
     {
       command: isCI
-        ? `cd apps/workspace && bun run dev`
-        : `${loadLocalEnv} pnpm --filter @super-app/workspace dev`,
+        ? `cd apps/docs && bun run dev`
+        : `${loadLocalEnv} pnpm --filter @super-app/docs dev`,
       env: localEnv,
-      url: 'http://localhost:5103/workspace/',
-      reuseExistingServer: !isCI,
-      timeout: 60_000,
-    },
-    {
-      command: isCI
-        ? `cd apps/canvas && bun run dev`
-        : `${loadLocalEnv} pnpm --filter @super-app/canvas dev`,
-      env: localEnv,
-      url: 'http://localhost:5104/canvas/',
-      reuseExistingServer: !isCI,
-      timeout: 60_000,
-    },
-    {
-      command: isCI
-        ? `cd apps/assets && bun run dev`
-        : `${loadLocalEnv} pnpm --filter @super-app/assets dev`,
-      env: localEnv,
-      url: 'http://localhost:5105/assets/',
-      reuseExistingServer: !isCI,
-      timeout: 60_000,
-    },
-    {
-      command: isCI
-        ? `cd apps/transfer && bun run dev`
-        : `${loadLocalEnv} pnpm --filter @super-app/transfer dev`,
-      env: localEnv,
-      url: 'http://localhost:5106/transfer/',
+      url: 'http://localhost:5102/',
       reuseExistingServer: !isCI,
       timeout: 60_000,
     },

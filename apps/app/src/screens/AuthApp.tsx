@@ -143,6 +143,10 @@ export function AuthApp() {
             <button type="submit" className="submit-button" disabled={isSubmitting}>
               {isSubmitting ? '处理中...' : mode === 'login' ? '登录 Super' : '创建并进入'}
             </button>
+
+            <a href="/transfer" className="guest-link">
+              游客模式 · 跳过登录
+            </a>
           </form>
         </section>
       </div>

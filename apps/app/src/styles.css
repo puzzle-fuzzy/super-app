@@ -331,6 +331,22 @@ textarea:focus-visible {
   opacity: 0.62;
 }
 
+.guest-link {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  margin-top: 8px;
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 13px;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.guest-link:hover {
+  color: var(--color-foreground);
+}
+
 @media (max-width: 860px) {
   .auth-shell {
     grid-template-columns: 1fr;

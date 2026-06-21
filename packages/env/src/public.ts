@@ -7,7 +7,6 @@ export const publicEnvSchema = z.object({
   SUPER_PUBLIC_WORKSPACE_APP_URL: z.string().url(),
   SUPER_PUBLIC_CANVAS_APP_URL: z.string().url(),
   SUPER_PUBLIC_ASSETS_APP_URL: z.string().url(),
-  SUPER_PUBLIC_TRANSFER_APP_URL: z.string().url(),
   SUPER_PUBLIC_CONSOLE_APP_URL: z.string().url(),
   SUPER_PUBLIC_ADMIN_APP_URL: z.string().url(),
   SUPER_PUBLIC_API_BASE_URL: z.string().url(),

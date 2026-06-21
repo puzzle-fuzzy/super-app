@@ -1,12 +1,9 @@
-import { StrictMode, useEffect, useRef, useState } from 'react'
-import { createRoot } from 'react-dom/client'
-import { OverlayScrollbarsComponent } from 'overlayscrollbars-react'
-import { ArrowDownToLine, House, Loader, Wifi, WifiOff } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ArrowDownToLine, Loader, Wifi, WifiOff } from 'lucide-react'
 
 import { clientEnv } from '@super-app/env/client'
+import type { CurrentUser } from '@super-app/contracts/auth'
 import { formatFileSize } from '@super-app/utils'
-
-import './styles.css'
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                      */
@@ -38,7 +35,7 @@ interface CompletedFile {
 /*  TransferApp                                                                */
 /* -------------------------------------------------------------------------- */
 
-function TransferApp() {
+export function TransferApp({ user: _user }: { user: CurrentUser | null }) {
   const roomId = new URLSearchParams(window.location.search).get('room')
   const [status, setStatus] = useState(roomId ? '正在连接传输房间…' : '缺少传输房间参数')
   const [peerId, setPeerId] = useState<string | null>(null)
@@ -238,128 +235,110 @@ function TransferApp() {
   const isDone = !!completed
 
   return (
-    <main className="flex min-h-screen flex-col bg-[#141414] text-[#e5e5e5]">
-      {/* Header */}
-      <div className="mx-auto w-full max-w-[1800px] px-8 pt-8 max-[920px]:px-4.5 max-[620px]:px-3.5">
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-md border border-[#3a3a3a] text-sm font-bold text-[#999999]">
-              S
-            </span>
-            <strong className="text-base font-semibold tracking-tight">Super Transfer</strong>
-          </div>
-          <a
-            href={clientEnv.SUPER_PUBLIC_WORKSPACE_APP_URL}
-            className="inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-[#2a2a2a] bg-[#1c1c1c] text-[#999999] no-underline transition-colors hover:border-[#3a3a3a] hover:bg-[#2a2a2a] hover:text-[#e5e5e5]"
-            aria-label="首页"
-            title="首页"
-          >
-            <House size={16} aria-hidden="true" />
-          </a>
-        </header>
-      </div>
+    <main className="min-h-screen bg-[#141414] text-[#e5e5e5]">
+      <section className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-[18px] max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5">
+        {/* Card — vertically centered */}
+        <div className="flex min-h-[80vh] items-center justify-center">
+          <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
+            {/* Kicker + Title */}
+            <p className="mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
+              P2P FILE TRANSFER
+            </p>
+            <h1 className="m-0 text-[clamp(36px,7vw,56px)] font-bold leading-[0.98] tracking-[-0.02em]">
+              局域网文件接收
+            </h1>
 
-      {/* Card — vertically centered */}
-      <div className="flex flex-1 items-center justify-center px-8 pb-8 max-[920px]:px-4.5 max-[620px]:px-3.5">
-        <div className="w-full max-w-140 rounded-[24px] border border-[#2a2a2a] bg-[#1c1c1c] p-[clamp(28px,6vw,44px)]">
-          {/* Kicker + Title */}
-          <p className="mb-2.5 text-xs font-bold tracking-[0.16em] text-[#666666]">
-            P2P FILE TRANSFER
-          </p>
-          <h1 className="m-0 text-[clamp(36px,7vw,56px)] font-bold leading-[0.98] tracking-[-0.02em]">
-            局域网文件接收
-          </h1>
+            {/* Connection indicator */}
+            <div className="mt-5 flex items-center gap-2">
+              {connected ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#064e3b] px-3 py-1 text-[12px] font-semibold text-[#34d399]">
+                  <Wifi size={12} />
+                  已连接
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#2a1f1f] px-3 py-1 text-[12px] font-semibold text-[#f87171]">
+                  <WifiOff size={12} />
+                  {roomId ? '未连接' : '无房间'}
+                </span>
+              )}
+              {peerId && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1e293b] px-3 py-1 text-[12px] font-semibold text-[#60a5fa]">
+                  设备 {peerId.slice(0, 8)}
+                </span>
+              )}
+            </div>
 
-          {/* Connection indicator */}
-          <div className="mt-5 flex items-center gap-2">
-            {connected ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#064e3b] px-3 py-1 text-[12px] font-semibold text-[#34d399]">
-                <Wifi size={12} />
-                已连接
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#2a1f1f] px-3 py-1 text-[12px] font-semibold text-[#f87171]">
-                <WifiOff size={12} />
-                {roomId ? '未连接' : '无房间'}
-              </span>
+            {/* Status */}
+            <p className="mt-5 leading-[1.7] text-[#999999]">{status}</p>
+
+            {/* File Offer Card */}
+            {isReady && offer && (
+              <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
+                <p className="m-0 mb-1 text-[12px] font-semibold tracking-[0.08em] text-[#666666]">
+                  待接收文件
+                </p>
+                <p className="m-0 text-[20px] font-bold tracking-[-0.01em] break-all">
+                  {offer.fileName}
+                </p>
+                <p className="m-0 mt-1 text-[13px] text-[#999999]">{formatFileSize(offer.fileSize)}</p>
+                <button
+                  type="button"
+                  className="mt-5 flex h-11 cursor-pointer items-center gap-2 rounded-md border-0 bg-[#e5e5e5] px-6 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
+                  onClick={acceptOffer}
+                >
+                  <ArrowDownToLine size={16} />
+                  接收文件
+                </button>
+              </div>
             )}
-            {peerId && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1e293b] px-3 py-1 text-[12px] font-semibold text-[#60a5fa]">
-                设备 {peerId.slice(0, 8)}
-              </span>
+
+            {/* Connecting state */}
+            {isConnecting && (
+              <div className="mt-6 flex items-center gap-3 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
+                <Loader size={20} className="animate-spin text-[#666666]" />
+                <p className="m-0 text-[14px] text-[#999999]">等待发送方接入…</p>
+              </div>
             )}
-          </div>
 
-          {/* Status */}
-          <p className="mt-5 leading-[1.7] text-[#999999]">{status}</p>
+            {/* Error state */}
+            {hasError && (
+              <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
+                <p className="m-0 text-[14px] text-[#999999]">
+                  请使用资产库中的「传输」功能生成的链接来访问此页面。
+                </p>
+              </div>
+            )}
 
-          {/* File Offer Card */}
-          {isReady && offer && (
-            <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
-              <p className="m-0 mb-1 text-[12px] font-semibold tracking-[0.08em] text-[#666666]">
-                待接收文件
-              </p>
-              <p className="m-0 text-[20px] font-bold tracking-[-0.01em] break-all">
-                {offer.fileName}
-              </p>
-              <p className="m-0 mt-1 text-[13px] text-[#999999]">{formatFileSize(offer.fileSize)}</p>
-              <button
-                type="button"
-                className="mt-5 flex h-11 cursor-pointer items-center gap-2 rounded-md border-0 bg-[#e5e5e5] px-6 text-[13px] font-semibold text-[#141414] transition-colors hover:bg-white"
-                onClick={acceptOffer}
+            {/* Progress */}
+            {progress > 0 && !completed && (
+              <div className="mt-6">
+                <div className="mb-2 flex items-center justify-between text-[12px] text-[#666666]">
+                  <span>接收进度</span>
+                  <span>{progress}%</span>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full bg-[#2a2a2a]">
+                  <div
+                    className="h-full rounded-full bg-[#e5e5e5] transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Completed Download */}
+            {isDone && completed && (
+              <a
+                className="mt-6 flex h-11 cursor-pointer items-center justify-center gap-2 rounded-md border-0 bg-[#064e3b] px-6 text-[13px] font-semibold text-[#34d399] no-underline transition-colors hover:bg-[#065f46]"
+                href={completed.url}
+                download={completed.fileName}
               >
                 <ArrowDownToLine size={16} />
-                接收文件
-              </button>
-            </div>
-          )}
-
-          {/* Connecting state */}
-          {isConnecting && (
-            <div className="mt-6 flex items-center gap-3 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
-              <Loader size={20} className="animate-spin text-[#666666]" />
-              <p className="m-0 text-[14px] text-[#999999]">等待发送方接入…</p>
-            </div>
-          )}
-
-          {/* Error state */}
-          {hasError && (
-            <div className="mt-6 rounded-[18px] border border-[#2a2a2a] bg-[#141414] p-6">
-              <p className="m-0 text-[14px] text-[#999999]">
-                请使用资产库中的「传输」功能生成的链接来访问此页面。
-              </p>
-            </div>
-          )}
-
-          {/* Progress */}
-          {progress > 0 && !completed && (
-            <div className="mt-6">
-              <div className="mb-2 flex items-center justify-between text-[12px] text-[#666666]">
-                <span>接收进度</span>
-                <span>{progress}%</span>
-              </div>
-              <div className="h-2.5 overflow-hidden rounded-full bg-[#2a2a2a]">
-                <div
-                  className="h-full rounded-full bg-[#e5e5e5] transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Completed Download */}
-          {isDone && completed && (
-            <a
-              className="mt-6 flex h-11 cursor-pointer items-center justify-center gap-2 rounded-md border-0 bg-[#064e3b] px-6 text-[13px] font-semibold text-[#34d399] no-underline transition-colors hover:bg-[#065f46]"
-              href={completed.url}
-              download={completed.fileName}
-            >
-              <ArrowDownToLine size={16} />
-              下载 {completed.fileName}（{formatFileSize(completed.size)}）
-            </a>
-          )}
+                下载 {completed.fileName}（{formatFileSize(completed.size)}）
+              </a>
+            )}
+          </div>
         </div>
-      </div>
+      </section>
     </main>
   )
 }
@@ -388,19 +367,3 @@ function parseSignalingMessage(raw: unknown): SignalingMessage | null {
     return null
   }
 }
-
-/* -------------------------------------------------------------------------- */
-/*  Mount                                                                      */
-/* -------------------------------------------------------------------------- */
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <OverlayScrollbarsComponent
-      style={{ height: '100vh', width: '100vw' }}
-      options={{ scrollbars: { autoHide: 'scroll', theme: 'os-theme-dark' } }}
-      defer
-    >
-      <TransferApp />
-    </OverlayScrollbarsComponent>
-  </StrictMode>
-)

@@ -1,6 +1,6 @@
 /**
  * 将各前端 app 的 dist 目录汇聚到 dist-web/，
- * 按 base 路径分目录存放，site app 放根目录。
+ * 按 base 路径分目录存放，docs app 放根目录。
  *
  * 使用: bun scripts/collect-frontends.ts
  */
@@ -13,9 +13,8 @@ const DST = join(ROOT, 'dist-web')
 
 // app → base 映射（site base="/" 放根，其余按 base 分段）
 const APPS: { dir: string; base: string }[] = [
-  { dir: 'apps/site', base: '/' },
+  { dir: 'apps/docs', base: '/' },
   { dir: 'apps/app', base: '/app/' },
-  { dir: 'apps/transfer', base: '/transfer/' },
 ]
 
 /** Narrows caught filesystem errors enough to branch on Node's errno code. */
