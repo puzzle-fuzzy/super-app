@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "echo \"No tests yet\""
+    "test": "bun test tests"
   },
   "dependencies": {
     "@super-app/billing": "workspace:*",
