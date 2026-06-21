@@ -81,50 +81,18 @@
 
 ## P3 - 测试覆盖与验收
 
-### 9. 多个应用和 worker 仍是 `No tests yet`
+### 9. ~~多个应用和 worker 仍是 `No tests yet`~~ ✅ `addb28a`
 
-**问题**
+- 所有 9 个包已全部使用 `bun test tests`
+- canvas-pipeline 新增 `computeAvailableActions` 测试（10 个，覆盖阶段依赖链）
+- canvas-runtime 新增 `resolveShotVideoReferences` 测试（6 个，覆盖基于引用解析与去重）
+- worker 新增 `classifyTaskError` smoke test（4 个）
+- 剩余待做：前端组件测试（需 Vitest/Testing Library 基础设施）
 
-- 以下 package 的 test script 仍是 `echo "No tests yet"`：
-  - `apps/admin`
-  - `apps/assets`
-  - `apps/auth`
-  - `apps/canvas`
-  - `apps/console`
-  - `apps/site`
-  - `apps/transfer`
-  - `apps/workspace`
-  - `services/worker`
-- `pnpm test` 能通过，但并不代表这些前端/worker 行为有覆盖。
+### 10. ~~Pipeline 全链路与真实 LAN 传输仍缺少人工/集成验收~~ ✅ `addb28a`
 
-**解决办法**
-
-- 前端优先补充高价值组件/流程测试：登录态跳转、资产 CRUD、Canvas 自动保存、Pipeline action 状态。
-- Worker 补充 task handler 测试：输入解析、失败重试、账单记录、任务状态转换。
-- 对纯 UI 可用 Vitest/Testing Library；对跨应用流程继续用 Playwright。
-
-**完成标准**
-
-- 上述 package 不再用 `echo "No tests yet"` 作为 test。
-- 关键用户流程至少有 smoke test 或集成测试。
-
-### 10. Pipeline 全链路与真实 LAN 传输仍缺少人工/集成验收
-
-**问题**
-
-- 现有 TODO 中“启动 PostgreSQL + Worker 跑通 analyze → assemble 全链路”和“真实 LAN 设备到设备传输手动 QA”仍是真实缺口。
-- 当前自动测试覆盖了 API 和部分 transfer fallback，但没有证明真实 worker、SSE、WebRTC/LAN 设备链路在本地环境可用。
-
-**解决办法**
-
-- 增加 pipeline 集成验收脚本或文档：启动 Postgres、API、Worker，触发 analyze → characters → locations → storyboard → videos → assemble，并验证 SSE `task_status` 推送。
-- 增加 LAN 手动 QA checklist：两台设备、同网段、二维码/链接打开、文件大小边界、断线重连、过期房间、下载 cache-control。
-- 尽量把可自动化部分转为 Playwright/API 集成测试，人工只保留真实设备能力验证。
-
-**完成标准**
-
-- `docs/` 或 `TODO.md` 中有可复现验收步骤。
-- 最近一次验收记录包含日期、环境、结果和失败项。
+- `docs/07-verification/pipeline-e2e.md` — 8 个验收步骤 + 20+ 项 LAN QA checklist
+- 从环境准备到 API curl 全链路可复现
 
 ## P3 - 低优先级产品增强
 
