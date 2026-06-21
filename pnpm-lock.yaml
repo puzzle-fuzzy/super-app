@@ -206,6 +206,9 @@ importers:
       '@super-app/auth-client':
         specifier: workspace:*
         version: link:../../packages/auth-client
+      '@super-app/canvas-pipeline':
+        specifier: workspace:*
+        version: link:../../packages/canvas-pipeline
       '@super-app/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts

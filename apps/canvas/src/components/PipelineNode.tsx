@@ -48,7 +48,8 @@ export function PipelineNode({ data }: NodeProps) {
 
   return (
     <div
-      className={`relative min-w-[260px] max-w-[320px] rounded-xl border-2 p-4 ${STATUS_COLORS[d.status]} transition-all`}
+      className={`relative min-w-[260px] max-w-[320px] rounded-xl border-2 p-4 ${STATUS_COLORS[d.status]} transition-all ${d.disabled ? 'opacity-45' : ''}`}
+      title={d.blockedReason}
     >
       {/* Header */}
       <div className="mb-2 flex items-center justify-between">
@@ -158,9 +159,14 @@ export function PipelineNode({ data }: NodeProps) {
         <p className="mt-2 text-[11px] text-red-400 line-clamp-2">{d.errorMessage}</p>
       )}
 
+      {/* Blocked reason tooltip */}
+      {d.disabled && d.blockedReason && (
+        <p className="mt-2 text-[11px] text-[#888888]">{d.blockedReason}</p>
+      )}
+
       {/* Action buttons */}
       <div className="mt-3 flex gap-2">
-        {d.status === 'pending' && d.onTrigger && (
+        {d.status === 'pending' && d.onTrigger && !d.disabled && (
           <button
             type="button"
             className="flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border-0 bg-[#e5e5e5] px-3 text-[11px] font-semibold text-[#141414] transition-colors hover:bg-white"

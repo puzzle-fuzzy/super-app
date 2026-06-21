@@ -25,9 +25,10 @@ import type {
   PipelineShotDto,
 } from '@super-app/contracts/pipeline'
 
+import type { CanvasPipelinePhase } from '@super-app/types'
+import { computeAvailableActions, PHASE_LABEL } from '@super-app/canvas-pipeline'
 import { PipelineNode } from '../components/PipelineNode'
-import type { NodeStatus, PhaseKey, PipelineNodeData } from '../pipeline/types'
-import { PHASE_LABEL } from '../pipeline/types'
+import type { NodeStatus, PipelineNodeData } from '../pipeline/types'
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -89,7 +90,7 @@ function PipelineEditor({
   const [assets, setAssets] = useState<AssetDto[]>([])
   const [assetFilter, setAssetFilter] = useState<AssetKind | 'all'>('all')
 
-  const taskMapRef = useRef<Map<string, { phase: PhaseKey; entityId?: string }>>(new Map())
+  const taskMapRef = useRef<Map<string, { phase: string; entityId?: string }>>(new Map())
 
   /* ---- Data Loading ------------------------------------------------- */
 
@@ -148,9 +149,9 @@ function PipelineEditor({
 
   /* ---- Phase Trigger ──────────────────────────────────────────────── */
 
-  async function handleTriggerPhase(phase: PhaseKey) {
+  async function handleTriggerPhase(phase: CanvasPipelinePhase) {
     try {
-      const phaseFn: Record<PhaseKey, (id: string) => Promise<TriggerPhaseResult>> = {
+      const phaseFn: Record<CanvasPipelinePhase, (id: string) => Promise<TriggerPhaseResult>> = {
         analyze: pipelineApi.analyze,
         characters: pipelineApi.characters,
         locations: pipelineApi.locations,
@@ -191,23 +192,42 @@ function PipelineEditor({
 
   /* ---- Build ReactFlow Nodes ──────────────────────────────────────── */
 
+  const actions = project ? computeAvailableActions(project, runs) : []
+  const actionByPhase = new Map(actions.map((a) => [a.phase, a]))
+  const phaseAction = (phase: CanvasPipelinePhase) => actionByPhase.get(phase)
+
   const nodes = useMemo(() => {
     if (!project) return [] as Node[]
 
-    const phaseStatus = (phase: PhaseKey): NodeStatus => {
-      if (!runs || runs.length === 0) return 'pending'
-      const phaseRuns = runs.filter((r) => r.phase === phase)
-      if (phaseRuns.length === 0) return 'pending'
-      const latest = phaseRuns[phaseRuns.length - 1]
-      return (latest.status as NodeStatus) || 'pending'
+    const phaseStatus = (phase: CanvasPipelinePhase): NodeStatus => {
+      const action = phaseAction(phase)
+      return action?.status ?? 'pending'
     }
 
-    const runError = (phase: PhaseKey): string | undefined => {
+    const runError = (phase: CanvasPipelinePhase): string | undefined => {
       const phaseRuns = runs.filter((r) => r.phase === phase)
       if (phaseRuns.length === 0) return undefined
       const latest = phaseRuns[phaseRuns.length - 1]
       return latest.errorMessage ?? undefined
     }
+
+    /** 根据 computeAvailableActions 构建阶段节点 data */
+    function phaseNodeData(phase: CanvasPipelinePhase) {
+      const action = phaseAction(phase)
+      return {
+        label: PHASE_LABEL[phase],
+        phase,
+        status: action?.status ?? ('pending' as NodeStatus),
+        disabled: action ? !action.canTrigger : false,
+        blockedReason: action?.blockedReason,
+        onTrigger: action?.canTrigger ? () => handleTriggerPhase(phase) : undefined,
+        onRetry: action?.status === 'failed' ? () => handleTriggerPhase(phase) : undefined,
+        errorMessage: runError(phase),
+      }
+    }
+
+    /** Y 坐标偏移累加器 */
+    let yOffset = 30
 
     const result: Node[] = []
 
@@ -215,7 +235,7 @@ function PipelineEditor({
     result.push({
       id: 'story-input',
       type: 'pipelineNode',
-      position: { x: 100, y: 30 },
+      position: { x: 100, y: yOffset },
       data: {
         label: '故事文本',
         phase: 'storyInput',
@@ -224,37 +244,48 @@ function PipelineEditor({
       },
     })
 
+    yOffset += 250
+
     // 2. Analysis
     result.push({
       id: 'analysis',
       type: 'pipelineNode',
-      position: { x: 100, y: 280 },
+      position: { x: 100, y: yOffset },
       data: {
+        ...phaseNodeData('analyze'),
         label: PHASE_LABEL.analyze,
         phase: 'analysis',
         status: project.analysis ? ('succeeded' as NodeStatus) : phaseStatus('analyze'),
         analysis: project.analysis as Record<string, unknown> | null,
-        onTrigger: !project.analysis ? () => handleTriggerPhase('analyze') : undefined,
+        onTrigger: !project.analysis
+          ? phaseNodeData('analyze').onTrigger
+          : undefined,
         onRetry: phaseStatus('analyze') === 'failed' ? () => handleTriggerPhase('analyze') : undefined,
+        disabled: !project.analysis ? phaseNodeData('analyze').disabled : false,
+        blockedReason: !project.analysis ? phaseNodeData('analyze').blockedReason : undefined,
         errorMessage: runError('analyze'),
       },
     })
+    yOffset += 270
 
     // 3. Characters
-    const charStartY = 550
     if (project.characters.length > 0) {
       project.characters.forEach((c: PipelineCharacterDto, i: number) => {
         result.push({
           id: `character-${c.id}`,
           type: 'pipelineNode',
-          position: { x: 100 + i * 340, y: charStartY },
+          position: { x: 100 + i * 340, y: yOffset },
           data: {
             label: c.name,
             phase: 'character' as const,
             status: (c.referenceImageUrl ? 'succeeded' : phaseStatus('characterRefs')) as NodeStatus,
             entityId: c.id,
             entityData: c,
-            onTrigger: !c.referenceImageUrl ? () => handleTriggerPhase('characterRefs') : undefined,
+            disabled: !c.referenceImageUrl ? !phaseAction('characterRefs')?.canTrigger : false,
+            blockedReason: !c.referenceImageUrl ? phaseAction('characterRefs')?.blockedReason : undefined,
+            onTrigger: !c.referenceImageUrl && phaseAction('characterRefs')?.canTrigger
+              ? () => handleTriggerPhase('characterRefs')
+              : undefined,
             onRetry: phaseStatus('characterRefs') === 'failed' ? () => handleTriggerPhase('characterRefs') : undefined,
             errorMessage: runError('characterRefs'),
           },
@@ -264,33 +295,33 @@ function PipelineEditor({
       result.push({
         id: 'characters-placeholder',
         type: 'pipelineNode',
-        position: { x: 100, y: charStartY },
+        position: { x: 100, y: yOffset },
         data: {
-          label: PHASE_LABEL.characters,
+          ...phaseNodeData('characters'),
           phase: 'characters' as const,
-          status: phaseStatus('characters'),
-          onTrigger: phaseStatus('characters') !== 'succeeded' ? () => handleTriggerPhase('characters') : undefined,
-          onRetry: phaseStatus('characters') === 'failed' ? () => handleTriggerPhase('characters') : undefined,
-          errorMessage: runError('characters'),
         },
       })
     }
+    yOffset += 260
 
     // 4. Locations
-    const locStartY = charStartY + 260
     if (project.locations.length > 0) {
       project.locations.forEach((l: PipelineLocationDto, i: number) => {
         result.push({
           id: `location-${l.id}`,
           type: 'pipelineNode',
-          position: { x: 100 + i * 340, y: locStartY },
+          position: { x: 100 + i * 340, y: yOffset },
           data: {
             label: l.name,
             phase: 'location' as const,
             status: (l.referenceImageUrl ? 'succeeded' : phaseStatus('locationRefs')) as NodeStatus,
             entityId: l.id,
             entityData: l,
-            onTrigger: !l.referenceImageUrl ? () => handleTriggerPhase('locationRefs') : undefined,
+            disabled: !l.referenceImageUrl ? !phaseAction('locationRefs')?.canTrigger : false,
+            blockedReason: !l.referenceImageUrl ? phaseAction('locationRefs')?.blockedReason : undefined,
+            onTrigger: !l.referenceImageUrl && phaseAction('locationRefs')?.canTrigger
+              ? () => handleTriggerPhase('locationRefs')
+              : undefined,
             onRetry: phaseStatus('locationRefs') === 'failed' ? () => handleTriggerPhase('locationRefs') : undefined,
             errorMessage: runError('locationRefs'),
           },
@@ -300,80 +331,31 @@ function PipelineEditor({
       result.push({
         id: 'locations-placeholder',
         type: 'pipelineNode',
-        position: { x: 100, y: locStartY },
+        position: { x: 100, y: yOffset },
         data: {
-          label: PHASE_LABEL.locations,
+          ...phaseNodeData('locations'),
           phase: 'locations' as const,
-          status: phaseStatus('locations'),
-          onTrigger: phaseStatus('locations') !== 'succeeded' ? () => handleTriggerPhase('locations') : undefined,
-          onRetry: phaseStatus('locations') === 'failed' ? () => handleTriggerPhase('locations') : undefined,
-          errorMessage: runError('locations'),
         },
       })
     }
 
-    // 5. Storyboard
-    result.push({
-      id: 'storyboard',
-      type: 'pipelineNode',
-      position: { x: 100, y: locStartY + 260 },
-      data: {
-        label: PHASE_LABEL.storyboard,
-        phase: 'storyboard' as const,
-        status: phaseStatus('storyboard'),
-        onTrigger: phaseStatus('storyboard') !== 'succeeded' ? () => handleTriggerPhase('storyboard') : undefined,
-        onRetry: phaseStatus('storyboard') === 'failed' ? () => handleTriggerPhase('storyboard') : undefined,
-        errorMessage: runError('storyboard'),
-      },
-    })
+    // 5-12: Data-driven phase nodes
+    const remainingPhases = ['storyboard', 'continuity', 'rebuild', 'dialogue'] as CanvasPipelinePhase[]
+    for (const phase of remainingPhases) {
+      yOffset += 260
+      result.push({
+        id: phase,
+        type: 'pipelineNode',
+        position: { x: 100, y: yOffset },
+        data: {
+          ...phaseNodeData(phase),
+        },
+      })
+    }
 
-    // 6. Continuity
-    result.push({
-      id: 'continuity',
-      type: 'pipelineNode',
-      position: { x: 100, y: locStartY + 520 },
-      data: {
-        label: PHASE_LABEL.continuity,
-        phase: 'continuity' as const,
-        status: phaseStatus('continuity'),
-        onTrigger: phaseStatus('continuity') !== 'succeeded' ? () => handleTriggerPhase('continuity') : undefined,
-        onRetry: phaseStatus('continuity') === 'failed' ? () => handleTriggerPhase('continuity') : undefined,
-        errorMessage: runError('continuity'),
-      },
-    })
-
-    // 7. Rebuild
-    result.push({
-      id: 'rebuild',
-      type: 'pipelineNode',
-      position: { x: 100, y: locStartY + 780 },
-      data: {
-        label: PHASE_LABEL.rebuild,
-        phase: 'rebuild' as const,
-        status: phaseStatus('rebuild'),
-        onTrigger: phaseStatus('rebuild') !== 'succeeded' ? () => handleTriggerPhase('rebuild') : undefined,
-        onRetry: phaseStatus('rebuild') === 'failed' ? () => handleTriggerPhase('rebuild') : undefined,
-        errorMessage: runError('rebuild'),
-      },
-    })
-
-    // 8. Dialogue
-    result.push({
-      id: 'dialogue',
-      type: 'pipelineNode',
-      position: { x: 100, y: locStartY + 1040 },
-      data: {
-        label: PHASE_LABEL.dialogue,
-        phase: 'dialogue' as const,
-        status: phaseStatus('dialogue'),
-        onTrigger: phaseStatus('dialogue') !== 'succeeded' ? () => handleTriggerPhase('dialogue') : undefined,
-        onRetry: phaseStatus('dialogue') === 'failed' ? () => handleTriggerPhase('dialogue') : undefined,
-        errorMessage: runError('dialogue'),
-      },
-    })
-
-    // 9. Shots (videos)
-    const shotStartY = locStartY + 1300
+    // Shots (videos)
+    yOffset += 260
+    const shotStartY = yOffset
     if (project.shots.length > 0) {
       project.shots.slice(0, 6).forEach((s: PipelineShotDto, i: number) => {
         const statusMap: Record<string, NodeStatus> = {
@@ -391,7 +373,11 @@ function PipelineEditor({
             status: statusMap[s.status] ?? 'pending',
             entityId: s.id,
             entityData: s,
-            onTrigger: s.status === 'draft' ? () => handleTriggerPhase('videos') : undefined,
+            disabled: s.status === 'draft' ? !phaseAction('videos')?.canTrigger : false,
+            blockedReason: s.status === 'draft' ? phaseAction('videos')?.blockedReason : undefined,
+            onTrigger: s.status === 'draft' && phaseAction('videos')?.canTrigger
+              ? () => handleTriggerPhase('videos')
+              : undefined,
             onRetry: s.status === 'failed' ? () => handleTriggerPhase('videos') : undefined,
             errorMessage: s.errorMessage ?? undefined,
           },
@@ -403,49 +389,37 @@ function PipelineEditor({
         type: 'pipelineNode',
         position: { x: 100, y: shotStartY },
         data: {
-          label: PHASE_LABEL.videos,
+          ...phaseNodeData('videos'),
           phase: 'videos' as const,
-          status: phaseStatus('videos'),
-          onTrigger: phaseStatus('videos') !== 'succeeded' ? () => handleTriggerPhase('videos') : undefined,
-          onRetry: phaseStatus('videos') === 'failed' ? () => handleTriggerPhase('videos') : undefined,
-          errorMessage: runError('videos'),
         },
       })
     }
 
-    // 10. BGM
+    // BGM
     const bgmY = shotStartY + Math.ceil((project.shots.length || 1) / 3) * 280 + 40
     result.push({
       id: 'bgm',
       type: 'pipelineNode',
       position: { x: 100, y: bgmY },
       data: {
-        label: PHASE_LABEL.bgm,
+        ...phaseNodeData('bgm'),
         phase: 'bgm' as const,
-        status: phaseStatus('bgm'),
-        onTrigger: phaseStatus('bgm') !== 'succeeded' ? () => handleTriggerPhase('bgm') : undefined,
-        onRetry: phaseStatus('bgm') === 'failed' ? () => handleTriggerPhase('bgm') : undefined,
-        errorMessage: runError('bgm'),
       },
     })
 
-    // 8. Assemble
+    // Assemble
     result.push({
       id: 'assemble',
       type: 'pipelineNode',
       position: { x: 100, y: bgmY + 260 },
       data: {
-        label: PHASE_LABEL.assemble,
+        ...phaseNodeData('assemble'),
         phase: 'assemble' as const,
-        status: phaseStatus('assemble'),
-        onTrigger: phaseStatus('assemble') !== 'succeeded' ? () => handleTriggerPhase('assemble') : undefined,
-        onRetry: phaseStatus('assemble') === 'failed' ? () => handleTriggerPhase('assemble') : undefined,
-        errorMessage: runError('assemble'),
       },
     })
 
     return result
-  }, [project, runs])
+  }, [project, runs, actions])
 
   /* ---- Edges ─────────────────────────────────────────────────────── */
 

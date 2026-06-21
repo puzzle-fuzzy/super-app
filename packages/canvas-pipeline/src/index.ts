@@ -224,6 +224,111 @@ export function canAdvanceToPhase(phase: CanvasPipelinePhase, opts: CanAdvanceTo
   return true
 }
 
+// ===== Frontend-accessible phase actions =====
+// 纯计算 UI 层面可触发的阶段列表，不依赖 DB/provider/server/worker runtime。
+
+/** 阶段中文标签 — 与 apps/canvas 前端 pipeline/types.ts 对齐 */
+export const PHASE_LABEL: Record<CanvasPipelinePhase, string> = {
+  analyze: '分析故事',
+  characters: '生成角色',
+  locations: '生成场景',
+  characterRefs: '角色参考图',
+  locationRefs: '场景参考图',
+  storyboard: '生成分镜',
+  continuity: '连续性检查',
+  rebuild: '重建 Prompt',
+  dialogue: '对白层',
+  videos: '生成视频',
+  bgm: '生成配乐',
+  assemble: '合成成片',
+}
+
+export interface PhaseAction {
+  phase: CanvasPipelinePhase
+  label: string
+  status: 'pending' | 'running' | 'succeeded' | 'failed'
+  /** 是否可以触发（前一阶段完成、不是 pause-before、无活跃 run） */
+  canTrigger: boolean
+  /** 不可触发的理由，用于 UI tooltip */
+  blockedReason?: string
+}
+
+/**
+ * 从项目状态和 run 列表计算当前可触发的阶段动作。
+ *
+ * 规则：
+ * - 按 CANVAS_PHASE_ORDER 遍历 12 个阶段
+ * - 从 runs 确定每个阶段最新运行状态
+ * - canTrigger=true 当且仅当前一阶段已完成、当前不是 pause-before、无活跃 run
+ * - 阶段 0（analyze）只要无活跃 run 即可触发
+ */
+export function computeAvailableActions(
+  project: { status: string; analysis?: unknown },
+  runs: Array<{ phase: string; status: string }>,
+): PhaseAction[] {
+  const actions: PhaseAction[] = []
+
+  for (let i = 0; i < CANVAS_PHASE_ORDER.length; i++) {
+    const phase = CANVAS_PHASE_ORDER[i]!
+    const phaseRuns = runs.filter((r) => r.phase === phase)
+    const latestRun = phaseRuns.length > 0 ? phaseRuns[phaseRuns.length - 1] : null
+    const hasActiveRun = phaseRuns.some(isActivePipelineRun as (r: { status: string }) => boolean)
+
+    let status: PhaseAction['status'] = 'pending'
+    if (latestRun) {
+      if (latestRun.status === 'running') status = 'running'
+      else if (latestRun.status === 'succeeded') status = 'succeeded'
+      else if (latestRun.status === 'failed') status = 'failed'
+      else if (latestRun.status === 'cancelled') status = 'failed'
+    }
+
+    // 确定可触发：
+    // - 第一阶段 (i===0)：检查是否有活跃 run 且项目无 analysis
+    // - 后续阶段：前一阶段 must be 'succeeded'
+    const firstPhase = i === 0
+    const prevPhase = firstPhase ? null : CANVAS_PHASE_ORDER[i - 1]
+    const prevSucceeded = prevPhase
+      ? runs.filter((r) => r.phase === prevPhase).some((r) => r.status === 'succeeded')
+      : false
+
+    let canTrigger = false
+    let blockedReason: string | undefined
+
+    if (hasActiveRun) {
+      canTrigger = false
+      blockedReason = '该阶段正在运行中'
+    }
+    else if (status === 'succeeded') {
+      canTrigger = false
+      blockedReason = '该阶段已完成'
+    }
+    else if (firstPhase) {
+      canTrigger = true
+    }
+    else if (!prevSucceeded) {
+      canTrigger = false
+      blockedReason = `请先完成「${PHASE_LABEL[prevPhase!]}」阶段`
+    }
+    else if (isPauseBeforePhase(phase)) {
+      // pause-before 阶段需要用户确认，仍视为可触发但非自动推进
+      canTrigger = true
+    }
+    else {
+      canTrigger = true
+    }
+
+    actions.push({
+      phase,
+      label: PHASE_LABEL[phase],
+      status,
+      canTrigger,
+      ...(blockedReason ? { blockedReason } : {}),
+    })
+  }
+
+  return actions
+}
+
 // ===== Batch outcome 规则 =====
 // 批量结果分类：全部成功 / 部分失败 / 全部失败 / 仍在进行 / 空。
 // 纯计算，不依赖 DB/provider/server/worker runtime。
