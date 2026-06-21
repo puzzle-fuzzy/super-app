@@ -83,25 +83,10 @@
 - 提取 PipelineDetailPanel 组件
 - 剩余：PipelineAssetSidebar 和 PipelineAssetDropHandler 可后续继续拆分
 
-### 8. `EditorView.tsx` 需要继续拆分生成与画布交互职责
+### 8. ~~`EditorView.tsx` 需要继续拆分生成与画布交互职责~~ ✅ `4b331dc`
 
-**问题**
-
-- `apps/canvas/src/components/EditorView.tsx` 仍约 530 行。
-- 它同时负责路由数据、React Flow、自动保存、生成图片/视频、资产拖拽、工具栏、弹窗挂载。
-- 新增资产完整信息弹窗后，这个文件会继续膨胀。
-
-**解决办法**
-
-- 抽出：
-  - `useCanvasProjectDocument`
-  - `useCanvasGeneration`
-  - `useCanvasAssetDrop`
-  - `CanvasEditorToolbar`
-  - `CanvasFlowSurface`
-  - `CanvasDialogs`
-- `handleGenerateImage` 中的 placeholder 与成功回填逻辑移入 `useCanvasGeneration`。
-- `AssetInfoDialog` 状态放入 `uiStore` 或局部 hook，不塞进 node component 内部。
+- 提取 `useCanvasProjectLoader`、`useCanvasGeneration`、`CanvasEditorToolbar`
+- EditorView.tsx：530 → 300 行
 
 **完成标准**
 
