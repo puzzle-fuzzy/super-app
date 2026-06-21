@@ -8,7 +8,6 @@ export function isGeneratedMediaAsset(asset: AssetDto): boolean {
   return (
     (asset.kind === 'image' || asset.kind === 'video') &&
     asset.source === 'ai_generation' &&
-    asset.metadata?.provider === 'dashscope' &&
     asset.files.some((file) => file.role === 'original' && Boolean(file.url))
   )
 }
@@ -36,10 +35,10 @@ export function GeneratedImageHistory({
     setHistoryLoading(true)
     setHistoryError(null)
     assetsApi
-      .list({ limit: 20 })
+      .list({ source: 'ai_generation', limit: 20 })
       .then((result) => {
         if (cancelled) return
-        setHistoryItems(result.items.filter(isGeneratedMediaAsset))
+        setHistoryItems(result.items)
       })
       .catch((err) => {
         if (cancelled) return

@@ -7,6 +7,7 @@ import type {
   AssetKind,
   AssetListData,
   AssetShareLinkDto,
+  AssetSource,
   AssetTransferSessionDto,
 } from '@super-app/contracts/assets'
 import {
@@ -168,9 +169,10 @@ export const assetsApi = {
     }, AssetDtoSchema)
   },
 
-  list(params?: { kind?: AssetKind; limit?: number; cursor?: string }) {
+  list(params?: { kind?: AssetKind; source?: AssetSource; limit?: number; cursor?: string }) {
     const qs = new URLSearchParams()
     if (params?.kind) qs.set('kind', params.kind)
+    if (params?.source) qs.set('source', params.source)
     if (params?.limit) qs.set('limit', String(params.limit))
     if (params?.cursor) qs.set('cursor', params.cursor)
     const query = qs.toString()

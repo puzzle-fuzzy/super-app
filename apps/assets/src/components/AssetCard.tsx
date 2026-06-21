@@ -50,6 +50,15 @@ export function AssetCard({
     >
       <div className="min-w-0">
         <div className="relative aspect-[4/3] rounded-t-xl bg-[#242424]">
+          {/* 来源标签 */}
+          <span className="absolute top-2.5 left-2.5 z-10 rounded-md bg-[#1c1c1c]/80 px-2 py-0.5 text-[10px] font-medium text-[#999999]">
+            {asset.source === 'upload' ? '上传' :
+             asset.source === 'ai_generation' ? 'AI 生成' :
+             asset.source === 'canvas_export' ? '画布导出' :
+             asset.source === 'transfer' ? '传输' :
+             asset.source === 'manual' ? '手动' :
+             asset.source === 'import' ? '导入' : asset.source}
+          </span>
           {isMedia ? (
             <>
               <AssetPreview asset={asset} />

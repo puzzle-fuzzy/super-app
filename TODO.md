@@ -45,31 +45,12 @@
 - 点击后能看到完整生成参数，而不是只看到 prompt 摘要。
 - 用户上传媒体不会被误展示为 AI 生成内容。
 
-### 4. 资产库卡片也需要展示来源差异
+### 4. ~~资产库卡片也需要展示来源差异~~ ✅ `当前会话`
 
-**问题**
-
-- `apps/assets/src/components/AssetCard.tsx` 当前主要展示预览、标题、类型和操作菜单。
-- `apps/canvas/src/components/AssetSidebar.tsx` 当前只展示 kind 标签，不展示上传/AI 生成/Canvas 导出来源。
-- `GeneratedImageHistory` 仍用前端本地 `filter(isGeneratedMediaAsset)` 过滤，且依赖 `metadata.provider === 'dashscope'`，未来多 provider 后会不稳。
-
-**解决办法**
-
-- 资产库卡片增加来源 badge：
-  - 用户上传
-  - AI 生成
-  - Canvas 导出
-  - Pipeline 产物
-  - 传输接收
-  - 手动创建
-- 资产列表 API 支持 `source` / `originKind` 服务端过滤，前端不要再只取 20 条后本地过滤。
-- `GeneratedImageHistory` 改为调用 `assetsApi.list({ kind: 'image' | 'video', source: 'ai_generation' })` 或新增专用接口。
-- 资产卡片“更多操作”中增加“查看详情”，复用 `AssetInfoDialog`。
-
-**完成标准**
-
-- 用户在资产库里能区分“自己上传的图”和“AI 生成的图”。
-- 生成历史不会因为分页、本地过滤或 provider 字段变化漏数据。
+- AssetCard 增加顶部来源 badge（上传/AI 生成/画布导出/传输/手动/导入）
+- assetsApi.list() 支持 `source` 参数，服务端过滤
+- GeneratedImageHistory 使用 `source: 'ai_generation'` 服务端过滤，移除本地 `isGeneratedMediaAsset` 过滤和 `provider === 'dashscope'` 硬编码
+- 剩余：AssetCard 增加”查看详情”按钮（需先接入 AssetInfoDialog，后续轮次）
 
 ## P1 - 数据关联与后端契约
 
