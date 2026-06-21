@@ -22,42 +22,13 @@
 - 图片/视频生成 metadata 补充 `negativePrompt`、`seed`、`promptExtend`、`watermark`
 - 剩余：Canvas Pipeline 资产原点构造（需访问 canvas-asset 关联表）；前端 MediaNode 展示 origin
 
-### 3. 画布媒体节点增加“查看完整信息”按钮
+### 3. ~~画布媒体节点增加”查看完整信息”按钮~~ ✅ `633e5ee`
 
-**用户需求**
-
-- 如果画布中的图片或视频是 AI 生成的，节点上应该带有“查看完整信息”的按钮。
-- 点击后弹窗展示完整生成信息。
-- 普通上传图片/视频不显示 AI 生成信息按钮，但可以展示基础文件信息。
-
-**当前问题**
-
-- `apps/canvas/src/types.ts` 的 `ImageNodeData` / `VideoNodeData` 只保存 `src`、`fileName`、`assetId` 等基础字段。
-- `apps/canvas/src/hooks/useNodeActions.ts` 从资产库拖入节点时只写入 `assetId`，没有写入 `asset.source`、`asset.origin` 或生成信息快照。
-- `apps/canvas/src/components/MediaNode.tsx` 只负责媒体预览和文件名，没有任何“详情”入口。
-- `apps/canvas/src/components/EditorView.tsx` 调用 `canvasApi.generateImage()` 后只把 `taskId` 写回占位节点，成功结果中的 `asset` 没有被完整写入节点。
-- SSE 成功回填只写 `src`，没有把 `assetId` / `origin` / `generationRecordId` 一并补齐。
-
-**解决办法**
-
-- 扩展节点数据结构：
-  - `assetId?: string`
-  - `assetSource?: AssetSource`
-  - `assetOrigin?: AssetOrigin`
-  - `generationRecordId?: string`
-  - `canvasPipelineAssetId?: string`
-  - `taskId?: string`
-  - `originSnapshot?: AssetOrigin`
-- 从资产库拖入节点时，把 `AssetDto.origin` 快照写入节点。
-- `canvasApi.generateImage()` 成功返回 asset 时，把节点从 placeholder 更新为：
-  - `src`
-  - `fileName`
-  - `assetId`
-  - `assetSource`
-  - `assetOrigin`
-  - `generationRecordId`
-  - `taskId`
-- SSE `task_status` 事件如果只能返回 URL，应补充后端 output，让它带上 `assetId` 和 origin 摘要。
+- 扩展 `ImageNodeData`/`VideoNodeData` 增加 `assetSource`, `assetOrigin`, `generationRecordId`, `taskId`
+- 创建 `AssetInfoDialog`：三个面板（AI 生成参数 & 任务信息、上传文件元数据、回退基本信息）
+- `MediaNode` 右上角 hover 显示 info 按钮，点击打开弹窗
+- `useNodeActions.addNodeFromAsset`：拖入资产时写入 origin 快照
+- 后续：SSE 回填补充 assetId/origin（需后端 output 补充字段）
 - `MediaNode` 渲染规则：
   - `assetOrigin.kind === 'ai_generated'` 或 `assetSource === 'ai_generation'`：显示“完整信息”按钮。
   - `assetOrigin.kind === 'uploaded'` 或 `assetSource === 'upload'`：显示“文件信息”按钮或仅在右键/更多菜单中展示。
