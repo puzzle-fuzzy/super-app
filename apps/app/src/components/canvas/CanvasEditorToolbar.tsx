@@ -1,12 +1,14 @@
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UserMenu } from './UserMenu'
-import { GeneratedImageHistory } from './GeneratedImageHistory'
-import type { AssetDto } from '@super-app/contracts/assets'
 
+/**
+ * 画布编辑器顶部工具栏 — 与 tersa 对齐
+ *
+ * 精简版：返回按钮 + 标题 + 用户菜单
+ */
 export function CanvasEditorToolbar({
   title,
-  version,
   nodeCount,
   edgeCount,
   saveStatus,
@@ -16,8 +18,6 @@ export function CanvasEditorToolbar({
   setUserMenuOpen,
   onBack,
   onLogout,
-  onAddText: _onAddText,
-  onAddGeneratedAsset,
 }: {
   title: string
   version?: number
@@ -30,8 +30,8 @@ export function CanvasEditorToolbar({
   setUserMenuOpen: (open: boolean | ((prev: boolean) => boolean)) => void
   onBack: () => void
   onLogout: () => void
-  onAddText: () => void
-  onAddGeneratedAsset: (asset: AssetDto) => void
+  onAddText?: () => void
+  onAddGeneratedAsset?: () => void
 }) {
   return (
     <header className="flex shrink-0 items-center justify-between border-b border-[#2a2a2a] px-5 py-3">
@@ -46,9 +46,11 @@ export function CanvasEditorToolbar({
           <ArrowLeft size={18} />
         </Button>
         <h2 className="m-0 text-sm font-semibold tracking-[-0.01em]">{title}</h2>
-        <span className="text-[11px] text-[#666666]">
-          v{version} · {nodeCount} 节点 · {edgeCount} 连线
-        </span>
+        {nodeCount > 0 && (
+          <span className="text-[11px] text-[#666666]">
+            {nodeCount} 节点 · {edgeCount} 连线
+          </span>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
@@ -60,8 +62,6 @@ export function CanvasEditorToolbar({
         >
           {saveStatus === 'saving' ? '保存中…' : '已自动保存'}
         </span>
-
-        <GeneratedImageHistory onAddAsset={onAddGeneratedAsset} />
 
         <UserMenu
           user={user}

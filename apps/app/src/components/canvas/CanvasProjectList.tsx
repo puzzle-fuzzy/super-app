@@ -1,275 +1,168 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Film,
-  MoreHorizontal,
-  PenLine,
-  Plus,
-  Trash2,
-} from 'lucide-react'
+import { Plus, FolderOpen } from 'lucide-react'
+import { canvasApi } from '@super-app/api-client'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/material-ui-dropdown-menu'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogFooter,
   DialogTitle,
-  DialogBody,
+  DialogFooter,
 } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 
-import { formatRelativeTime } from '@super-app/utils'
+interface ProjectListItem {
+  id: string
+  title: string
+  version: number
+  updatedAt: string
+  thumbnailUrl?: string
+}
 
-import { useProjectList } from '../../hooks/useProjectList'
-
-export function CanvasProjectList({ user: _user }: {
-  user: { id: string; name?: string; email: string; avatarUrl?: string }
-}) {
+/**
+ * 画布项目列表 — tersa 风格简化版
+ */
+export function CanvasProjectList({ user: _user }: { user: { id: string; name?: string; email: string } }) {
   const navigate = useNavigate()
-  const {
-    projects,
-    loading,
-    createOpen,
-    newTitle,
-    renameOpen,
-    renameTitle,
-    deleteConfirm,
-    menuOpenId,
-    setCreateOpen,
-    setNewTitle,
-    setRenameOpen,
-    setRenameTitle,
-    setRenameId,
-    setDeleteConfirm,
-    setMenuOpenId,
-    handleCreate,
-    handleRename,
-    handleDelete,
-  } = useProjectList()
-  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [projects, setProjects] = useState<ProjectListItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [newTitle, setNewTitle] = useState('')
+  const [creating, setCreating] = useState(false)
 
-  /* ---- User menu ------------------------------------------------------- */
+  const loadProjects = useCallback(async () => {
+    try {
+      setLoading(true)
+      const result = await canvasApi.list({ limit: 50 })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setProjects((result as any)?.items ?? (result as any)?.data?.items ?? [])
+    } catch (err) {
+      console.error('加载项目列表失败:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    if (!userMenuOpen) return
-    function closeOnOutsidePointer(event: PointerEvent) {
-      const target = event.target
-      if (target instanceof Element && target.closest('[data-user-menu-root]')) return
-      setUserMenuOpen(false)
-    }
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') setUserMenuOpen(false)
-    }
-    document.addEventListener('pointerdown', closeOnOutsidePointer)
-    document.addEventListener('keydown', closeOnEscape)
-    return () => {
-      document.removeEventListener('pointerdown', closeOnOutsidePointer)
-      document.removeEventListener('keydown', closeOnEscape)
-    }
-  }, [userMenuOpen])
+    loadProjects()
+  }, [loadProjects])
 
-
-  /* ---- Render ---------------------------------------------------------- */
+  async function handleCreate() {
+    if (!newTitle.trim()) return
+    setCreating(true)
+    try {
+      const result = await canvasApi.create({ title: newTitle.trim() })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const id = (result as any)?.id ?? (result as any)?.data?.id
+      if (id) {
+        setCreateOpen(false)
+        setNewTitle('')
+        navigate(`/canvas/project/${id}`)
+      }
+    } catch (err) {
+      console.error('创建项目失败:', err)
+    } finally {
+      setCreating(false)
+    }
+  }
 
   return (
-    <>
-      <section
-        className="mx-auto w-full max-w-[1800px] px-8 py-8 pb-16 max-[920px]:px-4.5 max-[920px]:py-6 max-[620px]:px-3.5 max-[620px]:py-5"
-        aria-label="画布"
-      >
-
-        {/* Toolbar */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="m-0 text-[clamp(22px,3vw,32px)] font-semibold leading-none tracking-[-0.02em]">
-              我的画布
-            </h1>
-            <p className="m-0 mt-2 text-sm text-[#999999]">{projects.length} 个项目</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-medium text-[#999999] hover:text-[#e5e5e5]"
-              onClick={() => navigate('/pipeline')}
-            >
-              <Film size={16} />
-              AI 视频流水线
-            </Button>
-            <Button
-              className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-semibold"
-              onClick={() => setCreateOpen(true)}
-            >
-              <Plus size={16} />
-              新建画布
-            </Button>
-          </div>
+    <div className="mx-auto w-full max-w-[1200px] px-8 py-8">
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="m-0 text-2xl font-semibold text-[#e5e5e5]">画布</h1>
+          <p className="mt-1 text-[13px] text-[#999999]">
+            {projects.length} 个项目
+          </p>
         </div>
+        <Button
+          onClick={() => setCreateOpen(true)}
+          className="h-10 gap-2 rounded-xl bg-[#6366f1] px-4 text-[13px] font-medium text-white hover:bg-[#5558e6]"
+        >
+          <Plus size={16} />
+          新建项目
+        </Button>
+      </div>
 
-        {/* Project Grid */}
-        {loading ? (
-          <div className="grid place-items-center py-20">
-            <p className="text-[#666666]">加载中…</p>
-          </div>
-        ) : projects.length === 0 ? (
-          <div className="grid place-items-center py-20">
-            <div className="max-w-105 text-center">
-              <h3 className="mb-2.5 text-[18px] font-semibold tracking-[-0.02em]">还没有画布项目</h3>
-              <p className="m-0 mb-6 text-[#999999]">创建第一个画布，开始组织你的资产和想法。</p>
-              <Button
-                className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-semibold"
-                onClick={() => setCreateOpen(true)}
-              >
-                <Plus size={16} />
-                新建画布
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-3.5 max-[1100px]:grid-cols-2 max-[680px]:grid-cols-1">
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                className="group relative flex min-h-45 cursor-pointer flex-col rounded-[18px] border border-[#2a2a2a] bg-[#1c1c1c] p-5 transition-all duration-160 hover:border-[#3a3a3a] hover:bg-[#202020]"
-                onClick={() => navigate(`/canvas/project/${project.id}`)}
-              >
-                <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={`h-8 w-8 rounded-lg text-[#666666] hover:text-[#e5e5e5] ${menuOpenId === project.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                      >
-                        <MoreHorizontal size={16} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="min-w-32">
-                      <DropdownMenuItem
-                        delayDuration={0}
-                        onSelect={() => {
-                          setMenuOpenId(null)
-                          setRenameId(project.id)
-                          setRenameTitle(project.title)
-                          setRenameOpen(true)
-                        }}
-                      >
-                        <PenLine size={14} />
-                        重命名
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        delayDuration={0}
-                        className="text-[#ffaaa3]"
-                        onSelect={() => {
-                          setMenuOpenId(null)
-                          setDeleteConfirm(project.id)
-                        }}
-                      >
-                        <Trash2 size={14} />
-                        删除
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <span className="mb-1 text-[10px] font-black tracking-[0.15em] uppercase text-[#666666]">
-                  画布项目
-                </span>
-                <h3 className="mt-10.5 mb-2.5 text-xl font-semibold tracking-[-0.02em]">
+      {loading ? (
+        <div className="grid grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="aspect-[4/3] animate-pulse rounded-2xl bg-[#1c1c1c]"
+            />
+          ))}
+        </div>
+      ) : projects.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <FolderOpen size={48} className="text-[#2a2a2a]" />
+          <p className="mt-4 text-[15px] text-[#999999]">还没有画布项目</p>
+          <p className="mt-1 text-[13px] text-[#666666]">创建一个项目开始你的创意</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {projects.map((project) => (
+            <button
+              key={project.id}
+              type="button"
+              onClick={() => navigate(`/canvas/project/${project.id}`)}
+              className="flex flex-col overflow-hidden rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] text-left transition-colors hover:border-[#3a3a3a]"
+            >
+              <div className="flex aspect-[4/3] items-center justify-center bg-[#141414]">
+                {project.thumbnailUrl ? (
+                  <img
+                    src={project.thumbnailUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <FolderOpen size={32} className="text-[#2a2a2a]" />
+                )}
+              </div>
+              <div className="p-3.5">
+                <p className="truncate text-[14px] font-medium text-[#e5e5e5]">
                   {project.title}
-                </h3>
-                <p className="m-0 mt-auto text-[12px] text-[#666666]">
-                  更新于 {formatRelativeTime(project.updatedAt)}
+                </p>
+                <p className="mt-0.5 text-[11px] text-[#666666]">
+                  v{project.version} ·{' '}
+                  {new Date(project.updatedAt).toLocaleString('zh-CN', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </p>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+            </button>
+          ))}
+        </div>
+      )}
 
-      {/* Create Dialog */}
-      <Dialog open={createOpen} onOpenChange={(open) => { if (!open) setCreateOpen(false) }}>
-        <DialogContent className="max-w-100">
+      {/* 创建对话框 */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>新建画布</DialogTitle>
+            <DialogTitle>新建画布项目</DialogTitle>
           </DialogHeader>
-          <DialogBody>
-            <input
-              type="text"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') { e.preventDefault(); handleCreate() }
-              }}
-              placeholder="输入项目名称"
-              autoFocus
-              className="w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a]"
-            />
-          </DialogBody>
+          <Input
+            placeholder="输入项目名称…"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleCreate()
+            }}
+          />
           <DialogFooter>
-            <Button variant="ghost" className="h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={() => setCreateOpen(false)}>
+            <Button variant="ghost" onClick={() => setCreateOpen(false)}>
               取消
             </Button>
-            <Button className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-semibold" onClick={handleCreate}>
-              创建
+            <Button onClick={handleCreate} disabled={creating || !newTitle.trim()}>
+              {creating ? '创建中…' : '创建'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Rename Dialog */}
-      <Dialog open={renameOpen} onOpenChange={(open) => { if (!open) setRenameOpen(false) }}>
-        <DialogContent className="max-w-100">
-          <DialogHeader>
-            <DialogTitle>重命名</DialogTitle>
-          </DialogHeader>
-          <DialogBody>
-            <input
-              type="text"
-              value={renameTitle}
-              onChange={(e) => setRenameTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') { e.preventDefault(); handleRename() }
-              }}
-              autoFocus
-              className="w-full rounded-[10px] border border-[#2a2a2a] bg-[#242424] px-3.5 py-2.5 text-[14px] text-[#e5e5e5] outline-none transition-colors placeholder:text-[#666666] hover:border-[#3a3a3a]"
-            />
-          </DialogBody>
-          <DialogFooter>
-            <Button variant="ghost" className="h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={() => setRenameOpen(false)}>
-              取消
-            </Button>
-            <Button className="h-10 gap-2 rounded-[10px] px-5 text-[13px] font-semibold" onClick={handleRename}>
-              保存
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation */}
-      <Dialog open={!!deleteConfirm} onOpenChange={(open) => { if (!open) setDeleteConfirm(null) }}>
-        <DialogContent className="max-w-100">
-          <DialogHeader>
-            <DialogTitle>确认删除</DialogTitle>
-          </DialogHeader>
-          <DialogBody>
-            <p className="text-sm text-[#999999]">
-              此操作不可撤销。确定要删除这个画布项目吗？
-            </p>
-          </DialogBody>
-          <DialogFooter>
-            <Button variant="ghost" className="h-10 rounded-[10px] px-5 text-[13px] font-medium" onClick={() => setDeleteConfirm(null)}>
-              取消
-            </Button>
-            <Button variant="destructive" className="h-10 rounded-[10px] px-5 text-[13px] font-semibold" onClick={() => handleDelete(deleteConfirm!)}>
-              删除
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    </div>
   )
 }

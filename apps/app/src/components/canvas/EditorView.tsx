@@ -1,77 +1,57 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Background,
-  Controls,
   ReactFlow,
   ReactFlowProvider,
   applyEdgeChanges,
+  applyNodeChanges,
   useReactFlow,
   type Connection,
   type Edge,
-  type NodeProps,
+  type IsValidConnection,
+  type Node,
   type OnSelectionChangeFunc,
+  getOutgoers,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
 import { logout } from '@super-app/auth-client'
 
-import { useCanvasStore } from '../../stores/canvasStore'
-import { useCanvasActions } from '../../hooks/useCanvasActions'
-import { useInputListeners } from '../../hooks/useInputListeners'
-import { useSelectionToolbar } from '../../hooks/useSelectionToolbar'
-import { useGroupToolbar } from '../../hooks/useGroupToolbar'
-import { useNodeActions } from '../../hooks/useNodeActions'
-import { useCanvasAutosave } from '../../hooks/useCanvasAutosave'
-import { useCanvasGeneration } from '../../hooks/useCanvasGeneration'
-import type { AppNode, DocNodeType, ImageNodeType, TextNodeType, VideoNodeType } from '../../types'
+import { useCanvasAutosave } from '@/hooks/useCanvasAutosave'
 
-import MediaNode from './MediaNode'
-import DocNode from './DocNode'
-import TextNode from './TextNode'
-import GroupNode from './GroupNode'
-import ErrorBoundary from './ErrorBoundary'
-import SelectionToolbar from './SelectionToolbar'
-import GroupToolbar from './GroupToolbar'
-import ModeToolbar from './ModeToolbar'
-import GroupNameModal from './GroupNameModal'
-import TextPreviewModal from './TextPreviewModal'
-import FullscreenPreview from './FullscreenPreview'
-import ErrorToast from './ErrorToast'
-import LoadingIndicator from './LoadingIndicator'
-import EmptyHint from './EmptyHint'
-import { AssetSidebar } from './AssetSidebar'
-import { generatedAssetPrompt } from './GeneratedImageHistory'
-import { ImageGenerationPromptBar } from './ImageGenerationPromptBar'
+import { TextNode } from './nodes/TextNode'
+import { ImageNode } from './nodes/ImageNode'
+import { VideoNode } from './nodes/VideoNode'
+import { ConnectionLine } from './ConnectionLine'
+import { AnimatedEdge } from './edges/AnimatedEdge'
+import { TemporaryEdge } from './edges/TemporaryEdge'
+import { CanvasContextMenu, CanvasNodesProvider } from './CanvasContextMenu'
+import { DropNode } from './DropNode'
+
+import { NodeOperationsProvider } from './providers/NodeOperationsProvider'
+import { NodeDropzoneProvider } from './providers/NodeDropzoneProvider'
+
 import { ScreenState } from './ScreenState'
 import { CanvasEditorToolbar } from './CanvasEditorToolbar'
+import type { ProjectDetail } from '@/hooks/useCanvasProjectLoader'
+import { useCanvasProjectLoader } from '@/hooks/useCanvasProjectLoader'
 
-import type { ProjectDetail } from '../../hooks/useCanvasProjectLoader'
-import { useCanvasProjectLoader } from '../../hooks/useCanvasProjectLoader'
+// ── node types ──
 
 const nodeTypes = {
-  imageNode: (() => {
-    const W = (props: NodeProps<ImageNodeType>) => (<ErrorBoundary level="node"><MediaNode {...props} /></ErrorBoundary>)
-    W.displayName = 'ImageNode'
-    return W
-  })(),
-  videoNode: (() => {
-    const W = (props: NodeProps<VideoNodeType>) => (<ErrorBoundary level="node"><MediaNode {...props} /></ErrorBoundary>)
-    W.displayName = 'VideoNode'
-    return W
-  })(),
-  docNode: (() => {
-    const W = (props: NodeProps<DocNodeType>) => (<ErrorBoundary level="node"><DocNode {...props} /></ErrorBoundary>)
-    W.displayName = 'DocNode'
-    return W
-  })(),
-  textNode: (() => {
-    const W = (props: NodeProps<TextNodeType>) => (<ErrorBoundary level="node"><TextNode {...props} /></ErrorBoundary>)
-    W.displayName = 'TextNode'
-    return W
-  })(),
-  groupNode: GroupNode,
+  textNode: TextNode,
+  imageNode: ImageNode,
+  videoNode: VideoNode,
+  dropNode: DropNode,
 }
+
+const edgeTypes = {
+  animated: AnimatedEdge,
+  temporary: TemporaryEdge,
+}
+
+const deleteKeyCode = ['Backspace', 'Delete']
 
 // ── EditorRoute ────────────────────────────────────────────────
 
@@ -99,7 +79,10 @@ export function EditorRoute({
       credits={credits}
       project={project}
       onBack={() => navigate('/')}
-      onLogout={async () => { await logout(); navigate('/') }}
+      onLogout={async () => {
+        await logout()
+        navigate('/')
+      }}
     />
   )
 }
@@ -136,171 +119,335 @@ function EditorViewInner({
   onLogout: () => void
 }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
-  useInputListeners()
-  const { addNodeFromAsset } = useNodeActions()
-  const actions = useCanvasActions()
-  const toolbarPos = useSelectionToolbar()
-  const groupToolbarPos = useGroupToolbar()
-  const { screenToFlowPosition } = useReactFlow()
+  // ── autosave ──
 
-  const { saveStatus, edgesRef, debouncedSaveRef, doSaveRef } = useCanvasAutosave(project.id)
+  const { saveStatus, doSaveRef, debouncedSaveRef } = useCanvasAutosave(project.id)
 
-  const { handleGenerateImage, handleAddGeneratedAsset } = useCanvasGeneration(
-    screenToFlowPosition,
-    addNodeFromAsset,
-    generatedAssetPrompt,
-  )
+  // ── nodes / edges state ──
 
-  const savedViewport = useMemo(() => {
-    try {
-      const raw = localStorage.getItem('viewport')
-      if (raw) {
-        const { x, y, zoom } = JSON.parse(raw)
-        if (typeof x === 'number' && typeof y === 'number' && typeof zoom === 'number') {
-          return { x, y, zoom }
-        }
-      }
-    } catch { /* ignore */ }
-    return undefined
-  }, [])
-
-  const nodes = useCanvasStore((s) => s.nodes)
-  const setNodes = useCanvasStore((s) => s.setNodes)
-  const onNodesChange = useCanvasStore((s) => s.onNodesChange)
-  const selectedNodeIds = useCanvasStore((s) => s.selectedNodeIds)
-  const interactionMode = useCanvasStore((s) => s.interactionMode)
-  const initialize = useCanvasStore((s) => s.setInitialized)
-
+  const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
-  edgesRef.current = edges
+  const [loaded, setLoaded] = useState(false)
+  const [copiedNodes, setCopiedNodes] = useState<Node[]>([])
+
+  const rfInstance = useReactFlow()
+
+  // ── load project data ──
 
   useEffect(() => {
-    const raw = project.data as Partial<{ nodes: AppNode[]; edges: Edge[] }> | undefined
-    const loadedNodes = (Array.isArray(raw?.nodes) ? raw.nodes : []) as AppNode[]
+    const raw = project.data as Partial<{ nodes: Node[]; edges: Edge[] }> | undefined
+    const loadedNodes = (Array.isArray(raw?.nodes) ? raw.nodes : []) as Node[]
     const loadedEdges = (Array.isArray(raw?.edges) ? raw.edges : []) as Edge[]
-    loadedNodes.sort((a, b) => {
-      const orderA = a.type === 'groupNode' ? 0 : 10
-      const orderB = b.type === 'groupNode' ? 0 : 10
-      return orderA - orderB
-    })
-    setNodes(() => loadedNodes)
+    setNodes(loadedNodes)
     setEdges(loadedEdges)
-    initialize(true)
+    setLoaded(true)
   }, [project.id])
 
-  useEffect(() => {
-    window.addEventListener('paste', actions.handlePaste)
-    return () => window.removeEventListener('paste', actions.handlePaste)
-  }, [actions.handlePaste])
+  // ── auto-save ──
 
-  const handleSelectionChange: OnSelectionChangeFunc = useCallback(
-    ({ nodes: sel }) => {
-      const newIds = sel.map((n) => n.id)
-      const currentIds = useCanvasStore.getState().selectedNodeIds
-      if (newIds.length === currentIds.length && newIds.every((id) => currentIds.includes(id))) return
-      useCanvasStore.getState().setSelectedNodeIds(newIds)
-    }, []
+  const save = useCallback(() => {
+    if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current)
+    debouncedSaveRef.current = setTimeout(() => {
+      const currentNodes = rfInstance.getNodes()
+      const currentEdges = rfInstance.getEdges()
+      doSaveRef.current(currentNodes, currentEdges)
+    }, 1000)
+  }, [debouncedSaveRef, doSaveRef, rfInstance])
+
+  // ── node operations ──
+
+  const addNode = useCallback(
+    (type: string, options?: Record<string, unknown>) => {
+      const { data: nodeData, ...nodeOptions } = options ?? {}
+      const newNode: Node = {
+        id: `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        type,
+        data: { ...(nodeData ? (nodeData as Record<string, unknown>) : {}) },
+        position: { x: 0, y: 0 },
+        origin: [0, 0.5] as [number, number],
+        ...nodeOptions,
+      }
+
+      setNodes((nds) => [...nds, newNode])
+      save()
+      return newNode.id
+    },
+    [save]
   )
 
-  const onConnect = useCallback((connection: Connection) => {
-    setEdges((eds) => {
-      const next = [...eds, { ...connection, id: `edge-${Date.now()}`, style: { stroke: '#666', strokeWidth: 1.5 }, animated: true } as Edge]
-      if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current)
-      debouncedSaveRef.current = setTimeout(() => doSaveRef.current(), 800)
-      return next
-    })
+  const duplicateNode = useCallback(
+    (id: string) => {
+      const node = rfInstance.getNode(id)
+      if (!node?.type) return
+
+      const { id: _oldId, ...nodeProps } = node
+
+      const newId = addNode(node.type, {
+        ...nodeProps,
+        position: {
+          x: node.position.x + 200,
+          y: node.position.y + 200,
+        },
+        selected: true,
+      })
+
+      setTimeout(() => {
+        rfInstance.updateNode(id, { selected: false })
+        rfInstance.updateNode(newId, { selected: true })
+      }, 0)
+    },
+    [addNode, rfInstance]
+  )
+
+  // ── edge lifecycle ──
+
+  const isValidConnection = useCallback<IsValidConnection>(
+    (connection) => {
+      const currentNodes = rfInstance.getNodes()
+      const currentEdges = rfInstance.getEdges()
+      const target = currentNodes.find((n) => n.id === connection.target)
+
+      if (connection.source) {
+        const source = currentNodes.find((n) => n.id === connection.source)
+        if (!(source && target)) return false
+        if (source.type === 'videoNode' || source.type === 'dropNode') return false
+      }
+
+      const hasCycle = (node: Node, visited = new Set<string>()): boolean => {
+        if (visited.has(node.id)) return false
+        visited.add(node.id)
+        for (const outgoer of getOutgoers(node, currentNodes, currentEdges)) {
+          if (outgoer.id === connection.source || hasCycle(outgoer, visited)) return true
+        }
+        return false
+      }
+
+      if (!target || target.id === connection.source) return false
+      return !hasCycle(target)
+    },
+    [rfInstance]
+  )
+
+  const handleConnect = useCallback(
+    (connection: Connection) => {
+      const newEdge: Edge = {
+        id: `edge-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        type: 'animated',
+        ...connection,
+      }
+      setEdges((eds) => [...eds, newEdge])
+      save()
+    },
+    [save]
+  )
+
+  const handleConnectStart = useCallback(() => {
+    setNodes((nds) => nds.filter((n) => n.type !== 'dropNode'))
+    setEdges((eds) => eds.filter((e) => e.type !== 'temporary'))
   }, [])
 
-  function addTextNode() {
-    const store = useCanvasStore.getState()
-    const id = `text-${Date.now()}`
-    const node: AppNode = {
-      id, type: 'textNode',
-      position: { x: 100 + Math.random() * 300, y: 100 + Math.random() * 300 },
-      data: { description: '双击此处编辑文本' },
+  const handleConnectEnd = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (event: any, connectionState: any) => {
+      if (!connectionState.isValid) {
+        const { clientX, clientY } =
+          'changedTouches' in event ? event.changedTouches[0] : event
+
+        const sourceId = connectionState.fromNode?.id
+        const isSourceHandle = connectionState.fromHandle?.type === 'source'
+
+        if (!sourceId) return
+
+        const newNodeId = addNode('dropNode', {
+          position: rfInstance.screenToFlowPosition({ x: clientX, y: clientY }),
+          data: { isSource: !isSourceHandle },
+        })
+
+        setEdges((eds) => [
+          ...eds,
+          {
+            id: `edge-${Date.now()}-tmp`,
+            source: isSourceHandle ? sourceId : newNodeId,
+            target: isSourceHandle ? newNodeId : sourceId,
+            type: 'temporary',
+          } as Edge,
+        ])
+      }
+    },
+    [addNode, rfInstance]
+  )
+
+  // ── keyboard shortcuts ──
+
+  useEffect(() => {
+    function isEditingTarget(target: EventTarget | null): boolean {
+      if (!target) return false
+      const tag = (target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return true
+      return (target as HTMLElement).isContentEditable
     }
-    store.setNodes((nds) => [...nds, node])
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (isEditingTarget(e.target)) return
+      const isMod = e.metaKey || e.ctrlKey
+      if (!isMod) return
+
+      switch (e.key.toLowerCase()) {
+        case 'a': {
+          e.preventDefault()
+          setNodes((nds) => nds.map((n) => ({ ...n, selected: true })))
+          break
+        }
+        case 'c': {
+          const selected = rfInstance.getNodes().filter((n) => n.selected)
+          if (selected.length === 0) return
+          e.preventDefault()
+          setCopiedNodes(selected)
+          break
+        }
+        case 'v': {
+          if (copiedNodes.length === 0) return
+          e.preventDefault()
+          setNodes((nds) => {
+            const unselected = nds.map((n) => ({ ...n, selected: false }))
+            const newNodes = copiedNodes.map((node) => ({
+              ...node,
+              id: `${node.type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+              position: { x: node.position.x + 200, y: node.position.y + 200 },
+              selected: true,
+            }))
+            return [...unselected, ...newNodes]
+          })
+          save()
+          break
+        }
+        case 'd': {
+          e.preventDefault()
+          const selected = rfInstance.getNodes().filter((n) => n.selected)
+          for (const node of selected) {
+            duplicateNode(node.id)
+          }
+          break
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [copiedNodes, rfInstance, save, duplicateNode])
+
+  // ── double click → drop node ──
+
+  const handleDoubleClick = useCallback(
+    (event: MouseEvent) => {
+      const { x, y } = rfInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      })
+      addNode('dropNode', { position: { x, y } })
+    },
+    [addNode, rfInstance]
+  )
+
+  // ── selection change ──
+
+  const handleSelectionChange: OnSelectionChangeFunc = useCallback(() => {
+    // no-op — ReactFlow manages selection internally
+  }, [])
+
+  // ── fitView on initial load ──
+
+  const fitViewTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => {
+    if (loaded && nodes.length > 0) {
+      fitViewTimer.current = setTimeout(() => {
+        rfInstance.fitView({ duration: 300 })
+      }, 100)
+    }
+    return () => {
+      if (fitViewTimer.current) clearTimeout(fitViewTimer.current)
+    }
+  }, [loaded, nodes.length, rfInstance])
+
+  // ── nodes / edges change handlers ──
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function handleNodesChange(changes: any) {
+    setNodes((nds) => {
+      const next = applyNodeChanges(changes, nds) as Node[]
+      save()
+      return next
+    })
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function handleEdgesChange(changes: any) {
+    setEdges((eds) => {
+      const next = applyEdgeChanges(changes, eds) as Edge[]
+      save()
+      return next
+    })
+  }
+
+  // ── render ──
 
   const nodeCount = nodes.length
   const edgeCount = edges.length
 
+  if (!loaded) return null
+
   return (
-    <main className="flex h-screen flex-col bg-[#141414] text-[#e5e5e5]">
-      <CanvasEditorToolbar
-        title={project.title}
-        version={project.version}
-        nodeCount={nodeCount}
-        edgeCount={edgeCount}
-        saveStatus={saveStatus}
-        user={user}
-        credits={credits}
-        userMenuOpen={userMenuOpen}
-        setUserMenuOpen={setUserMenuOpen}
-        onBack={onBack}
-        onLogout={onLogout}
-        onAddText={addTextNode}
-        onAddGeneratedAsset={handleAddGeneratedAsset}
-      />
+    <CanvasNodesProvider setNodes={setNodes}>
+      <NodeOperationsProvider addNode={addNode} duplicateNode={duplicateNode}>
+        <NodeDropzoneProvider>
+          <CanvasContextMenu>
+            <main className="flex h-screen flex-col bg-[#141414] text-[#e5e5e5]">
+              <CanvasEditorToolbar
+                title={project.title}
+                version={project.version}
+                nodeCount={nodeCount}
+                edgeCount={edgeCount}
+                saveStatus={saveStatus}
+                user={user}
+                credits={credits}
+                userMenuOpen={userMenuOpen}
+                setUserMenuOpen={setUserMenuOpen}
+                onBack={onBack}
+                onLogout={onLogout}
+              />
 
-      <div className="flex flex-1">
-        <AssetSidebar
-          collapsed={sidebarCollapsed}
-          onToggle={() => { setSidebarCollapsed((c) => !c) }}
-        />
-
-        <div className="flex-1" style={{ position: 'relative' }}>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            onNodesChange={onNodesChange}
-            onEdgesChange={(changes) => setEdges((eds) => {
-              const next = applyEdgeChanges(changes, eds as Edge[]) as Edge[]
-              if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current)
-              debouncedSaveRef.current = setTimeout(() => doSaveRef.current(), 800)
-              return next
-            })}
-            onConnect={onConnect}
-            onSelectionChange={handleSelectionChange}
-            onDrop={actions.handleDrop}
-            onDragOver={(e) => e.preventDefault()}
-            defaultViewport={savedViewport}
-            onMoveEnd={(_, viewport) => {
-              localStorage.setItem('viewport', JSON.stringify(viewport))
-            }}
-            minZoom={0.05}
-            maxZoom={4}
-            fitView={false}
-            selectionOnDrag={interactionMode === 'select'}
-            panOnDrag={interactionMode === 'pan'}
-            multiSelectionKeyCode="Shift"
-            deleteKeyCode="Delete"
-          >
-            <Background color="#2a2a2a" gap={24} size={1} />
-            <Controls
-              showInteractive={false}
-              className="[&>button]:border-[#2a2a2a] [&>button]:bg-[#1c1c1c] [&>button]:text-[#999999] [&>button]:hover:bg-[#2a2a2a]"
-            />
-          </ReactFlow>
-
-          <ImageGenerationPromptBar onGenerate={handleGenerateImage} />
-
-          {toolbarPos && <SelectionToolbar position={toolbarPos} selectedCount={selectedNodeIds.length} />}
-          {groupToolbarPos && <GroupToolbar position={groupToolbarPos} />}
-          <ModeToolbar />
-
-          <GroupNameModal />
-          <TextPreviewModal />
-          <FullscreenPreview />
-          <ErrorToast />
-          <LoadingIndicator />
-          <EmptyHint />
-        </div>
-      </div>
-    </main>
+              <div className="flex-1">
+                <ReactFlow
+                  nodes={nodes}
+                  edges={edges}
+                  nodeTypes={nodeTypes}
+                  edgeTypes={edgeTypes}
+                  connectionLineComponent={ConnectionLine}
+                  isValidConnection={isValidConnection}
+                  onConnect={handleConnect}
+                  onConnectStart={handleConnectStart}
+                  onConnectEnd={handleConnectEnd}
+                  onSelectionChange={handleSelectionChange}
+                  onDoubleClick={handleDoubleClick}
+                  onEdgesChange={handleEdgesChange}
+                  onNodesChange={handleNodesChange}
+                  deleteKeyCode={deleteKeyCode}
+                  fitView={false}
+                  panOnDrag={false}
+                  panOnScroll
+                  selectionOnDrag
+                  zoomOnDoubleClick={false}
+                  minZoom={0.05}
+                  maxZoom={4}
+                >
+                  <Background color="#2a2a2a" gap={24} size={1} />
+                </ReactFlow>
+              </div>
+            </main>
+          </CanvasContextMenu>
+        </NodeDropzoneProvider>
+      </NodeOperationsProvider>
+    </CanvasNodesProvider>
   )
 }
-

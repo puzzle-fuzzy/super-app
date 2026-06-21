@@ -1,9 +1,8 @@
 import { Component, type ReactNode } from 'react'
-import { Button } from '@/components/ui/button'
 
 interface Props {
+  level: 'app' | 'node'
   children: ReactNode
-  level?: 'app' | 'node'
 }
 
 interface State {
@@ -11,54 +10,26 @@ interface State {
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false }
-  }
+  state: State = { hasError: false }
 
   static getDerivedStateFromError(): State {
     return { hasError: true }
   }
 
-  override render() {
+  render() {
     if (this.state.hasError) {
       if (this.props.level === 'app') {
         return (
-          <div
-            style={{
-              display: 'grid',
-              placeItems: 'center',
-              height: '100vh',
-              background: '#141414',
-              color: '#e5e5e5',
-            }}
-          >
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>抱歉，发生了意外错误</p>
-              <Button
-                variant="ghost"
-                className="h-10 rounded-[10px] px-5 text-[13px] font-medium"
-                onClick={() => window.location.reload()}
-              >
-                刷新页面
-              </Button>
+          <div className="flex min-h-screen items-center justify-center bg-[#141414]">
+            <div className="rounded-2xl border border-[#2a2a2a] bg-[#1c1c1c] px-8 py-6 text-center">
+              <h2 className="m-0 text-lg font-semibold text-[#e5e5e5]">发生错误</h2>
+              <p className="mt-2 text-[13px] text-[#999999]">请刷新页面重试</p>
             </div>
           </div>
         )
       }
-      // node-level fallback
       return (
-        <div
-          style={{
-            width: 320,
-            padding: 12,
-            background: '#1c1c1c',
-            border: '1px solid #3a3a3a',
-            borderRadius: 12,
-            color: '#999999',
-            fontSize: 13,
-          }}
-        >
+        <div className="rounded-2xl border border-[#5a2a27] bg-[#2a1d1b] px-4 py-3 text-[13px] text-[#ffaaa3]">
           节点渲染错误
         </div>
       )

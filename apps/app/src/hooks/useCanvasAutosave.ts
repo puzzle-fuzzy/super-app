@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-
+import type { Node, Edge } from '@xyflow/react'
 import { canvasApi } from '@super-app/api-client'
 
-import { setPersistCallback, useCanvasStore } from '../stores/canvasStore'
-import type { AppNode } from '../types'
-import type { Edge } from '@xyflow/react'
-
-async function saveProject(projectId: string, nodes: AppNode[], edges: Edge[]) {
+async function saveProject(projectId: string, nodes: Node[], edges: Edge[]) {
   try {
     const serializableNodes = nodes.map(({ id, type, position, data, selectable, draggable }) => ({
       id,
@@ -16,40 +12,40 @@ async function saveProject(projectId: string, nodes: AppNode[], edges: Edge[]) {
       ...(selectable !== undefined ? { selectable } : {}),
       ...(draggable !== undefined ? { draggable } : {}),
     }))
-    const data: Record<string, unknown> = { nodes: serializableNodes, edges }
-    await canvasApi.update(projectId, { data })
+    const projectData: Record<string, unknown> = { nodes: serializableNodes, edges }
+    await canvasApi.update(projectId, { data: projectData })
   } catch {
     // Silent
   }
 }
 
+/**
+ * 画布自动保存 — tersa 风格（简化版）
+ *
+ * 与 tersa 的 localStorage 不同的是，super-app 使用 API 持久化到 PostgreSQL
+ */
 export function useCanvasAutosave(projectId: string) {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const edgesRef = useRef<Edge[]>([])
-  const debouncedSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const debouncedSaveRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
-  const doSave = useCallback(async () => {
-    setSaveStatus('saving')
-    try {
-      await saveProject(projectId, useCanvasStore.getState().nodes, edgesRef.current)
-      setSaveStatus('saved')
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2000)
-    } catch {
-      setSaveStatus('idle')
-    }
-  }, [projectId])
+  const doSave = useCallback(
+    async (nodes: Node[], edges: Edge[]) => {
+      setSaveStatus('saving')
+      try {
+        await saveProject(projectId, nodes, edges)
+        setSaveStatus('saved')
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2000)
+      } catch {
+        setSaveStatus('idle')
+      }
+    },
+    [projectId]
+  )
 
   const doSaveRef = useRef(doSave)
   doSaveRef.current = doSave
-
-  useEffect(() => {
-    setPersistCallback(() => {
-      if (debouncedSaveRef.current) clearTimeout(debouncedSaveRef.current)
-      debouncedSaveRef.current = setTimeout(() => doSaveRef.current(), 800)
-    })
-  }, [])
 
   useEffect(() => {
     return () => {
@@ -58,5 +54,5 @@ export function useCanvasAutosave(projectId: string) {
     }
   }, [])
 
-  return { saveStatus, edgesRef, debouncedSaveRef, doSaveRef }
+  return { saveStatus, doSaveRef, debouncedSaveRef }
 }

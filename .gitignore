@@ -12,6 +12,7 @@ playwright-report/
 /services/api/storage/
 /services/worker/storage/
 *.log
+*.bak
 
 .env
 .env.local

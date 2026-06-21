@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { FileText, FolderOpen, Key, LogOut, Send, Shield, UserRound } from 'lucide-react'
-
 import { clientEnv } from '@super-app/env/client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -34,13 +33,11 @@ export function UserMenu({
 }) {
   return (
     <div className="flex items-center gap-2" data-user-menu-root>
-      {/* Credits */}
       <span className="flex items-center gap-1 text-[11px]">
         <span className="text-[#666666]">积分</span>
         <span className="font-semibold text-[#e5e5e5] tabular-nums leading-none">{credits}</span>
       </span>
 
-      {/* User avatar + dropdown */}
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <Avatar className="h-7 w-7 cursor-pointer">
@@ -55,9 +52,7 @@ export function UserMenu({
             <p className="m-0 text-[13px] font-medium text-[#e5e5e5] truncate">
               {user.name ?? '未命名用户'}
             </p>
-            <p className="m-0 mt-0.5 text-[11px] text-[#666666] truncate">
-              {user.email ?? ''}
-            </p>
+            <p className="m-0 mt-0.5 text-[11px] text-[#666666] truncate">{user.email ?? ''}</p>
           </div>
           <DropdownMenuSeparator />
           {MENU_LINKS.map((item) =>
