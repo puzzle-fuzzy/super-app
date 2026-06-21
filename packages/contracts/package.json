@@ -14,10 +14,13 @@
     "./canvas": "./src/canvas.ts",
     "./pipeline": "./src/pipeline.ts",
     "./records": "./src/records.ts",
+    "./asset-tags": "./src/asset-tags.ts",
+    "./notifications": "./src/notifications.ts",
     "./style-assets": "./src/style-assets.ts",
     "./subject-assets": "./src/subject-assets.ts",
     "./template-assets": "./src/template-assets.ts",
-    "./text-assets": "./src/text-assets.ts"
+    "./text-assets": "./src/text-assets.ts",
+    "./upload": "./src/upload.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
