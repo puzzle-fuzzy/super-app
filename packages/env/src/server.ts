@@ -18,6 +18,7 @@ export const serverEnvSchema = publicEnvSchema.extend({
   ASSETS_APP_URL: z.string().url(),
   TRANSFER_APP_URL: z.string().url(),
   CONSOLE_APP_URL: z.string().url(),
+  ADMIN_APP_URL: z.string().url(),
   API_BASE_URL: z.string().url(),
   API_PORT: numberString.default(5200),
 

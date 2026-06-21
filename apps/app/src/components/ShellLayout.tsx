@@ -19,7 +19,7 @@ const NAV_ITEMS = [
 const EXTERNAL_LINKS = [
   { label: '首页', href: clientEnv.SUPER_PUBLIC_SITE_URL },
   { label: '文档', href: clientEnv.SUPER_PUBLIC_DOCS_URL },
-  { label: '管理', href: '/admin/' },
+  { label: '管理', href: clientEnv.SUPER_PUBLIC_ADMIN_APP_URL },
 ]
 
 function ShellLayoutInner({ user }: { user: CurrentUser }) {
