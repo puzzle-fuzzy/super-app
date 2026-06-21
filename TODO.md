@@ -175,27 +175,12 @@
 - 用户不需要去数据库或日志里找生成参数。
 - 同一个弹窗能服务普通 Canvas、资产库、Pipeline 三个入口。
 
-### 12. 生成失败和生成中节点需要更完整的状态表达
+### 12. ~~生成失败和生成中节点需要更完整的状态表达~~ ✅ `248615b`
 
-**问题**
-
-- `MediaNode` 生成中只显示固定进度 35%。
-- 失败时只把 `fileName` 改成“生成失败”，信息量不足。
-- 用户无法在节点上查看失败原因、重试、取消或打开任务详情。
-
-**解决办法**
-
-- 节点数据增加：
-  - `generationStatus`
-  - `errorMessage`
-  - `retryCount`
-  - `canRetry`
-  - `canCancel`
-- `MediaNode` 根据状态显示：
-  - 排队中
-  - 提交中
-  - 生成中
-  - 保存中
+- 新增 `GenerationStatus` 类型（queued/submitting/generating/saving/succeeded/failed）
+- MediaNode 根据状态显示不同文案和样式
+- 失败节点展示 `errorMessage` 红色提示
+- SSE 回填设置 `generationStatus: succeeded/failed` + `errorMessage`
   - 成功
   - 失败
   - 已取消
