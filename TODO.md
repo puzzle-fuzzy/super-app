@@ -128,23 +128,16 @@
 
 ## P3 - 低优先级产品增强
 
-### 11. Pipeline 详情与结果展示还不完整
+### 11. Pipeline 详情与结果展示 — 逐步完善中
 
-**问题**
+**本轮完成**（`791f152`）：
+- ✅ Assemble 节点嵌入 `finalVideoUrl` 的 `<video>` 预览
+- ✅ 项目列表卡片在 `finalVideoUrl` 存在时展示缩略图（video poster）
+- ✅ `finalVideoUrl`/`bgmUrl` 贯通 contracts → types → API → frontend
 
-- 节点详情面板仍需要支持编辑 `identityPrompt` / `scenePrompt` / `videoPrompt`，并展示 AssetHistory 历史版本。
-- 节点名称缺少双击内联编辑、失焦自动保存。
-- 项目状态机缺少 12 阶段色块进度条。
-- 取消操作只支持取消活跃阶段，尚未支持指定 stage，例如 `?phase=analyze`。
-- Assemble 节点还未嵌入 `project.finalVideoUrl` 的 `<video>` 预览。
-- 项目列表卡片还未在存在 `finalVideoUrl` 时展示缩略图。
-
-**解决办法**
-
-- 先把 pipeline phase/state/action 规则收口到 domain 层，再做 UI 增强。
-- 节点编辑走已有 PATCH character/location/shot/project 接口，并加入 optimistic update + 失败回滚。
-- 取消 API 增加 phase query contract，并在 service 中校验 owner、project、active run。
-
-**完成标准**
-
-- Pipeline 工作站能完成“查看状态、编辑提示词、触发下一步、预览结果、取消/重试”的闭环。
+**剩余待做**：
+- ⬜ 节点详情面板编辑 `identityPrompt` / `scenePrompt` / `videoPrompt`
+- ⬜ 节点名称双击内联编辑、失焦自动保存
+- ⬜ 12 阶段色块进度条
+- ⬜ 取消操作支持指定 stage
+- ⬜ Pipeline 详情面板展示 AssetHistory 历史版本
