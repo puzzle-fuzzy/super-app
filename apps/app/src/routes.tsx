@@ -4,18 +4,18 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { ShellLayout } from './components/ShellLayout'
 import { useShellUser } from './components/ShellContext'
 
-// Lazy-load each app module — keeps per-app bundle sizes small
+// Lazy-load each app screen — keeps per-module bundle sizes small
 const WorkspaceApp = React.lazy(() =>
-  import('@app/workspace/screens/WorkspaceApp').then((m) => ({ default: m.WorkspaceApp }))
+  import('./screens/WorkspaceApp').then((m) => ({ default: m.WorkspaceApp }))
 )
 const AssetsApp = React.lazy(() =>
-  import('@app/assets/screens/AssetsApp').then((m) => ({ default: m.AssetsApp }))
+  import('./screens/AssetsApp').then((m) => ({ default: m.AssetsApp }))
 )
 const CanvasApp = React.lazy(() =>
-  import('@app/canvas/screens/CanvasApp').then((m) => ({ default: m.CanvasApp }))
+  import('./screens/CanvasApp').then((m) => ({ default: m.CanvasApp }))
 )
 const ConsoleAppContent = React.lazy(() =>
-  import('@app/console/screens/ConsoleApp').then((m) => ({ default: m.ConsoleAppContent }))
+  import('./screens/ConsoleApp').then((m) => ({ default: m.ConsoleAppContent }))
 )
 
 function AppFallback() {

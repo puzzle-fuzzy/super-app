@@ -24,14 +24,6 @@ export default defineConfig(({ command }) => ({
       },
     },
   },
-  resolve: {
-    alias: {
-      '@app/workspace': path.resolve(appDir, '../workspace/src'),
-      '@app/assets': path.resolve(appDir, '../assets/src'),
-      '@app/canvas': path.resolve(appDir, '../canvas/src'),
-      '@app/console': path.resolve(appDir, '../console/src'),
-    },
-  },
   server: {
     port: 5173,
     proxy: {
