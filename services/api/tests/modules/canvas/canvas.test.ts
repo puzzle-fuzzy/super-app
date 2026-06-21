@@ -127,7 +127,7 @@ describe('canvas module', () => {
       .from(canvasVersions)
       .where(eq(canvasVersions.projectId, projectId))
     expect(versions.length).toBe(1)
-    expect(versions[0].version).toBe(2)
+    expect(versions[0]!.version).toBe(2)
 
     // Delete (archive)
     const deleteRes = await app.handle(
@@ -390,7 +390,7 @@ async function createUser(name: string): Promise<TestUser> {
   const body = (await res.json()) as { data: CurrentUser }
   const user: TestUser = {
     id: body.data.id,
-    cookie: res.headers.get('set-cookie')!.split(';')[0],
+    cookie: res.headers.get('set-cookie')!.split(';')[0]!,
   }
   testUsers.push(user)
   return user

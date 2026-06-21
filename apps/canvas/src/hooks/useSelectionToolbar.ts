@@ -28,11 +28,13 @@ function extractSelectedPositions(
 function shallowEqualPositions(a: SelectedNodePos[], b: SelectedNodePos[]): boolean {
   if (a.length !== b.length) return false
   for (let i = 0; i < a.length; i++) {
+    const ai = a[i]!
+    const bi = b[i]!
     if (
-      a[i].id !== b[i].id ||
-      a[i].x !== b[i].x ||
-      a[i].y !== b[i].y ||
-      a[i].width !== b[i].width
+      ai.id !== bi.id ||
+      ai.x !== bi.x ||
+      ai.y !== bi.y ||
+      ai.width !== bi.width
     ) {
       return false
     }

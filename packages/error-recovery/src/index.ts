@@ -244,7 +244,7 @@ function domainFromText(message: string): FailureDomain | null {
 function domainFromCode(code: string): { domain: FailureDomain; action?: RecoveryAction } | null {
   const c = code.trim().toLowerCase()
   for (const rule of CODE_RULES) {
-    if (rule.match.test(c)) return { domain: rule.domain, action: rule.action }
+    if (rule.match.test(c)) return { domain: rule.domain, ...(rule.action ? { action: rule.action } : {}) }
   }
   return null
 }

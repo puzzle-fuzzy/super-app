@@ -207,7 +207,7 @@ function PipelineEditor({
     const runError = (phase: CanvasPipelinePhase): string | undefined => {
       const phaseRuns = runs.filter((r) => r.phase === phase)
       if (phaseRuns.length === 0) return undefined
-      const latest = phaseRuns[phaseRuns.length - 1]
+      const latest = phaseRuns[phaseRuns.length - 1]!
       return latest.errorMessage ?? undefined
     }
 

@@ -136,7 +136,7 @@ export function applyProviderOutcome(
       lastSuccessAt: ts,
       updatedAt: ts,
     }
-    return { record, transitionedTo: recovered ? 'healthy' : undefined }
+    return { record, ...(recovered ? { transitionedTo: 'healthy' as const } : {}) }
   }
 
   // ── 失败路径 ──
@@ -177,5 +177,5 @@ export function applyProviderOutcome(
     degradedReason,
     updatedAt: ts,
   }
-  return { record, transitionedTo }
+  return { record, ...(transitionedTo ? { transitionedTo } : {}) }
 }

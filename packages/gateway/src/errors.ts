@@ -10,7 +10,7 @@ export interface OpenAIGatewayErrorShape {
 export class OpenAIGatewayError extends Error {
   readonly type: string
   readonly code: string
-  readonly hint?: string
+  readonly hint: string | undefined
   readonly httpStatus: number
 
   constructor(

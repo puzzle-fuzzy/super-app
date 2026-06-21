@@ -130,10 +130,10 @@ export function normalizeChatRequest(
   return {
     model: resolvedModel,
     messages,
-    maxTokens: req.max_tokens ?? req.max_tokens,
-    temperature: req.temperature,
-    topP: req.top_p,
-    stop: req.stop,
+    ...(req.max_tokens != null ? { maxTokens: req.max_tokens } : {}),
+    ...(req.temperature != null ? { temperature: req.temperature } : {}),
+    ...(req.top_p != null ? { topP: req.top_p } : {}),
+    ...(req.stop != null ? { stop: req.stop } : {}),
     stream: req.stream === true,
   }
 }
@@ -174,13 +174,15 @@ export function createChatCompletionResponse(
         finish_reason: 'stop',
       },
     ],
-    usage: result.usage
+    ...(result.usage
       ? {
-          prompt_tokens: result.usage.inputTokens,
-          completion_tokens: result.usage.outputTokens,
-          total_tokens: result.usage.inputTokens + result.usage.outputTokens,
+          usage: {
+            prompt_tokens: result.usage.inputTokens,
+            completion_tokens: result.usage.outputTokens,
+            total_tokens: result.usage.inputTokens + result.usage.outputTokens,
+          },
         }
-      : undefined,
+      : {}),
   }
 }
 
@@ -201,13 +203,15 @@ export function createStreamChunk(
         finish_reason: chunk.done ? (chunk.finishReason as 'stop' | 'length') ?? 'stop' : null,
       },
     ],
-    usage: chunk.usage
+    ...(chunk.usage
       ? {
-          prompt_tokens: chunk.usage.inputTokens,
-          completion_tokens: chunk.usage.outputTokens,
-          total_tokens: chunk.usage.inputTokens + chunk.usage.outputTokens,
+          usage: {
+            prompt_tokens: chunk.usage.inputTokens,
+            completion_tokens: chunk.usage.outputTokens,
+            total_tokens: chunk.usage.inputTokens + chunk.usage.outputTokens,
+          },
         }
-      : undefined,
+      : {}),
   }
 }
 

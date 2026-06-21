@@ -348,7 +348,7 @@ async function createUser(name: string): Promise<TestUser> {
   const body = (await res.json()) as { data: CurrentUser }
   const user: TestUser = {
     id: body.data.id,
-    cookie: res.headers.get('set-cookie')!.split(';')[0],
+    cookie: res.headers.get('set-cookie')!.split(';')[0]!,
   }
   testUsers.push(user)
   return user

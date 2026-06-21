@@ -152,15 +152,17 @@ describe('texts module', () => {
   })
 
   it('does not delete a non-text asset through the text endpoint', async () => {
-    const [asset] = await db
-      .insert(assets)
-      .values({
-        ownerId: primary.id,
-        kind: 'file',
-        title: 'Not a text asset',
-        source: 'manual',
-      })
-      .returning()
+    const asset = (
+      await db
+        .insert(assets)
+        .values({
+          ownerId: primary.id,
+          kind: 'file',
+          title: 'Not a text asset',
+          source: 'manual',
+        })
+        .returning()
+    )[0]!
 
     expect(asset).toBeTruthy()
 
@@ -230,7 +232,7 @@ async function createUser(name: string): Promise<TestUser> {
   const body = (await res.json()) as { data: CurrentUser }
   const user: TestUser = {
     id: body.data.id,
-    cookie: res.headers.get('set-cookie')!.split(';')[0],
+    cookie: res.headers.get('set-cookie')!.split(';')[0]!,
   }
   testUsers.push(user)
   return user

@@ -273,11 +273,15 @@ export function isVideoGenerationModel(model: GenerationModel): model is VideoGe
 }
 
 export function imageSizeToAspectRatio(size: ImageSize): number {
-  const [width, height] = size.split('*').map(Number)
+  const [w, h] = size.split('*').map(Number)
+  const width = w!
+  const height = h!
   return width > 0 && height > 0 ? height / width : 1
 }
 
 export function videoRatioToAspectRatio(ratio: VideoRatio): number {
-  const [width, height] = ratio.split(':').map(Number)
+  const [w, h] = ratio.split(':').map(Number)
+  const width = w!
+  const height = h!
   return width > 0 && height > 0 ? height / width : 9 / 16
 }

@@ -52,7 +52,10 @@ export function classifyCanvasFailure(
   errorMessage: string | null | undefined,
   status?: string,
 ): CanvasFailureClassification {
-  const recovery = classifyRecovery({ errorMessage, status })
+  const recovery = classifyRecovery({
+    ...(errorMessage != null ? { errorMessage } : {}),
+    ...(status !== undefined ? { status } : {}),
+  })
   return {
     kind: domainToKind(recovery.domain),
     label: recovery.label,

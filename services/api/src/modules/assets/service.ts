@@ -184,7 +184,7 @@ export async function listAssets(input: ListAssetsInput): Promise<AssetListData>
 
   const nextCursor =
     hasMore && page.length > 0
-      ? encodeCursor(page[page.length - 1].createdAt, page[page.length - 1].id)
+      ? encodeCursor(page[page.length - 1]!.createdAt, page[page.length - 1]!.id)
       : null
 
   return { items, nextCursor }
@@ -471,7 +471,9 @@ function decodeCursor(cursor: string | null | undefined): [Date, string] | null 
   }
   try {
     const decoded = Buffer.from(cursor, 'base64url').toString('utf8')
-    const [createdAt, id] = decoded.split('|')
+    const parts = decoded.split('|')
+    const createdAt = parts[0]!
+    const id = parts[1]!
     const date = new Date(createdAt)
     if (isNaN(date.getTime()) || !id) {
       return null

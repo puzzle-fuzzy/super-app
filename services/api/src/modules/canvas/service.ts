@@ -101,11 +101,12 @@ export async function listCanvasProjects({
   const hasMore = rows.length > effectiveLimit
   const items = rows.slice(0, effectiveLimit)
 
+  const lastItem = items[items.length - 1]!
   const nextCursor =
     hasMore && items.length > 0
       ? encodeCursor({
-          updatedAt: items[items.length - 1].updatedAt.toISOString(),
-          id: items[items.length - 1].id,
+          updatedAt: lastItem.updatedAt.toISOString(),
+          id: lastItem.id,
         })
       : undefined
 

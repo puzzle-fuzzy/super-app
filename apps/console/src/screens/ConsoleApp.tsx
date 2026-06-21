@@ -11,7 +11,7 @@ interface ApiKeyItem {
   name: string
   keyPrefix: string
   createdAt: string
-  lastUsedAt?: string
+  lastUsedAt?: string | undefined
   isRevoked: boolean
 }
 
@@ -32,7 +32,7 @@ export function ConsoleApp() {
 function ConsoleAppContent({
   user,
 }: {
-  user: { id: string; name?: string; email: string; avatarUrl?: string }
+  user: { id: string; name?: string | undefined; email: string; avatarUrl?: string | undefined }
 }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [keys, setKeys] = useState<ApiKeyItem[]>([])

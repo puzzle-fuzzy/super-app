@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
     "types": ["bun-types"]
   },
   "include": ["src", "tests"]

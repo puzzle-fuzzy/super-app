@@ -10,9 +10,9 @@ import type { BillingParams } from '@super-app/types'
  * 和 Record<string, unknown>（worker 从 DB 读取的 inputParams）
  */
 export function extractBillingParams(params: Record<string, unknown>): BillingParams {
-  return {
-    n: typeof params.n === 'number' ? params.n : undefined,
-    duration: typeof params.duration === 'number' ? params.duration : undefined,
-    resolution: typeof params.resolution === 'string' ? params.resolution : undefined,
-  }
+  const result: BillingParams = {}
+  if (typeof params.n === 'number') result.n = params.n
+  if (typeof params.duration === 'number') result.duration = params.duration
+  if (typeof params.resolution === 'string') result.resolution = params.resolution
+  return result
 }

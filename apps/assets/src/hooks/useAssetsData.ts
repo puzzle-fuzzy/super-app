@@ -117,7 +117,7 @@ export function useAssetsData() {
   const activeTransferRef = useRef<ReturnType<typeof startAssetTransferSender> | null>(null)
 
   const kind = filter === 'all' ? undefined : filter
-  const activeFilter = FILTERS.find((option) => option.value === filter) ?? FILTERS[0]
+  const activeFilter = FILTERS.find((option) => option.value === filter) ?? FILTERS[0]!
   const visibleItems = items.filter((item) =>
     item.title.toLowerCase().includes(searchQuery.trim().toLowerCase())
   )

@@ -77,7 +77,9 @@ export function generationNodeDimensions(
 }
 
 export function imageSizeLabel(size: ImageSize): string {
-  const [width, height] = size.split('*').map(Number)
+  const [w, h] = size.split('*').map(Number)
+  const width = w!
+  const height = h!
   const ratio = width === height ? '1:1' : width > height ? '横图' : '竖图'
   return `${ratio} ${size}`
 }

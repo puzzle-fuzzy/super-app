@@ -38,7 +38,7 @@ export function isDangerousFile(fileName: string): boolean {
   const segments = fileName.toLowerCase().split('.')
   // 检查所有扩展名段，防止双重扩展名绕过
   for (let i = 1; i < segments.length; i++) {
-    if (DANGEROUS_EXTENSIONS.has(segments[i])) return true
+    if (DANGEROUS_EXTENSIONS.has(segments[i]!)) return true
   }
   return false
 }

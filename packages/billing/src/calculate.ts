@@ -51,7 +51,7 @@ export function calculateCost(
         inputTokens,
         outputTokens,
         inputUnitPriceCents: pricing.inputPriceCents,
-        outputUnitPriceCents: pricing.outputPriceCents,
+        ...(pricing.outputPriceCents !== undefined ? { outputUnitPriceCents: pricing.outputPriceCents } : {}),
         inputCostCents,
         outputCostCents,
         totalPriceCents: totalCents,

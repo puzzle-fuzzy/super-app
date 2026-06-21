@@ -156,7 +156,7 @@ describe('subjects module', () => {
   })
 
   it('does not delete a non-subject asset through the subject endpoint', async () => {
-    const [asset] = await db
+    const asset = (await db
       .insert(assets)
       .values({
         ownerId: primary.id,
@@ -164,7 +164,7 @@ describe('subjects module', () => {
         title: 'Not a subject asset',
         source: 'manual',
       })
-      .returning()
+      .returning())[0]!
 
     expect(asset).toBeTruthy()
 
@@ -234,7 +234,7 @@ async function createUser(name: string): Promise<TestUser> {
   const body = (await res.json()) as { data: CurrentUser }
   const user: TestUser = {
     id: body.data.id,
-    cookie: res.headers.get('set-cookie')!.split(';')[0],
+    cookie: res.headers.get('set-cookie')!.split(';')[0]!,
   }
   testUsers.push(user)
   return user
